@@ -71,8 +71,6 @@ static apr_status_t cleanup(void *cfgdata)
 {
     int i;
     maxminddb_server_config_rec *cfg = (maxminddb_server_config_rec *) cfgdata;
-    MMDB_close(cfg->mmdb);
-    cfg->mmdb = NULL;
     return APR_SUCCESS;
 }
 
@@ -80,20 +78,8 @@ static apr_status_t cleanup(void *cfgdata)
 static void server_init(apr_pool_t * p, server_rec * s)
 {
     maxminddb_server_config_rec *cfg;
-    int i;
     cfg = (maxminddb_server_config_rec *)
         ap_get_module_config(s->module_config, &maxminddb_module);
-
-    if (!cfg->mmdb && cfg->filename) {
-        cfg->mmdb = MMDB_open(cfg->filename, cfg->flags & 7);
-
-    }
-    if (!cfg->mmdb) {
-        ap_log_error(APLOG_MARK, APLOG_ERR, 0,
-                     s,
-                     "[mod_maxminddb]: Error while opening data file %s",
-                     cfg->filename);
-    }
 
     apr_pool_cleanup_register(p, (void *)cfg, cleanup, cleanup);
 
