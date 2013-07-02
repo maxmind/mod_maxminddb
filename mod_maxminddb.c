@@ -17,6 +17,7 @@
 #include "ap_config.h"
 #include "apr_strings.h"
 #include "util_script.h"
+#include <netdb.h>
 #include <arpa/inet.h>
 #include "MMDB.h"
 
@@ -30,6 +31,9 @@ typedef struct {
 typedef maxminddb_server_config_rec maxminddb_dir_config_rec;
 
 module AP_MODULE_DECLARE_DATA maxminddb_module;
+
+static void set_env_for_ip(request_rec * r, const char *filename,
+                           const char *ipaddr);
 
 /* create a disabled directory entry */
 
@@ -80,10 +84,11 @@ static void server_init(apr_pool_t * p, server_rec * s)
     cfg = (maxminddb_server_config_rec *)
         ap_get_module_config(s->module_config, &maxminddb_module);
 
-    if (!cfg->mmdb) {
+    if (!cfg->mmdb && cfg->filename) {
         cfg->mmdb = MMDB_open(cfg->filename, cfg->flags & 7);
 
-    } else {
+    }
+    if (!cfg->mmdb) {
         ap_log_error(APLOG_MARK, APLOG_ERR, 0,
                      s,
                      "[mod_maxminddb]: Error while opening data file %s",
@@ -166,16 +171,9 @@ static int maxminddb_header_parser(request_rec * r)
         return DECLINED;
 
     ipaddr = _get_client_ip(r);
-    cfg->mmdb = MMDB_open(cfg->filename, cfg->flags);
-    if (!cfg->mmdb) {
-        ap_log_error(APLOG_MARK, APLOG_ERR, 0,
-                     r->server,
-                     "[mod_maxminddb]: Error while opening data file");
-        return DECLINED;
-    }
 
-    if (!cfg->filename)
-        return DECLINED;
+//    if (!cfg->filename)
+//        return DECLINED;
 
     set_env_for_ip(r, cfg->filename, ipaddr);
     return OK;
@@ -188,16 +186,17 @@ static void set_env_for_ip(request_rec * r, const char *filename,
     char buffer[bsize];
     struct in6_addr v6;
     apr_table_set(r->subprocess_env, "MAXMINDDB_ADDR", ipaddr);
-    MMDB_s *mmdb = MMDB_open(fname, MMDB_MODE_STANDARD);
+    MMDB_s *mmdb = MMDB_open(filename, MMDB_MODE_STANDARD);
     MMDB_root_entry_s root = {.entry.mmdb = mmdb };
+
     if (!mmdb)
         return;
 
     int ai_family = AF_INET6;
     int ai_flags = AI_V4MAPPED;
 
-    if (ipaddr != NULL && 0 != MMDB_lookupaddressX(ipstr, ai_family, ai_flags,
-                                                   &v6)) {
+    if ((ipaddr != NULL)
+        && (0 == MMDB_lookupaddressX(ipaddr, ai_family, ai_flags, &v6))) {
 
         int status = MMDB_lookup_by_ipnum_128(v6, &root);
         if (status == MMDB_SUCCESS && root.entry.offset > 0) {
@@ -205,7 +204,7 @@ static void set_env_for_ip(request_rec * r, const char *filename,
             MMDB_return_s res_location;
             MMDB_get_value(&root.entry, &res_location, "location", NULL);
             MMDB_return_s lat, lon;
-            MMDB_entry_s location = {.mmdb = ipinfo->entry.mmdb,.offset =
+            MMDB_entry_s location = {.mmdb = root.entry.mmdb,.offset =
                     res_location.offset
             };
             if (res_location.offset) {
