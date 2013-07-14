@@ -20,7 +20,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include "MMDB.h"
-
+#include <alloca.h>
 typedef struct {
     MMDB_s *mmdb;
     char *filename;
@@ -164,6 +164,46 @@ static int maxminddb_header_parser(request_rec * r)
     set_env_for_ip(r, cfg->filename, ipaddr);
     return OK;
 }
+
+void set_string(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
+{
+    va_list keys;
+    MMDB_return_s result;
+    if (!entry->offset)
+        return;
+    va_start(keys, env);
+    MMDB_s *mmdb = entry->mmdb;
+    MMDB_vget_value(entry, &result, keys);
+    if (result.offset) {
+        uint32_t segments = mmdb->full_record_size_bytes * mmdb->node_count;
+        char *value = alloca(result.data_size + 1);
+        MMDB_pread(mmdb->fd, value, result.data_size, segments + (off_t)(void*)result.ptr);
+        value[result.data_size] = 0;
+        apr_table_set(r->subprocess_env, env, value);
+    }
+    va_end(keys);
+}
+
+void set_double(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
+{
+    va_list keys;
+    MMDB_return_s result;
+    if (!entry->offset)
+        return;
+    va_start(keys, env);
+    MMDB_vget_value(entry, &result, keys);
+    if (result.offset) {
+        char *value;
+        asprintf(&value, "%.5f", result.double_value);
+        if (value) {
+            apr_table_set(r->subprocess_env, env, value);
+            free(value);
+        }
+    }
+    va_end(keys);
+}
+
+#define K(...) __VA_ARGS__, NULL
 
 static void set_env_for_ip(request_rec * r, const char *filename,
                            const char *ipaddr)
