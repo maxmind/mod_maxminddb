@@ -227,27 +227,41 @@ static void set_env_for_ip(request_rec * r, const char *filename,
         int status = MMDB_lookup_by_ipnum_128(v6, &root);
         if (status == MMDB_SUCCESS && root.entry.offset > 0) {
 
-            MMDB_return_s res_location;
-            MMDB_get_value(&root.entry, &res_location, "location", NULL);
-            MMDB_return_s lat, lon;
+            MMDB_return_s result;
+            MMDB_get_value(&root.entry, &result, K("location"));
             MMDB_entry_s location = {.mmdb = root.entry.mmdb,.offset =
-                    res_location.offset
+                    result.offset
             };
-            if (res_location.offset) {
-                MMDB_get_value(&location, &lat, "latitude", NULL);
-                if (lat.offset > 0) {
-                    snprintf(buffer, bsize, "%.5f", lat.double_value);
-                    apr_table_set(r->subprocess_env, "MAXMINDDB_LATITUDE",
-                                  buffer);
-                }
+            set_double(r, &location, "GEOIP_LATITUDE", K("latitude"));
+            set_double(r, &location, "GEOIP_LONGITUDE", K("longitude"));
+            set_string(r, &location, "GEOIP_METRO_CODE", K("metro_code"));
+            set_string(r, &location, "GEOIP_TIME_ZONE", K("time_zone"));
 
-                MMDB_get_value(&location, &lon, "longitude", NULL);
-                if (lon.offset > 0) {
-                    snprintf(buffer, bsize, "%.5f", lon.double_value);
-                    apr_table_set(r->subprocess_env, "MAXMINDDB_LONGITUDE",
-                                  buffer);
-                }
-            }
+            MMDB_get_value(&root.entry, &result, K("continent"));
+            location.offset = result.offset;
+            set_string(r, &location, "GEOIP_CONTINENT_CODE", K("code"));
+            set_string(r, &location, "GEOIP_CONTINENT_NAME", K("names", "en"));
+
+            MMDB_get_value(&root.entry, &result, K("country"));
+            location.offset = result.offset;
+            set_string(r, &location, "GEOIP_COUNTRY_CODE", K("iso_code"));
+            set_string(r, &location, "GEOIP_COUNTRY_NAME", K("names", "en"));
+
+            MMDB_get_value(&root.entry, &result, K("registered_country"));
+            location.offset = result.offset;
+            set_string(r, &location, "GEOIP_REGISTERED_COUNTRY_CODE",
+                       K("iso_code"));
+            set_string(r, &location, "GEOIP_REGISTERED_COUNTRY_NAME",
+                       K("names", "en"));
+
+            MMDB_get_value(&root.entry, &result, K("subdivisions", "0"));
+            location.offset = result.offset;
+            set_string(r, &location, "GEOIP_REGION_CODE", K("iso_code"));
+            set_string(r, &location, "GEOIP_REGION_NAME", K("names", "en"));
+
+            set_string(r, &root.entry, "GEOIP_CITY", K("city", "names", "en"));
+            set_string(r, &root.entry, "GEOIP_POSTAL_CODE",
+                       K("postal", "code"));
         }
     }
     MMDB_close(mmdb);
