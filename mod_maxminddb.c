@@ -208,8 +208,6 @@ void set_double(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
 static void set_env_for_ip(request_rec * r, const char *filename,
                            const char *ipaddr)
 {
-    int bsize = 1024;
-    char buffer[bsize];
     struct in6_addr v6;
     apr_table_set(r->subprocess_env, "GEOIP_ADDR", ipaddr);
     MMDB_s *mmdb = MMDB_open(filename, MMDB_MODE_STANDARD);
