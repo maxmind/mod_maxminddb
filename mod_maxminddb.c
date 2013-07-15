@@ -211,7 +211,7 @@ static void set_env_for_ip(request_rec * r, const char *filename,
     int bsize = 1024;
     char buffer[bsize];
     struct in6_addr v6;
-    apr_table_set(r->subprocess_env, "MAXMINDDB_ADDR", ipaddr);
+    apr_table_set(r->subprocess_env, "GEOIP_ADDR", ipaddr);
     MMDB_s *mmdb = MMDB_open(filename, MMDB_MODE_STANDARD);
     MMDB_root_entry_s root = {.entry.mmdb = mmdb };
 
