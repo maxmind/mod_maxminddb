@@ -22,7 +22,6 @@
 #include "MMDB.h"
 #include <alloca.h>
 typedef struct {
-    MMDB_s *mmdb;
     char *filename;
     int enabled;
     int flags;
@@ -47,7 +46,6 @@ static void *create_dir_config(apr_pool_t * p, char *d)
                                                  sizeof
                                                  (maxminddb_dir_config_rec));
     dcfg->enabled = 0;
-    dcfg->mmdb = NULL;
     dcfg->flags = 0;
     dcfg->filename = NULL;
 
@@ -64,7 +62,6 @@ static void *create_server_config(apr_pool_t * p, server_rec * d)
         return NULL;
     }
 
-    conf->mmdb = NULL;
     conf->enabled = 0;
     conf->flags = 0;
     conf->filename = NULL;
@@ -315,7 +312,6 @@ static void *make_maxminddb(apr_pool_t * p, server_rec * d)
         (maxminddb_server_config_rec *) apr_pcalloc(p,
                                                     sizeof
                                                     (maxminddb_server_config_rec));
-    dcfg->mmdb = NULL;
     dcfg->filename = NULL;
     dcfg->enabled = 0;
     return dcfg;
