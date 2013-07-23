@@ -47,6 +47,9 @@ static void *create_dir_config(apr_pool_t * p, char *d)
                                                  sizeof
                                                  (maxminddb_dir_config_rec));
     dcfg->enabled = 0;
+    dcfg->mmdb = NULL;
+    dcfg->flags = 0;
+    dcfg->filename = NULL;
 
     return dcfg;
 }
@@ -177,7 +180,8 @@ void set_string(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
     if (result.offset) {
         uint32_t segments = mmdb->full_record_size_bytes * mmdb->node_count;
         char *value = alloca(result.data_size + 1);
-        MMDB_pread(mmdb->fd, value, result.data_size, segments + (off_t)(void*)result.ptr);
+        MMDB_pread(mmdb->fd, value, result.data_size,
+                   segments + (off_t) (void *)result.ptr);
         value[result.data_size] = 0;
         apr_table_set(r->subprocess_env, env, value);
     }
