@@ -21,10 +21,18 @@
 #include <arpa/inet.h>
 #include "MMDB.h"
 #include <alloca.h>
+
+typedef struct key_value_list_s {
+    const char *path;
+    const char *env_key;
+    struct key_value_list_s *next;
+} key_value_list_s;
+
 typedef struct {
     char *filename;
     int enabled;
     int flags;
+    key_value_list_s *next;
 } maxminddb_server_config_rec;
 
 typedef maxminddb_server_config_rec maxminddb_dir_config_rec;
@@ -48,6 +56,7 @@ static void *create_dir_config(apr_pool_t * p, char *d)
     dcfg->enabled = 0;
     dcfg->flags = 0;
     dcfg->filename = NULL;
+    dcfg->next = NULL;
 
     return dcfg;
 }
@@ -65,6 +74,7 @@ static void *create_server_config(apr_pool_t * p, server_rec * d)
     conf->enabled = 0;
     conf->flags = 0;
     conf->filename = NULL;
+    conf->next = NULL;
 
     return (void *)conf;
 }
