@@ -314,19 +314,6 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
     return NULL;
 }
 
-static void *make_maxminddb(apr_pool_t * p, server_rec * d)
-{
-    maxminddb_server_config_rec *dcfg;
-
-    dcfg =
-        (maxminddb_server_config_rec *) apr_pcalloc(p,
-                                                    sizeof
-                                                    (maxminddb_server_config_rec));
-    dcfg->filename = NULL;
-    dcfg->enabled = 0;
-    return dcfg;
-}
-
 static const command_rec maxminddb_cmds[] = {
     AP_INIT_FLAG("MaxMindDBEnable", set_maxminddb_enable, NULL,
                  RSRC_CONF | OR_FILEINFO, "Turn on mod_maxminddb"),
@@ -367,7 +354,7 @@ static void maxminddb_register_hooks(apr_pool_t * p)
 AP_DECLARE_MODULE(maxminddb) = {
     STANDARD20_MODULE_STUFF, create_dir_config, /* create per-dir    config structures */
         NULL,                   /* merge  per-dir    config structures */
-        make_maxminddb,         /* create per-server config structures */
+        create_server_config,   /* create per-server config structures */
         NULL,                   /* merge  per-server config structures */
         maxminddb_cmds,         /* table of config file commands       */
         maxminddb_register_hooks        /* register hooks                      */
