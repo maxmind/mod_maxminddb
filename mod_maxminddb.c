@@ -67,6 +67,8 @@ static void *create_server_config(apr_pool_t * p, server_rec * d)
     conf->mmdb = NULL;
     conf->enabled = 0;
     conf->flags = 0;
+    conf->filename = NULL;
+
     return (void *)conf;
 }
 
