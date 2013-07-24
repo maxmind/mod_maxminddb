@@ -22,6 +22,9 @@
 #include "MMDB.h"
 #include <alloca.h>
 
+#define INFO(server_rec, ...) \
+                    ap_log_error(APLOG_MARK, APLOG_DEBUG | APLOG_NOERRNO, 0, server_rec, "[mod_maxminddb]: " __VA_ARGS__);
+
 typedef struct key_value_list_s {
     const char *path;
     const char *env_key;
@@ -75,6 +78,7 @@ static void *create_server_config(apr_pool_t * p, server_rec * d)
     conf->flags = 0;
     conf->filename = NULL;
     conf->next = NULL;
+    INFO(s, "create_server_config");
 
     return (void *)conf;
 }
@@ -94,6 +98,7 @@ static void server_init(apr_pool_t * p, server_rec * s)
         ap_get_module_config(s->module_config, &maxminddb_module);
 
     apr_pool_cleanup_register(p, (void *)cfg, cleanup, cleanup);
+    INFO(s, "server_init");
 
 }
 
@@ -101,6 +106,8 @@ static void child_init(apr_pool_t * p, server_rec * s)
 {
     maxminddb_server_config_rec *cfg;
     int i, flags;
+
+    INFO(s, "child_init");
 
     cfg = (maxminddb_server_config_rec *)
         ap_get_module_config(s->module_config, &maxminddb_module);
@@ -111,6 +118,7 @@ static void child_init(apr_pool_t * p, server_rec * s)
 static int post_config(apr_pool_t * p, apr_pool_t * plog,
                        apr_pool_t * ptemp, server_rec * s)
 {
+    INFO(s, "post_config");
     server_init(p, s);
     return OK;
 }
@@ -122,6 +130,7 @@ static int maxminddb_post_read_request(request_rec * r)
     maxminddb_server_config_rec *cfg;
     cfg = ap_get_module_config(r->server->module_config, &maxminddb_module);
 
+    INFO(r->server, "maxminddb_post_read_request");
     if (!cfg)
         return DECLINED;
 
@@ -135,6 +144,7 @@ static int maxminddb_per_dir(request_rec * r)
 {
 
     maxminddb_dir_config_rec *dcfg;
+    INFO(r->server, "maxminddb_per_dir");
 
     dcfg = ap_get_module_config(r->per_dir_config, &maxminddb_module);
     if (!dcfg)
@@ -143,6 +153,7 @@ static int maxminddb_per_dir(request_rec * r)
     if (!dcfg->enabled)
         return DECLINED;
 
+    INFO(r->server, "maxminddb_per_dir ( enabled )");
     return maxminddb_header_parser(r);
 }
 
@@ -169,6 +180,7 @@ static int maxminddb_header_parser(request_rec * r)
         return DECLINED;
 
     ipaddr = _get_client_ip(r);
+    INFO(r->server, "maxminddb_header_parser %s", ipaddr);
 
 //    if (!cfg->filename)
 //        return DECLINED;
@@ -286,6 +298,9 @@ static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
     if (cmd->path) {
         maxminddb_dir_config_rec *dcfg = dummy;
         dcfg->enabled = arg;
+
+        INFO(cmd->server, "set_maxminddb_enable: (dir) %d", arg);
+
         return NULL;
     }
     /* no then it is server config */
@@ -296,6 +311,8 @@ static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
         return "mod_maxminddb: server structure not allocated";
 
     conf->enabled = arg;
+    INFO(cmd->server, "set_maxminddb_enable: (server) %d", arg);
+
     return NULL;
 }
 
@@ -311,6 +328,8 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
         return NULL;
 
     conf->filename = (char *)apr_pstrdup(cmd->pool, filename);
+    INFO(cmd->server, "set_maxminddb_filename (dir) %s", filename);
+
     return NULL;
 }
 
