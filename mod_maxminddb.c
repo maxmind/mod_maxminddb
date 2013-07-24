@@ -340,11 +340,49 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
     return NULL;
 }
 
+static void insert_kvlist(maxminddb_config * mmcfg, key_value_list_s * list)
+{
+
+    list->next = mmcfg->next;
+    mmcfg->next = list;
+}
+
+static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
+                                     const char *dbpath, const char *env)
+{
+    int i;
+
+    key_value_list_s *list = apr_palloc(cmd->pool, sizeof(key_value_list_s));
+    list->path = dbpath;
+    list->env_key = env;
+    list->next = NULL;
+
+    if (cmd->path) {
+        maxminddb_dir_config_rec *dcfg = dummy;
+
+        INFO(cmd->server, "set_maxminddb_env (dir) %s %s", dbpath, env);
+        insert_kvlist(&dcfg->mmcfg, list);
+
+        return NULL;
+    }
+
+    maxminddb_server_config_rec *conf = (maxminddb_server_config_rec *)
+        ap_get_module_config(cmd->server->module_config, &maxminddb_module);
+
+    INFO(cmd->server, "set_maxminddb_env (server) %s %s", dbpath, env);
+
+    insert_kvlist(&conf->mmcfg, list);
+
+    return NULL;
+}
+
 static const command_rec maxminddb_cmds[] = {
     AP_INIT_FLAG("MaxMindDBEnable", set_maxminddb_enable, NULL,
                  OR_ALL, "Turn on mod_maxminddb"),
     AP_INIT_TAKE12("MaxMindDBFile", set_maxminddb_filename, NULL,
                    OR_ALL, "Path to the Database File"),
+    AP_INIT_ITERATE2("MaxMindDBEnv", set_maxminddb_env, NULL,
+                     OR_ALL, "Set desired env var"),
     {NULL}
 };
 
