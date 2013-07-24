@@ -32,7 +32,7 @@ typedef struct key_value_list_s {
 } key_value_list_s;
 
 typedef struct {
-    char *filename;
+    const char *filename;
     int enabled;
     int flags;
     key_value_list_s *next;
