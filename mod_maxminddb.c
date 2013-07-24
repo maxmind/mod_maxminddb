@@ -36,6 +36,10 @@ typedef struct {
     int enabled;
     int flags;
     key_value_list_s *next;
+} maxminddb_config;
+
+typedef struct {
+    maxminddb_config mmcfg;
 } maxminddb_server_config_rec;
 
 typedef maxminddb_server_config_rec maxminddb_dir_config_rec;
@@ -123,7 +127,7 @@ static int post_config(apr_pool_t * p, apr_pool_t * plog,
     return OK;
 }
 
-static int maxminddb_header_parser(request_rec * r);
+static int maxminddb_header_parser(request_rec * r, maxminddb_config * mmcfg);
 
 static int maxminddb_post_read_request(request_rec * r)
 {
@@ -134,10 +138,10 @@ static int maxminddb_post_read_request(request_rec * r)
     if (!cfg)
         return DECLINED;
 
-    if (!cfg->enabled)
+    if (!cfg->mmcfg.enabled)
         return DECLINED;
 
-    return maxminddb_header_parser(r);
+    return maxminddb_header_parser(r, &cfg->mmcfg);
 }
 
 static int maxminddb_per_dir(request_rec * r)
@@ -150,11 +154,11 @@ static int maxminddb_per_dir(request_rec * r)
     if (!dcfg)
         return DECLINED;
 
-    if (!dcfg->enabled)
+    if (!dcfg->mmcfg.enabled)
         return DECLINED;
 
     INFO(r->server, "maxminddb_per_dir ( enabled )");
-    return maxminddb_header_parser(r);
+    return maxminddb_header_parser(r, &dcfg->mmcfg);
 }
 
 char *_get_client_ip(request_rec * r)
@@ -166,18 +170,11 @@ char *_get_client_ip(request_rec * r)
 #endif
 }
 
-static int maxminddb_header_parser(request_rec * r)
+static int maxminddb_header_parser(request_rec * r, maxminddb_config * mmcfg)
 {
     char *ipaddr;
     char *free_me = NULL;
-
-    maxminddb_server_config_rec *cfg;
-
     char *ipaddr_ptr = NULL;
-    cfg = ap_get_module_config(r->server->module_config, &maxminddb_module);
-
-    if (!cfg)
-        return DECLINED;
 
     ipaddr = _get_client_ip(r);
     INFO(r->server, "maxminddb_header_parser %s", ipaddr);
@@ -185,7 +182,7 @@ static int maxminddb_header_parser(request_rec * r)
 //    if (!cfg->filename)
 //        return DECLINED;
 
-    set_env_for_ip(r, cfg->filename, ipaddr);
+    set_env_for_ip(r, mmcfg->filename, ipaddr);
     return OK;
 }
 
@@ -297,7 +294,7 @@ static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
     /* is per directory config? */
     if (cmd->path) {
         maxminddb_dir_config_rec *dcfg = dummy;
-        dcfg->enabled = arg;
+        dcfg->mmcfg.enabled = arg;
 
         INFO(cmd->server, "set_maxminddb_enable: (dir) %d", arg);
 
@@ -310,7 +307,7 @@ static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
     if (!conf)
         return "mod_maxminddb: server structure not allocated";
 
-    conf->enabled = arg;
+    conf->mmcfg.enabled = arg;
     INFO(cmd->server, "set_maxminddb_enable: (server) %d", arg);
 
     return NULL;
@@ -321,14 +318,24 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
                                           const char *arg2)
 {
     int i;
+
+    if (cmd->path) {
+        maxminddb_dir_config_rec *dcfg = dummy;
+        dcfg->mmcfg.filename = filename;
+
+        INFO(cmd->server, "set_maxminddb_filename (dir) %s", filename);
+
+        return NULL;
+    }
+
     maxminddb_server_config_rec *conf = (maxminddb_server_config_rec *)
         ap_get_module_config(cmd->server->module_config, &maxminddb_module);
 
     if (!filename)
         return NULL;
 
-    conf->filename = (char *)apr_pstrdup(cmd->pool, filename);
-    INFO(cmd->server, "set_maxminddb_filename (dir) %s", filename);
+    conf->mmcfg.filename = (char *)apr_pstrdup(cmd->pool, filename);
+    INFO(cmd->server, "set_maxminddb_filename (server) %s", filename);
 
     return NULL;
 }
