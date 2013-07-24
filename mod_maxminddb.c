@@ -342,10 +342,9 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
 
 static const command_rec maxminddb_cmds[] = {
     AP_INIT_FLAG("MaxMindDBEnable", set_maxminddb_enable, NULL,
-                 RSRC_CONF | OR_FILEINFO, "Turn on mod_maxminddb"),
+                 OR_ALL, "Turn on mod_maxminddb"),
     AP_INIT_TAKE12("MaxMindDBFile", set_maxminddb_filename, NULL,
-                   RSRC_CONF | OR_FILEINFO,
-                   "Path to the Database File"),
+                   OR_ALL, "Path to the Database File"),
     {NULL}
 };
 
