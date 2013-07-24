@@ -49,6 +49,14 @@ module AP_MODULE_DECLARE_DATA maxminddb_module;
 static void set_env_for_ip(request_rec * r, const char *filename,
                            const char *ipaddr);
 
+static void init_maxminddb_config(maxminddb_config * cfg)
+{
+    cfg->enabled = 0;
+    cfg->flags = 0;
+    cfg->filename = NULL;
+    cfg->next = NULL;
+}
+
 /* create a disabled directory entry */
 
 static void *create_dir_config(apr_pool_t * p, char *d)
@@ -60,10 +68,7 @@ static void *create_dir_config(apr_pool_t * p, char *d)
         (maxminddb_dir_config_rec *) apr_pcalloc(p,
                                                  sizeof
                                                  (maxminddb_dir_config_rec));
-    dcfg->enabled = 0;
-    dcfg->flags = 0;
-    dcfg->filename = NULL;
-    dcfg->next = NULL;
+    init_maxminddb_config(&dcfg->mmcfg);
 
     return dcfg;
 }
@@ -78,10 +83,7 @@ static void *create_server_config(apr_pool_t * p, server_rec * d)
         return NULL;
     }
 
-    conf->enabled = 0;
-    conf->flags = 0;
-    conf->filename = NULL;
-    conf->next = NULL;
+    init_maxminddb_config(&conf->mmcfg);
     INFO(s, "create_server_config");
 
     return (void *)conf;
