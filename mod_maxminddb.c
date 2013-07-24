@@ -75,7 +75,7 @@ static void *create_dir_config(apr_pool_t * p, char *d)
 
 /* create a standard disabled server entry */
 
-static void *create_server_config(apr_pool_t * p, server_rec * d)
+static void *create_server_config(apr_pool_t * p, server_rec * srec)
 {
     maxminddb_server_config_rec *conf =
         apr_pcalloc(p, sizeof(maxminddb_server_config_rec));
@@ -84,7 +84,7 @@ static void *create_server_config(apr_pool_t * p, server_rec * d)
     }
 
     init_maxminddb_config(&conf->mmcfg);
-    INFO(s, "create_server_config");
+    INFO(srec, "create_server_config");
 
     return (void *)conf;
 }
