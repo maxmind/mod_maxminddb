@@ -20,6 +20,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include "MMDB.h"
+#include <string.h>
 #include <alloca.h>
 
 #define INFO(server_rec, ...) \
@@ -71,6 +72,11 @@ static void *create_dir_config(apr_pool_t * p, char *d)
     init_maxminddb_config(&dcfg->mmcfg);
 
     return dcfg;
+}
+
+static void *merge_dir_config(apr_pool_t * p, void *parent, void *cur)
+{
+    return cur;
 }
 
 /* create a standard disabled server entry */
@@ -156,6 +162,8 @@ static int maxminddb_per_dir(request_rec * r)
     if (!dcfg)
         return DECLINED;
 
+    INFO(r->server, "maxminddb_per_dir config exists");
+
     if (!dcfg->mmcfg.enabled)
         return DECLINED;
 
@@ -181,8 +189,8 @@ static int maxminddb_header_parser(request_rec * r, maxminddb_config * mmcfg)
     ipaddr = _get_client_ip(r);
     INFO(r->server, "maxminddb_header_parser %s", ipaddr);
 
-//    if (!cfg->filename)
-//        return DECLINED;
+    if (!mmcfg || !mmcfg->filename || !mmcfg->enabled)
+        return DECLINED;
 
     set_env_for_ip(r, mmcfg->filename, ipaddr);
     return OK;
@@ -291,8 +299,6 @@ static void set_env_for_ip(request_rec * r, const char *filename,
 
 static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
 {
-    maxminddb_server_config_rec *conf;
-
     /* is per directory config? */
     if (cmd->path) {
         maxminddb_dir_config_rec *dcfg = dummy;
@@ -303,7 +309,7 @@ static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
         return NULL;
     }
     /* no then it is server config */
-    conf = (maxminddb_server_config_rec *)
+    maxminddb_server_config_rec *conf = (maxminddb_server_config_rec *)
         ap_get_module_config(cmd->server->module_config, &maxminddb_module);
 
     if (!conf)
@@ -380,7 +386,7 @@ static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
 
 static const command_rec maxminddb_cmds[] = {
     AP_INIT_FLAG("MaxMindDBEnable", set_maxminddb_enable, NULL,
-                 OR_ALL, "Turn on mod_maxminddb"),
+                 OR_FILEINFO, "Turn on mod_maxminddb"),
     AP_INIT_TAKE12("MaxMindDBFile", set_maxminddb_filename, NULL,
                    OR_ALL, "Path to the Database File"),
     AP_INIT_ITERATE2("MaxMindDBEnv", set_maxminddb_env, NULL,
@@ -398,7 +404,7 @@ static void maxminddb_register_hooks(apr_pool_t * p)
      * the authentication hook used for Dirctory specific enabled maxminddblookups
      * or right before directory rewrite rules.
      */
-    ap_hook_header_parser(maxminddb_per_dir, NULL, aszSucc, APR_HOOK_FIRST);
+    ap_hook_header_parser(maxminddb_per_dir, NULL, aszSucc, APR_HOOK_MIDDLE);
 
     /* and the servectly wide hook, after reading the request. Perfecly
      * suitable to serve serverwide mod_rewrite actions
@@ -419,9 +425,64 @@ static void maxminddb_register_hooks(apr_pool_t * p)
 AP_DECLARE_MODULE(maxminddb) = {
     STANDARD20_MODULE_STUFF,    /* */
         create_dir_config,      /* create per-dir    config structures */
-        NULL,                   /* merge  per-dir    config structures */
+        merge_dir_config,       /* merge  per-dir    config structures */
         create_server_config,   /* create per-server config structures */
         NULL,                   /* merge  per-server config structures */
         maxminddb_cmds,         /* table of config file commands       */
         maxminddb_register_hooks        /* register hooks                      */
 };
+
+static void set_env_for_ip_conf(request_rec * r, const maxminddb_config * mmcfg,
+                                const char *ipaddr)
+{
+
+    struct in6_addr v6;
+    apr_table_set(r->subprocess_env, "GEOIP_ADDR", ipaddr);
+    MMDB_s *mmdb = MMDB_open(filename, MMDB_MODE_STANDARD);
+    MMDB_root_entry_s root = {.entry.mmdb = mmdb };
+
+    if (!mmdb)
+        return;
+
+    int ai_family = AF_INET6;
+    int ai_flags = AI_V4MAPPED;
+
+    if ((ipaddr != NULL)
+        && (0 == MMDB_lookupaddressX(ipaddr, ai_family, ai_flags, &v6))) {
+
+        int status = MMDB_lookup_by_ipnum_128(v6, &root);
+        if (status == MMDB_SUCCESS && root.entry.offset > 0) {
+
+            for (key_value_list_s * key_value = mmcfg->next; key_value;
+                 key_value = key_value->next) {
+                set_env(r, mmdb, &root, key_value);
+            }
+
+        }
+    }
+}
+
+static void set_env(request_rec * r, MMDB_s * mmdb, MMDB_root_entry_s * root,
+                    key_value_list_s * key_value)
+{
+
+    const int max_list = 80;
+    char *list[max_list + 1];
+    int i;
+    char *ptr, *cur, *tok;
+    cur = ptr = strdup(key_value->path);
+    for (i = 0; i < max_list; i++) {
+        list[i] = strsep(&cur, "/");
+        if (*list[i] == '\0') {
+            --i;
+        }
+    }
+    list[i] = NULL;
+    MMDB_return_s result;
+    MMDB_vget_value(&root.entry, &result, list);
+    if (root.entry.offset > 0) {
+        setenv(key_value->env_key, "123", 1);
+    }
+
+    free(ptr);
+}
