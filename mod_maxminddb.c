@@ -199,7 +199,7 @@ static int maxminddb_header_parser(request_rec * r, maxminddb_config * mmcfg)
 void set_string(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
 {
     va_list keys;
-    MMDB_return_s result;
+    MMDB_entry_data_s result;
     if (!entry->offset)
         return;
     va_start(keys, env);
@@ -219,7 +219,7 @@ void set_string(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
 void set_double(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
 {
     va_list keys;
-    MMDB_return_s result;
+    MMDB_entry_data_s result;
     if (!entry->offset)
         return;
     va_start(keys, env);
@@ -257,7 +257,7 @@ static void set_env_for_ip(request_rec * r, const char *filename,
         int status = MMDB_lookup_by_ipnum_128(v6, &root);
         if (status == MMDB_SUCCESS && root.entry.offset > 0) {
 
-            MMDB_return_s result;
+            MMDB_entry_data_s result;
             MMDB_get_value(&root.entry, &result, K("location"));
             MMDB_entry_s location = {.mmdb = root.entry.mmdb,.offset =
                     result.offset
@@ -478,7 +478,7 @@ static void set_env(request_rec * r, MMDB_s * mmdb, MMDB_root_entry_s * root,
         }
     }
     list[i] = NULL;
-    MMDB_return_s result;
+    MMDB_entry_data_s result;
     MMDB_vget_value(&root.entry, &result, list);
     if (root.entry.offset > 0) {
         setenv(key_value->env_key, "123", 1);
