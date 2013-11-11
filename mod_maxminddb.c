@@ -19,7 +19,7 @@
 #include "util_script.h"
 #include <netdb.h>
 #include <arpa/inet.h>
-#include "MMDB.h"
+#include "maxminddb.h"
 #include <string.h>
 #include <alloca.h>
 
