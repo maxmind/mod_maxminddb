@@ -239,7 +239,7 @@ static void set_env_for_ip(request_rec * r, const char *filename,
                            const char *ipaddr)
 {
     struct in6_addr v6;
-    apr_table_set(r->subprocess_env, "GEOIP_ADDR", ipaddr);
+    apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
     MMDB_s *mmdb = MMDB_open(filename, MMDB_MODE_STANDARD);
     MMDB_root_entry_s root = {.entry.mmdb = mmdb };
 
@@ -260,35 +260,35 @@ static void set_env_for_ip(request_rec * r, const char *filename,
             MMDB_entry_s location = {.mmdb = root.entry.mmdb,.offset =
                     result.offset
             };
-            set_double(r, &location, "GEOIP_LATITUDE", K("latitude"));
-            set_double(r, &location, "GEOIP_LONGITUDE", K("longitude"));
-            set_string(r, &location, "GEOIP_METRO_CODE", K("metro_code"));
-            set_string(r, &location, "GEOIP_TIME_ZONE", K("time_zone"));
+            set_double(r, &location, "MMDB_LATITUDE", K("latitude"));
+            set_double(r, &location, "MMDB_LONGITUDE", K("longitude"));
+            set_string(r, &location, "MMDB_METRO_CODE", K("metro_code"));
+            set_string(r, &location, "MMDB_TIME_ZONE", K("time_zone"));
 
             MMDB_get_value(&root.entry, &result, K("continent"));
             location.offset = result.offset;
-            set_string(r, &location, "GEOIP_CONTINENT_CODE", K("code"));
-            set_string(r, &location, "GEOIP_CONTINENT_NAME", K("names", "en"));
+            set_string(r, &location, "MMDB_CONTINENT_CODE", K("code"));
+            set_string(r, &location, "MMDB_CONTINENT_NAME", K("names", "en"));
 
             MMDB_get_value(&root.entry, &result, K("country"));
             location.offset = result.offset;
-            set_string(r, &location, "GEOIP_COUNTRY_CODE", K("iso_code"));
-            set_string(r, &location, "GEOIP_COUNTRY_NAME", K("names", "en"));
+            set_string(r, &location, "MMDB_COUNTRY_CODE", K("iso_code"));
+            set_string(r, &location, "MMDB_COUNTRY_NAME", K("names", "en"));
 
             MMDB_get_value(&root.entry, &result, K("registered_country"));
             location.offset = result.offset;
-            set_string(r, &location, "GEOIP_REGISTERED_COUNTRY_CODE",
+            set_string(r, &location, "MMDB_REGISTERED_COUNTRY_CODE",
                        K("iso_code"));
-            set_string(r, &location, "GEOIP_REGISTERED_COUNTRY_NAME",
+            set_string(r, &location, "MMDB_REGISTERED_COUNTRY_NAME",
                        K("names", "en"));
 
             MMDB_get_value(&root.entry, &result, K("subdivisions", "0"));
             location.offset = result.offset;
-            set_string(r, &location, "GEOIP_REGION_CODE", K("iso_code"));
-            set_string(r, &location, "GEOIP_REGION_NAME", K("names", "en"));
+            set_string(r, &location, "MMDB_REGION_CODE", K("iso_code"));
+            set_string(r, &location, "MMDB_REGION_NAME", K("names", "en"));
 
-            set_string(r, &root.entry, "GEOIP_CITY", K("city", "names", "en"));
-            set_string(r, &root.entry, "GEOIP_POSTAL_CODE",
+            set_string(r, &root.entry, "MMDB_CITY", K("city", "names", "en"));
+            set_string(r, &root.entry, "MMDB_POSTAL_CODE",
                        K("postal", "code"));
         }
     }
@@ -435,7 +435,7 @@ static void set_env_for_ip_conf(request_rec * r, const maxminddb_config * mmcfg,
 {
 
     struct in6_addr v6;
-    apr_table_set(r->subprocess_env, "GEOIP_ADDR", ipaddr);
+    apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
     MMDB_s *mmdb = MMDB_open(filename, MMDB_MODE_STANDARD);
     MMDB_root_entry_s root = {.entry.mmdb = mmdb };
 
