@@ -243,7 +243,8 @@ static void set_env_for_ip(request_rec * r, const char *filename,
     apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
     int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, &mmdb);
     MMDB_result_entry_s root = {
-    .entry.mmdb = mmdb};
+        .entry.mmdb = mmdb
+    };
 
     if (mmdb_error != MMDB_SUCCESS)
         return;
@@ -356,7 +357,7 @@ static void insert_kvlist(maxminddb_config * mmcfg, key_value_list_s * list)
 }
 
 static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
-                                     const char *dbpath, const char *env)
+                                     const char *env, const char *dbpath)
 {
     int i;
 
@@ -368,7 +369,7 @@ static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
     if (cmd->path) {
         maxminddb_dir_config_rec *dcfg = dummy;
 
-        INFO(cmd->server, "set_maxminddb_env (dir) %s %s", dbpath, env);
+        INFO(cmd->server, "set_maxminddb_env (dir) %s %s", env, dbpath);
         insert_kvlist(&dcfg->mmcfg, list);
 
         return NULL;
@@ -377,7 +378,7 @@ static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
     maxminddb_server_config_rec *conf = (maxminddb_server_config_rec *)
         ap_get_module_config(cmd->server->module_config, &maxminddb_module);
 
-    INFO(cmd->server, "set_maxminddb_env (server) %s %s", dbpath, env);
+    INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, dbpath);
 
     insert_kvlist(&conf->mmcfg, list);
 
@@ -441,7 +442,8 @@ static void set_env_for_ip_conf(request_rec * r, const maxminddb_config * mmcfg,
     apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
     MMDB_s *mmdb = MMDB_open(filename, MMDB_MODE_STANDARD);
     MMDB_result_entry_s root = {
-    .entry.mmdb = mmdb};
+        .entry.mmdb = mmdb
+    };
 
     if (!mmdb)
         return;
