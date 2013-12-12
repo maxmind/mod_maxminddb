@@ -503,18 +503,46 @@ static void set_env(request_rec * r, MMDB_s * mmdb, MMDB_lookup_result_s * root,
     int i;
     char *ptr, *cur, *tok;
     cur = ptr = strdup(key_value->path);
-    for (i = 0; i < max_list; i++) {
-        list[i] = strsep(&cur, "/");
-        if (*list[i] == '\0') {
-            --i;
-        }
-    }
+    for (i = 0; i < max_list; i++)
+        if ((list[i] = strsep(&cur, "/")) == NULL)
+            break;
     list[i] = NULL;
     MMDB_entry_data_s result;
     MMDB_aget_value(&root->entry, &result, list);
     if (result.offset > 0) {
-        setenv(key_value->env_key, "123", 1);
+        char *value;
+        switch (result.type) {
+        case MMDB_DATA_TYPE_UTF8_STRING:
+            value = malloc(result.data_size + 1);
+            memcpy(value, result.utf8_string, result.data_size);
+            value[result.data_size] = '\0';
+            break;
+        case MMDB_DATA_TYPE_BYTES:
+            value = malloc(result.data_size + 1);
+            memcpy(value, result.bytes, result.data_size);
+            value[result.data_size] = '\0';
+            break;
+        case MMDB_DATA_TYPE_FLOAT:
+            asprintf(&value, "%.5f", result.float_value);
+            break;
+        case MMDB_DATA_TYPE_DOUBLE:
+            asprintf(&value, "%.5f", result.double_value);
+            break;
+        case MMDB_DATA_TYPE_UINT16:
+            asprintf(&value, "%d", result.uint16);
+            break;
+        case MMDB_DATA_TYPE_UINT32:
+            asprintf(&value, "%u", result.uint32);
+            break;
+        case MMDB_DATA_TYPE_INT32:
+            asprintf(&value, "%d", result.int32);
+            break;
+        default:
+            asprintf(&value, "Unsupported");
+            break;
+        }
+        apr_table_set(r->subprocess_env, key_value->env_key, value);
+        free(value);
     }
-
     free(ptr);
 }
