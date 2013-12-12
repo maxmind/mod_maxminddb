@@ -251,54 +251,69 @@ static void set_env_for_ip(request_rec * r, const char *filename,
                            const char *ipaddr)
 {
     struct in6_addr v6;
-    MMDB_s mmdb = { };
+    ipaddr = "24.24.24.24";
     apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
+    MMDB_s mmdb = { };
+
+    INFO(r->server, "Before open");
+    apr_table_set(r->subprocess_env, "MMDB_INFO", "Before open");
+
     int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, &mmdb);
-    MMDB_result_entry_s root = {
-        .entry.mmdb = mmdb
-    };
+
+    INFO(r->server, "Open database result: %d", mmdb_error);
+    apr_table_set(r->subprocess_env, "MMDB_INFO", "After open");
 
     if (mmdb_error != MMDB_SUCCESS)
         return;
+    INFO(r->server, "Open database works");
+    apr_table_set(r->subprocess_env, "MMDB_INFO", "open success");
 
     if (ipaddr != NULL) {
-
         int gai_error;
         MMDB_lookup_result_s result =
             MMDB_lookup_string(&mmdb, ipaddr, &gai_error, &mmdb_error);
 
-        if (gai_error != MMDB_SUCCESS)
+        if (mmdb_error != MMDB_SUCCESS)
             return;
 
+        if (gai_error != MMDB_SUCCESS)
+            return;
+        apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup success");
+
+        INFO(r->server, "MMDB_lookup_string %s works", ipaddr);
+
         if (result.found_entry) {
-            MMDB_get_value(&result.entry, &result, K("location"));
+            apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
+
+            MMDB_entry_data_s entry_data;
+            MMDB_get_value(&result.entry, &entry_data, K("location"));
             MMDB_entry_s location = {.mmdb = result.entry.mmdb,.offset =
-                    result.offset
+                    entry_data.offset
             };
             set_double(r, &location, "MMDB_LATITUDE", K("latitude"));
             set_double(r, &location, "MMDB_LONGITUDE", K("longitude"));
             set_string(r, &location, "MMDB_METRO_CODE", K("metro_code"));
             set_string(r, &location, "MMDB_TIME_ZONE", K("time_zone"));
 
-            MMDB_get_value(&result.entry, &result, K("continent"));
-            location.offset = result.offset;
+            MMDB_get_value(&result.entry, &entry_data, K("continent"));
+            location.offset = entry_data.offset;
             set_string(r, &location, "MMDB_CONTINENT_CODE", K("code"));
             set_string(r, &location, "MMDB_CONTINENT_NAME", K("names", "en"));
 
-            MMDB_get_value(&result.entry, &result, K("country"));
-            location.offset = result.offset;
+            MMDB_get_value(&result.entry, &entry_data, K("country"));
+            location.offset = entry_data.offset;
             set_string(r, &location, "MMDB_COUNTRY_CODE", K("iso_code"));
             set_string(r, &location, "MMDB_COUNTRY_NAME", K("names", "en"));
 
-            MMDB_get_value(&result.entry, &result, K("registered_country"));
-            location.offset = result.offset;
+            MMDB_get_value(&result.entry, &entry_data, K("registered_country"));
+            location.offset = entry_data.offset;
             set_string(r, &location, "MMDB_REGISTERED_COUNTRY_CODE",
                        K("iso_code"));
             set_string(r, &location, "MMDB_REGISTERED_COUNTRY_NAME",
                        K("names", "en"));
 
-            MMDB_get_value(&result.entry, &result, K("subdivisions", "0"));
-            location.offset = result.offset;
+            MMDB_get_value(&result.entry, &entry_data, K("subdivisions", "0"));
+            location.offset = entry_data.offset;
             set_string(r, &location, "MMDB_REGION_CODE", K("iso_code"));
             set_string(r, &location, "MMDB_REGION_NAME", K("names", "en"));
 
@@ -496,8 +511,8 @@ static void set_env(request_rec * r, MMDB_s * mmdb, MMDB_lookup_result_s * root,
     }
     list[i] = NULL;
     MMDB_entry_data_s result;
-    MMDB_vget_value(&result.entry, &result, list);
-    if (result.entry.offset > 0) {
+    MMDB_aget_value(&root->entry, &result, list);
+    if (result.offset > 0) {
         setenv(key_value->env_key, "123", 1);
     }
 
