@@ -293,6 +293,7 @@ static void set_env_for_ip(request_rec * r, const char *filename,
 
         if (result.found_entry) {
             apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
+            set_user_env(r, &mmdb, &result);
 
             MMDB_entry_data_s entry_data;
             MMDB_get_value(&result.entry, &entry_data, K("location"));
