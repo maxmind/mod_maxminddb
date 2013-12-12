@@ -62,6 +62,13 @@ module AP_MODULE_DECLARE_DATA maxminddb_module;
 static void set_env_for_ip(request_rec * r, const char *filename,
                            const char *ipaddr);
 
+static void set_user_env(request_rec * r, MMDB_s * mmdb,
+                         MMDB_lookup_result_s * root);
+
+static void set_env(request_rec * r, MMDB_s * mmdb, MMDB_lookup_result_s * root,
+                    key_value_list_s * key_value);
+
+
 static maxminddb_config *get_maxminddb_config(request_rec * r);
 
 static void init_maxminddb_config(maxminddb_config * cfg)
@@ -509,6 +516,17 @@ static maxminddb_config *get_maxminddb_config(request_rec * r)
     return (scfg ? &scfg->mmcfg : NULL);
 }
 
+static void set_user_env(request_rec * r, MMDB_s * mmdb,
+                         MMDB_lookup_result_s * root)
+{
+    maxminddb_config *mmcfg = get_maxminddb_config(r);
+    if (mmcfg) {
+        for (key_value_list_s * current = mmcfg->next; current;
+             current = current->next) {
+            set_env(r, mmdb, root, current);
+        }
+    }
+}
 
 static void set_env(request_rec * r, MMDB_s * mmdb, MMDB_lookup_result_s * root,
                     key_value_list_s * key_value)
