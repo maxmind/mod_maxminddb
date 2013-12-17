@@ -540,11 +540,11 @@ static void set_env_for_ip_conf(request_rec * r, const maxminddb_config * mmcfg,
 }
 #endif
 
-static maxminddb_config *get_maxminddb_config(request_rec * r)
+static maxminddb_server_config *get_maxminddb_config(request_rec * r)
 {
     maxminddb_server_config_rec *scfg =
         ap_get_module_config(r->server->module_config, &maxminddb_module);
-    return (scfg ? &scfg->mmcfg : NULL);
+    return (scfg ? &scfg->mmsrvcfg : NULL);
 }
 
 static void set_user_env(request_rec * r, MMDB_s * mmdb,
