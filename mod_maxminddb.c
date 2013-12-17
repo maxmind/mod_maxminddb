@@ -52,6 +52,24 @@ typedef struct {
     maxminddb_config mmcfg;
 } maxminddb_dir_config_rec;
 
+typedef struct maxminddb_server_list {
+    struct maxminddb_server_list *nextdb;
+    const char *disk_name;
+    const char *nick_name;
+    MMDB_s *mmdb;
+    key_value_list_s *next;
+} maxminddb_server_list;
+
+typedef struct maxminddb_server_config {
+    maxminddb_server_list *nextdb;
+    int enabled;
+} maxminddb_server_config;
+
+typedef struct {
+    maxminddb_server_config mmsrvcfg;
+} maxminddb_server_config_rec;
+
+
 module AP_MODULE_DECLARE_DATA maxminddb_module;
 
 static void set_env_for_ip(request_rec * r, const char *filename,
