@@ -45,10 +45,7 @@ typedef struct key_value_list_s {
 } key_value_list_s;
 
 typedef struct {
-    const char *filename;
     int enabled;
-    int flags;
-    key_value_list_s *next;
 } maxminddb_config;
 
 typedef struct {
@@ -74,9 +71,6 @@ static maxminddb_config *get_maxminddb_config(request_rec * r);
 static void init_maxminddb_config(maxminddb_config * cfg)
 {
     cfg->enabled = 0;
-    cfg->flags = 0;
-    cfg->filename = NULL;
-    cfg->next = NULL;
 }
 
 /* create a disabled directory entry */
