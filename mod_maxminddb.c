@@ -74,16 +74,22 @@ module AP_MODULE_DECLARE_DATA maxminddb_module;
 static void add_database(cmd_parms * cmd, maxminddb_server_config * conf,
                          const char *nickname, const char *filename);
 
-static void set_env_for_ip(request_rec * r, const char *filename,
-                           const char *ipaddr);
+static void set_env_for_ip(request_rec * r, maxminddb_server_config * mmsrvcfg, const char *ipaddr);
 
-static void set_user_env(request_rec * r, MMDB_s * mmdb,
-                         MMDB_lookup_result_s * root);
+static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
+                         const char *ipaddr);
 
 static void set_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                     MMDB_lookup_result_s * root, key_value_list_s * key_value);
 
 static maxminddb_config *get_maxminddb_config(request_rec * r);
+
+static void init_maxminddb_server_config(maxminddb_server_config * srv)
+{
+    srv->nextdb = NULL;
+    srv->enabled = 1;
+}
+ 
 
 static void init_maxminddb_config(maxminddb_config * cfg)
 {
@@ -121,7 +127,7 @@ static void *create_server_config(apr_pool_t * p, server_rec * srec)
         return NULL;
     }
 
-    init_maxminddb_config(&conf->mmcfg);
+    init_maxminddb_server_config(&conf->mmsrvcfg);
     INFO(srec, "create_server_config");
 
     return (void *)conf;
@@ -204,7 +210,7 @@ char *_get_client_ip(request_rec * r)
 #endif
 }
 
-static int maxminddb_header_parser(request_rec * r, maxminddb_config * mmcfg)
+static int maxminddb_header_parser(request_rec * r, maxminddb_server_config * mmsrvcfg)
 {
     char *ipaddr;
     char *free_me = NULL;
@@ -284,7 +290,7 @@ static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
     if (!conf)
         return "mod_maxminddb: server structure not allocated";
 
-    conf->mmcfg.enabled = arg;
+    conf->mmsrvcfg.enabled = arg;
     INFO(cmd->server, "set_maxminddb_enable: (server) %d", arg);
 
     return NULL;
@@ -298,7 +304,7 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
 
     if (cmd->path) {
         maxminddb_dir_config_rec *dcfg = dummy;
-        dcfg->mmcfg.filename = filename;
+        dcfg->mmsrvcfg.filename = filename;
 
         INFO(cmd->server, "set_maxminddb_filename (dir) %s", filename);
 
