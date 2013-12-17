@@ -213,10 +213,10 @@ static int maxminddb_header_parser(request_rec * r, maxminddb_config * mmcfg)
     ipaddr = _get_client_ip(r);
     INFO(r->server, "maxminddb_header_parser %s", ipaddr);
 
-    if (!mmcfg || !mmcfg->filename || !mmcfg->enabled)
+    if (!mmsrvcfg || !mmsrvcfg->enabled)
         return DECLINED;
 
-    set_env_for_ip(r, mmcfg->filename, ipaddr);
+    set_env_for_ip(r, mmsrvcfg, ipaddr);
     return OK;
 }
 
@@ -259,83 +259,11 @@ void set_double(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
 
 #define K(...) __VA_ARGS__, NULL
 
-static void set_env_for_ip(request_rec * r, const char *filename,
+static void set_env_for_ip(request_rec * r, maxminddb_server_config * mmsrvcfg,
                            const char *ipaddr)
 {
-    struct in6_addr v6;
-    ipaddr = "24.24.24.24";
     apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
-    MMDB_s mmdb = { };
-
-    INFO(r->server, "Before open");
-    apr_table_set(r->subprocess_env, "MMDB_INFO", "Before open");
-
-    int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, &mmdb);
-
-    INFO(r->server, "Open database result: %d", mmdb_error);
-    apr_table_set(r->subprocess_env, "MMDB_INFO", "After open");
-
-    if (mmdb_error != MMDB_SUCCESS)
-        return;
-    INFO(r->server, "Open database works");
-    apr_table_set(r->subprocess_env, "MMDB_INFO", "open success");
-
-    if (ipaddr != NULL) {
-        int gai_error;
-        MMDB_lookup_result_s result =
-            MMDB_lookup_string(&mmdb, ipaddr, &gai_error, &mmdb_error);
-
-        if (mmdb_error != MMDB_SUCCESS)
-            return;
-
-        if (gai_error != MMDB_SUCCESS)
-            return;
-        apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup success");
-
-        INFO(r->server, "MMDB_lookup_string %s works", ipaddr);
-
-        if (result.found_entry) {
-            apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
-            set_user_env(r, &mmdb, &result);
-
-            MMDB_entry_data_s entry_data;
-            MMDB_get_value(&result.entry, &entry_data, K("location"));
-            MMDB_entry_s location = {.mmdb = result.entry.mmdb,.offset =
-                    entry_data.offset
-            };
-            set_double(r, &location, "MMDB_LATITUDE", K("latitude"));
-            set_double(r, &location, "MMDB_LONGITUDE", K("longitude"));
-            set_string(r, &location, "MMDB_METRO_CODE", K("metro_code"));
-            set_string(r, &location, "MMDB_TIME_ZONE", K("time_zone"));
-
-            MMDB_get_value(&result.entry, &entry_data, K("continent"));
-            location.offset = entry_data.offset;
-            set_string(r, &location, "MMDB_CONTINENT_CODE", K("code"));
-            set_string(r, &location, "MMDB_CONTINENT_NAME", K("names", "en"));
-
-            MMDB_get_value(&result.entry, &entry_data, K("country"));
-            location.offset = entry_data.offset;
-            set_string(r, &location, "MMDB_COUNTRY_CODE", K("iso_code"));
-            set_string(r, &location, "MMDB_COUNTRY_NAME", K("names", "en"));
-
-            MMDB_get_value(&result.entry, &entry_data, K("registered_country"));
-            location.offset = entry_data.offset;
-            set_string(r, &location, "MMDB_REGISTERED_COUNTRY_CODE",
-                       K("iso_code"));
-            set_string(r, &location, "MMDB_REGISTERED_COUNTRY_NAME",
-                       K("names", "en"));
-
-            MMDB_get_value(&result.entry, &entry_data, K("subdivisions", "0"));
-            location.offset = entry_data.offset;
-            set_string(r, &location, "MMDB_REGION_CODE", K("iso_code"));
-            set_string(r, &location, "MMDB_REGION_NAME", K("names", "en"));
-
-            set_string(r, &result.entry, "MMDB_CITY", K("city", "names", "en"));
-            set_string(r, &result.entry, "MMDB_POSTAL_CODE",
-                       K("postal", "code"));
-        }
-    }
-    MMDB_close(&mmdb);
+    set_user_env(r, mmsrvcfg, ipaddr);
 }
 
 static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
