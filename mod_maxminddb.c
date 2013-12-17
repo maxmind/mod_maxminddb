@@ -42,6 +42,7 @@ typedef struct key_value_list_s {
     const char *path;
     const char *env_key;
     struct key_value_list_s *next;
+    const char **names;
 } key_value_list_s;
 
 typedef struct {
