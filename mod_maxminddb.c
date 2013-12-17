@@ -58,16 +58,16 @@ typedef struct {
     maxminddb_config mmcfg;
 } maxminddb_dir_config_rec;
 
-typedef struct maxminddb_server_list {
-    struct maxminddb_server_list *nextdb;
+typedef struct maxminddb_database_list {
+    struct maxminddb_database_list *nextdb;
     const char *disk_name;
     const char *nick_name;
     MMDB_s *mmdb;
     key_value_list_s *next;
-} maxminddb_server_list;
+} maxminddb_database_list;
 
 typedef struct maxminddb_server_config {
-    maxminddb_server_list *nextdb;
+    maxminddb_database_list *nextdb;
     int enabled;
 } maxminddb_server_config;
 
@@ -332,7 +332,7 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
 static void add_database(cmd_parms * cmd, maxminddb_server_config * conf,
                          const char *nickname, const char *filename)
 {
-    for (maxminddb_server_list * cur = conf->nextdb; cur; cur = cur->nextdb) {
+    for (maxminddb_database_list * cur = conf->nextdb; cur; cur = cur->nextdb) {
         if (!strcmp(cur->nick_name, nickname)) {
             // we know the nickname already
             INFO(cmd->server, "We know already db (%s) skipping %s", nickname,
@@ -341,8 +341,8 @@ static void add_database(cmd_parms * cmd, maxminddb_server_config * conf,
         }
     }
     // insert
-    maxminddb_server_list *sl =
-        apr_palloc(cmd->pool, sizeof(maxminddb_server_list));
+    maxminddb_database_list *sl =
+        apr_palloc(cmd->pool, sizeof(maxminddb_database_list));
     sl->nextdb = NULL;
     sl->next = NULL;
     sl->mmdb = apr_palloc(cmd->pool, sizeof(MMDB_s));
@@ -379,7 +379,7 @@ static void insert_kvlist(struct server_rec * srv,
         return;
     }
 
-    for (maxminddb_server_list * sl = mmsrvcfg->nextdb; sl; sl = sl->nextdb) {
+    for (maxminddb_database_list * sl = mmsrvcfg->nextdb; sl; sl = sl->nextdb) {
         if (!strcmp(names[0], sl->nick_name)) {
             // found
             list->next = sl->next;
@@ -493,7 +493,7 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
         return;
     }
 
-    for (maxminddb_server_list * sl = mmsrvcfg->nextdb; sl; sl = sl->nextdb) {
+    for (maxminddb_database_list * sl = mmsrvcfg->nextdb; sl; sl = sl->nextdb) {
 
         INFO(r->server, "sl %08lx n:%08lx", sl, sl->next);
 
