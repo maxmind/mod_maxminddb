@@ -542,12 +542,6 @@ static void set_env_for_ip_conf(request_rec * r, const maxminddb_config * mmcfg,
 
 static maxminddb_config *get_maxminddb_config(request_rec * r)
 {
-#if 0
-    maxminddb_dir_config_rec *dcfg =
-        ap_get_module_config(r->per_dir_config, &maxminddb_module);
-    if (dcfg)
-        return &dcfg->mmcfg;
-#endif
     maxminddb_server_config_rec *scfg =
         ap_get_module_config(r->server->module_config, &maxminddb_module);
     return (scfg ? &scfg->mmcfg : NULL);
