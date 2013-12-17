@@ -80,8 +80,8 @@ static void set_env_for_ip(request_rec * r, const char *filename,
 static void set_user_env(request_rec * r, MMDB_s * mmdb,
                          MMDB_lookup_result_s * root);
 
-static void set_env(request_rec * r, MMDB_s * mmdb, MMDB_lookup_result_s * root,
-                    key_value_list_s * key_value);
+static void set_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
+                    MMDB_lookup_result_s * root, key_value_list_s * key_value);
 
 static maxminddb_config *get_maxminddb_config(request_rec * r);
 
@@ -589,10 +589,9 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
     }
 }
 
-static void set_env(request_rec * r, MMDB_s * mmdb, MMDB_lookup_result_s * root,
-                    key_value_list_s * key_value)
+static void set_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
+                    MMDB_lookup_result_s * root, key_value_list_s * key_value)
 {
-
     const int max_list = 80;
     char *list[max_list + 1];
     int i;
