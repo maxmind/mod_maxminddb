@@ -470,7 +470,6 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
             continue;
 
         int gai_error, mmdb_error;
-        assert(sl->mmdb != NULL);
         MMDB_lookup_result_s lookup_result =
             MMDB_lookup_string(sl->mmdb, ipaddr, &gai_error, &mmdb_error);
 
