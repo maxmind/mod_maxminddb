@@ -348,14 +348,15 @@ static void add_database(cmd_parms * cmd, maxminddb_server_config * conf,
     INFO(cmd->server, "Insert db (%s)%s", nickname, filename);
 }
 
-static void insert_kvlist(maxminddb_server_config * mmsrvcfg,
+static void insert_kvlist(struct server_rec * srv, maxminddb_server_config * mmsrvcfg,
                           key_value_list_s * list)
 {
     const int max_names = 80;
     const char *names[max_names + 1];
     int i;
     char *ptr, *cur, *tok;
-    cur = ptr = strdup(list->path);
+    apr_pool_t * pool = srv->process->pconf;
+    cur = ptr = apr_pstrdup(pool, list->path);
     for (i = 0; i < max_names; i++)
         if ((names[i] = strsep(&cur, "/")) == NULL)
             break;
@@ -370,7 +371,7 @@ static void insert_kvlist(maxminddb_server_config * mmsrvcfg,
             list->next = sl->next;
             sl->next = list;
             const char **to = list->names =
-                (const char **)malloc((1 + i) * sizeof(char *));
+                (const char **)apr_palloc(pool, (1 + i) * sizeof(char *));
             const char **from = &names[0];
             while ((*to++ = *from++)) ;
             break;
@@ -394,7 +395,7 @@ static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
 
     INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, dbpath);
 
-    insert_kvlist(&conf->mmsrvcfg, list);
+    insert_kvlist(cmd->server, &conf->mmsrvcfg, list);
 
     return NULL;
 }
