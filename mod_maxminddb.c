@@ -453,7 +453,7 @@ static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
 
     INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, dbpath);
 
-    insert_kvlist(&conf->mmcfg, list);
+    insert_kvlist(&conf->mmsrvcfg, list);
 
     return NULL;
 }
