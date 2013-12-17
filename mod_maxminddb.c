@@ -82,7 +82,7 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
 static void set_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                     MMDB_lookup_result_s * root, key_value_list_s * key_value);
 
-static maxminddb_config *get_maxminddb_config(request_rec * r);
+static maxminddb_server_config *get_maxminddb_config(request_rec * r);
 
 static void init_maxminddb_server_config(maxminddb_server_config * srv)
 {
