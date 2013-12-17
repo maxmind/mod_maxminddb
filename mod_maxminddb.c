@@ -448,15 +448,6 @@ static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
     list->next = NULL;
     list->names = NULL;
 
-    if (cmd->path) {
-        maxminddb_dir_config_rec *dcfg = dummy;
-
-        INFO(cmd->server, "set_maxminddb_env (dir) %s %s", env, dbpath);
-        insert_kvlist(&dcfg->mmcfg, list);
-
-        return NULL;
-    }
-
     maxminddb_server_config_rec *conf = (maxminddb_server_config_rec *)
         ap_get_module_config(cmd->server->module_config, &maxminddb_module);
 
