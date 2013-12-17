@@ -70,8 +70,9 @@ typedef struct {
     maxminddb_server_config mmsrvcfg;
 } maxminddb_server_config_rec;
 
-
 module AP_MODULE_DECLARE_DATA maxminddb_module;
+static void add_database(cmd_parms * cmd, maxminddb_server_config * conf,
+                         const char *nickname, const char *filename);
 
 static void set_env_for_ip(request_rec * r, const char *filename,
                            const char *ipaddr);
@@ -391,13 +392,45 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
     if (!filename)
         return NULL;
 
-    conf->mmcfg.filename = (char *)apr_pstrdup(cmd->pool, filename);
+    INFO(cmd->server, "add-database (server) %s", filename);
+    add_database(cmd, &conf->mmsrvcfg, nickname, filename);
+
     INFO(cmd->server, "set_maxminddb_filename (server) %s", filename);
 
     return NULL;
 }
 
-static void insert_kvlist(maxminddb_config * mmcfg, key_value_list_s * list)
+static void add_database(cmd_parms * cmd, maxminddb_server_config * conf,
+                         const char *nickname, const char *filename)
+{
+    for (maxminddb_server_list * cur = conf->nextdb; cur; cur = cur->nextdb) {
+        if (!strcmp(cur->nick_name, nickname)) {
+            // we know the nickname already
+            INFO(cmd->server, "We know already db (%s) skipping %s", nickname,
+                 filename);
+            return;
+        }
+    }
+    // insert
+    maxminddb_server_list *sl =
+        apr_palloc(cmd->pool, sizeof(maxminddb_server_list));
+    sl->nextdb = NULL;
+    sl->next = NULL;
+    sl->mmdb = apr_palloc(cmd->pool, sizeof(MMDB_s));
+    int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, sl->mmdb);
+    if (mmdb_error != MMDB_SUCCESS) {
+        INFO(cmd->server, "Open database failed: %s %d", filename, mmdb_error);
+        return;
+    }
+    sl->disk_name = (char *)apr_pstrdup(cmd->pool, filename);
+    sl->nick_name = (char *)apr_pstrdup(cmd->pool, nickname);
+    sl->nextdb = conf->nextdb;
+    conf->nextdb = sl;
+    INFO(cmd->server, "Insert db (%s)%s", nickname, filename);
+}
+
+static void insert_kvlist(maxminddb_server_config * mmsrvcfg,
+                          key_value_list_s * list)
 {
 
     list->next = mmcfg->next;
