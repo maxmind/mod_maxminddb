@@ -347,9 +347,8 @@ static void add_database(cmd_parms * cmd, maxminddb_server_config * conf,
 static void insert_kvlist(maxminddb_server_config * mmsrvcfg,
                           key_value_list_s * list)
 {
-
-    list->next = mmcfg->next;
-    mmcfg->next = list;
+    list->next = mmsrvcfg->next;
+    mmsrvcfg->next = list;
 }
 
 static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
