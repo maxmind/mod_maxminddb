@@ -50,9 +50,7 @@ typedef struct {
 
 typedef struct {
     maxminddb_config mmcfg;
-} maxminddb_server_config_rec;
-
-typedef maxminddb_server_config_rec maxminddb_dir_config_rec;
+} maxminddb_dir_config_rec;
 
 module AP_MODULE_DECLARE_DATA maxminddb_module;
 
