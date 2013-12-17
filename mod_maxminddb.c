@@ -347,8 +347,31 @@ static void add_database(cmd_parms * cmd, maxminddb_server_config * conf,
 static void insert_kvlist(maxminddb_server_config * mmsrvcfg,
                           key_value_list_s * list)
 {
-    list->next = mmsrvcfg->next;
-    mmsrvcfg->next = list;
+    const int max_names = 80;
+    char *names[max_names + 1];
+    int i;
+    char *ptr, *cur, *tok;
+    cur = ptr = strdup(list->path);
+    for (i = 0; i < max_names; i++)
+        if ((names[i] = strsep(&cur, "/")) == NULL)
+            break;
+    names[i] = NULL;
+
+    if (!i)
+        return;
+
+    for (maxminddb_server_list * sl = mmsrvcfg->nextdb; sl; sl = sl->nextdb) {
+        if (!strcmp(names[0], sl->nick_name)) {
+            // found
+            list->next = sl->next;
+            sl->next = list;
+            const char **to = list->names =
+                (const char **)malloc((1 + i) * sizeof(char *));
+            const char **from = &names[0];
+            while ((*to++ = *from++)) ;
+            break;
+        }
+    }
 }
 
 static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
