@@ -297,8 +297,8 @@ static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
 }
 
 static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
-                                          const char *filename,
-                                          const char *arg2)
+                                          const char *nickname,
+                                          const char *filename)
 {
     int i;
 
