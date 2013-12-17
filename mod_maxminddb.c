@@ -506,40 +506,6 @@ AP_DECLARE_MODULE(maxminddb) = {
         maxminddb_register_hooks        /* register hooks                      */
 };
 
-#if 0
-static void set_env_for_ip_conf(request_rec * r, const maxminddb_config * mmcfg,
-                                const char *ipaddr)
-{
-
-    struct in6_addr v6;
-    apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
-    MMDB_s *mmdb = MMDB_open(filename, MMDB_MODE_STANDARD);
-    MMDB_result_entry_s root = {
-        .entry.mmdb = mmdb
-    };
-
-    if (!mmdb)
-        return;
-
-    int ai_family = AF_INET6;
-    int ai_flags = AI_V4MAPPED;
-
-    if ((ipaddr != NULL)
-        && (0 == MMDB_lookupaddressX(ipaddr, ai_family, ai_flags, &v6))) {
-
-        int status = MMDB_lookup_by_ipnum_128(v6, &root);
-        if (status == MMDB_SUCCESS && result.entry.offset > 0) {
-
-            for (key_value_list_s * key_value = mmcfg->next; key_value;
-                 key_value = key_value->next) {
-                set_env(r, mmdb, &root, key_value);
-            }
-
-        }
-    }
-}
-#endif
-
 static maxminddb_server_config *get_maxminddb_config(request_rec * r)
 {
     maxminddb_server_config_rec *scfg =
