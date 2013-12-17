@@ -300,16 +300,6 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
                                           const char *nickname,
                                           const char *filename)
 {
-    int i;
-
-    if (cmd->path) {
-        maxminddb_dir_config_rec *dcfg = dummy;
-        dcfg->mmsrvcfg.filename = filename;
-
-        INFO(cmd->server, "set_maxminddb_filename (dir) %s", filename);
-
-        return NULL;
-    }
 
     maxminddb_server_config_rec *conf = (maxminddb_server_config_rec *)
         ap_get_module_config(cmd->server->module_config, &maxminddb_module);
