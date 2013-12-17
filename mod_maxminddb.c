@@ -70,7 +70,7 @@ static maxminddb_config *get_maxminddb_config(request_rec * r);
 
 static void init_maxminddb_config(maxminddb_config * cfg)
 {
-    cfg->enabled = 0;
+    cfg->enabled = 1;
 }
 
 /* create a disabled directory entry */
