@@ -83,7 +83,6 @@ static void set_user_env(request_rec * r, MMDB_s * mmdb,
 static void set_env(request_rec * r, MMDB_s * mmdb, MMDB_lookup_result_s * root,
                     key_value_list_s * key_value);
 
-
 static maxminddb_config *get_maxminddb_config(request_rec * r);
 
 static void init_maxminddb_config(maxminddb_config * cfg)
@@ -513,14 +512,79 @@ static maxminddb_server_config *get_maxminddb_config(request_rec * r)
     return (scfg ? &scfg->mmsrvcfg : NULL);
 }
 
-static void set_user_env(request_rec * r, MMDB_s * mmdb,
-                         MMDB_lookup_result_s * root)
+static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
+                         const char *ipaddr)
 {
-    maxminddb_config *mmcfg = get_maxminddb_config(r);
-    if (mmcfg) {
-        for (key_value_list_s * current = mmcfg->next; current;
-             current = current->next) {
-            set_env(r, mmdb, root, current);
+    struct in6_addr v6;
+
+    if (ipaddr == NULL)
+        return;
+
+    for (maxminddb_server_list * sl = mmsrvcfg->nextdb; sl; sl = sl->nextdb) {
+
+        INFO(r->server, "sl %08lx n:%08lx", sl, sl->next);
+
+        if (sl->next == NULL)
+            continue;
+
+        int gai_error, mmdb_error;
+        assert(sl->mmdb != NULL);
+        MMDB_lookup_result_s lookup_result =
+            MMDB_lookup_string(sl->mmdb, ipaddr, &gai_error, &mmdb_error);
+
+        if (mmdb_error != MMDB_SUCCESS)
+            continue;
+
+        if (gai_error != MMDB_SUCCESS)
+            continue;
+
+        apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup success");
+
+        INFO(r->server, "MMDB_lookup_string %s works", ipaddr);
+
+        if (lookup_result.found_entry) {
+
+            for (key_value_list_s * kv = sl->next; kv; kv = kv->next) {
+                apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
+
+                MMDB_entry_data_s result;
+                MMDB_aget_value(&lookup_result.entry, &result, &kv->names[1]);
+                if (result.offset > 0) {
+                    char *value;
+                    switch (result.type) {
+                    case MMDB_DATA_TYPE_UTF8_STRING:
+                        value = malloc(result.data_size + 1);
+                        memcpy(value, result.utf8_string, result.data_size);
+                        value[result.data_size] = '\0';
+                        break;
+                    case MMDB_DATA_TYPE_BYTES:
+                        value = malloc(result.data_size + 1);
+                        memcpy(value, result.bytes, result.data_size);
+                        value[result.data_size] = '\0';
+                        break;
+                    case MMDB_DATA_TYPE_FLOAT:
+                        asprintf(&value, "%.5f", result.float_value);
+                        break;
+                    case MMDB_DATA_TYPE_DOUBLE:
+                        asprintf(&value, "%.5f", result.double_value);
+                        break;
+                    case MMDB_DATA_TYPE_UINT16:
+                        asprintf(&value, "%d", result.uint16);
+                        break;
+                    case MMDB_DATA_TYPE_UINT32:
+                        asprintf(&value, "%u", result.uint32);
+                        break;
+                    case MMDB_DATA_TYPE_INT32:
+                        asprintf(&value, "%d", result.int32);
+                        break;
+                    default:
+                        asprintf(&value, "Unsupported");
+                        break;
+                    }
+                    apr_table_set(r->subprocess_env, kv->env_key, value);
+                    free(value);
+                }
+            }
         }
     }
 }
