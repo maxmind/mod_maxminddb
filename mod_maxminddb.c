@@ -446,6 +446,7 @@ static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
     list->path = dbpath;
     list->env_key = env;
     list->next = NULL;
+    list->names = NULL;
 
     if (cmd->path) {
         maxminddb_dir_config_rec *dcfg = dummy;
