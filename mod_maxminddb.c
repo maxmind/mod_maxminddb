@@ -352,7 +352,7 @@ static void insert_kvlist(maxminddb_server_config * mmsrvcfg,
                           key_value_list_s * list)
 {
     const int max_names = 80;
-    char *names[max_names + 1];
+    const char *names[max_names + 1];
     int i;
     char *ptr, *cur, *tok;
     cur = ptr = strdup(list->path);
