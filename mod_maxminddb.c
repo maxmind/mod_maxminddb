@@ -167,8 +167,8 @@ static int post_config(apr_pool_t * p, apr_pool_t * plog,
     return OK;
 }
 
-static int maxminddb_header_parser(request_rec * r, maxminddb_config * mmcfg);
-
+static int maxminddb_header_parser(request_rec * r,
+                                   maxminddb_server_config * mmcfg);
 static int maxminddb_post_read_request(request_rec * r)
 {
     maxminddb_server_config_rec *cfg;
@@ -178,29 +178,21 @@ static int maxminddb_post_read_request(request_rec * r)
     if (!cfg)
         return DECLINED;
 
-    if (!cfg->mmcfg.enabled)
+    if (!cfg->mmsrvcfg.enabled)
         return DECLINED;
 
-    return maxminddb_header_parser(r, &cfg->mmcfg);
+    return maxminddb_header_parser(r, &cfg->mmsrvcfg);
 }
 
 static int maxminddb_per_dir(request_rec * r)
 {
-
-    maxminddb_dir_config_rec *dcfg;
-    INFO(r->server, "maxminddb_per_dir");
-
-    dcfg = ap_get_module_config(r->per_dir_config, &maxminddb_module);
-    if (!dcfg)
-        return DECLINED;
-
-    INFO(r->server, "maxminddb_per_dir config exists");
-
-    if (!dcfg->mmcfg.enabled)
-        return DECLINED;
-
     INFO(r->server, "maxminddb_per_dir ( enabled )");
-    return maxminddb_header_parser(r, &dcfg->mmcfg);
+    maxminddb_server_config_rec *scfg =
+        ap_get_module_config(r->server->module_config, &maxminddb_module);
+    if (!scfg)
+        return DECLINED;
+
+    return maxminddb_header_parser(r, &scfg->mmsrvcfg);
 }
 
 char *_get_client_ip(request_rec * r)
