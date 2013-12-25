@@ -1,0 +1,9 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use JSON::XS;
+
+print "Content-type: application/json; charset=UTF-8\n\n";
+print encode_json(\%ENV);
+
