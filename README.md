@@ -37,6 +37,30 @@ not always what you want.
 useful to do this work.
 
 
+## `MaxMindDBEnable`
+Enable and disable the lookup. Can be On or Off.
+
+## `MaxMindDBFile`
+Assigns the database file to do the lookup. You can use several databases with
+different names.
+
+    MaxMindDBFile NAME database_file.mmdb
+
+## `MaxMindDBEnv`
+Assigns the lookup result to the environment variable.
+
+    MaxMindDBEnv MM_COUNTRY_CODE DB/country/iso_code
+
+The environment variable `MM_COUNTRY_CODE` contains the lookup result for
+database `DB`'s field `country/iso_code`
+
+Special environment vars
+========================
+
+The environment var `MMDB_ADDR` contains the IP address whenever `mod_maxminddb`
+is used to lookup something. It is very useful for debugging purpose of your
+setup.
+
 Examples
 ========
 
