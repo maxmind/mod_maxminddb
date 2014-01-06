@@ -37,3 +37,21 @@ not always what you want.
 useful to do this work.
 
 
+Examples
+========
+
+This example use one database file and assigns the results to the environment
+vars.
+
+    <IfModule mod_maxminddb.c>
+	MaxMindDBEnable On
+	MaxMindDBFile DB /usr/local/share/GeoIP/GeoLite2-City.mmdb
+
+	MaxMindDBEnv MM_COUNTRY_CODE DB/country/iso_code
+	MaxMindDBEnv MM_COUNTRY_NAME DB/country/names/en
+	MaxMindDBEnv MM_CITY_NAME DB/city/names/en
+	MaxMindDBEnv MM_LONGITUDE DB/location/longitude
+	MaxMindDBEnv MM_LATITUDE DB/location/latitude
+    </IfModule>
+
+
