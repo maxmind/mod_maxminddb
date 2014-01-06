@@ -78,4 +78,12 @@ vars.
 	MaxMindDBEnv MM_LATITUDE DB/location/latitude
     </IfModule>
 
+Another example to block users based on their country.
+
+	MaxMindDBEnable On
+	MaxMindDBFile DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
+	MaxMindDBEnv MM_COUNTRY_CODE DB/country/iso_code
+        ...
+        SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
+        Deny from env=BlockCountry
 
