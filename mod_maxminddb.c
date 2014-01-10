@@ -43,6 +43,13 @@
 #define INFO(server_rec, ...)
 #endif
 
+#ifdef UNUSED
+#elif defined(__GNUC__)
+#define  UNUSED(x) UNUSED_ ## x __attribute__((unused))
+#else
+#define UNUSED
+#endif
+
 typedef struct key_value_list_s {
     const char *path;
     const char *env_key;
@@ -115,14 +122,15 @@ static void *create_dir_config(apr_pool_t * p, char *d)
     return dcfg;
 }
 
-static void *merge_dir_config(apr_pool_t * p, void *parent, void *cur)
+static void *merge_dir_config(apr_pool_t * UNUSED(p), void * UNUSED(
+                                  parent), void *cur)
 {
     return cur;
 }
 
 /* create a standard disabled server entry */
 
-static void *create_server_config(apr_pool_t * p, server_rec * srec)
+static void *create_server_config(apr_pool_t * p, server_rec * UNUSED(srec))
 {
     maxminddb_server_config_rec *conf =
         apr_pcalloc(p, sizeof(maxminddb_server_config_rec));
@@ -138,8 +146,8 @@ static void *create_server_config(apr_pool_t * p, server_rec * srec)
 
 static apr_status_t cleanup(void *cfgdata)
 {
-    int i;
     maxminddb_server_config_rec *cfg = (maxminddb_server_config_rec *)cfgdata;
+    (void)cfg;
     return APR_SUCCESS;
 }
 
@@ -156,8 +164,8 @@ static void server_init(apr_pool_t * p, server_rec * s)
 }
 
 /* map into the first apache */
-static int post_config(apr_pool_t * p, apr_pool_t * plog,
-                       apr_pool_t * ptemp, server_rec * s)
+static int post_config(apr_pool_t * p, apr_pool_t * UNUSED(plog),
+                       apr_pool_t * UNUSED(ptemp), server_rec * s)
 {
     INFO(s, "post_config");
     server_init(p, s);
@@ -208,8 +216,6 @@ static int maxminddb_header_parser(request_rec * r,
                                    maxminddb_server_config * mmsrvcfg)
 {
     char *ipaddr;
-    char *free_me = NULL;
-    char *ipaddr_ptr = NULL;
 
     ipaddr = _get_client_ip(r);
     INFO(r->server, "maxminddb_header_parser %s", ipaddr);
@@ -257,7 +263,7 @@ static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
     return NULL;
 }
 
-static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
+static const char *set_maxminddb_filename(cmd_parms * cmd, void *UNUSED(dummy),
                                           const char *nickname,
                                           const char *filename)
 {
@@ -314,7 +320,7 @@ static void insert_kvlist(struct server_rec * srv,
     const int max_names = 80;
     const char *names[max_names + 1];
     int i;
-    char *ptr, *cur, *tok;
+    char *ptr, *cur;
     apr_pool_t * pool = srv->process->pconf;
     cur = ptr = apr_pstrdup(pool, list->path);
     for (i = 0; i < max_names; i++) {
@@ -347,11 +353,9 @@ static void insert_kvlist(struct server_rec * srv,
     }
 }
 
-static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
+static const char *set_maxminddb_env(cmd_parms * cmd, void *UNUSED(dummy),
                                      const char *env, const char *dbpath)
 {
-    int i;
-
     key_value_list_s *list = apr_palloc(cmd->pool, sizeof(key_value_list_s));
     list->path = dbpath;
     list->env_key = env;
@@ -388,7 +392,7 @@ static const command_rec maxminddb_cmds[] = {
     { NULL }
 };
 
-static void maxminddb_register_hooks(apr_pool_t * p)
+static void maxminddb_register_hooks(apr_pool_t * UNUSED(p))
 {
     /* make sure we run before mod_rewrite's handler */
     static const char *const aszSucc[] =
@@ -433,8 +437,6 @@ static maxminddb_server_config *get_maxminddb_config(request_rec * r)
 static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                          const char *ipaddr)
 {
-    struct in6_addr v6;
-
     if (ipaddr == NULL) {
         return;
     }
@@ -469,7 +471,8 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                 apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
 
                 MMDB_entry_data_s result;
-                MMDB_aget_value(&lookup_result.entry, &result, &kv->names[1]);
+                MMDB_aget_value(&lookup_result.entry, &result,
+                                (char **)&kv->names[1]);
                 if (result.offset > 0) {
                     char *value;
                     int len;
