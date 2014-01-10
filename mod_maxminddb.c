@@ -108,7 +108,7 @@ static void init_maxminddb_config(maxminddb_config * cfg)
 
 /* create a disabled directory entry */
 
-static void *create_dir_config(apr_pool_t * p, char *d)
+static void *create_dir_config(apr_pool_t * p, char *UNUSED(d))
 {
 
     maxminddb_dir_config_rec *dcfg;
