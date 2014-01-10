@@ -155,18 +155,6 @@ static void server_init(apr_pool_t * p, server_rec * s)
 
 }
 
-static void child_init(apr_pool_t * p, server_rec * s)
-{
-    maxminddb_server_config_rec *cfg;
-    int i, flags;
-
-    INFO(s, "child_init");
-
-    cfg = (maxminddb_server_config_rec *)
-          ap_get_module_config(s->module_config, &maxminddb_module);
-
-}
-
 /* map into the first apache */
 static int post_config(apr_pool_t * p, apr_pool_t * plog,
                        apr_pool_t * ptemp, server_rec * s)
@@ -417,9 +405,6 @@ static void maxminddb_register_hooks(apr_pool_t * p)
      */
     ap_hook_post_read_request(maxminddb_post_read_request, NULL, aszSucc,
                               APR_HOOK_MIDDLE);
-
-    /* setup our childs maxminddb database once for every child */
-    ap_hook_child_init(child_init, NULL, NULL, APR_HOOK_MIDDLE);
 
     /* static const char * const list[]={ "mod_maxminddb.c", NULL }; */
     /* mmap the database(s) into the master process */
