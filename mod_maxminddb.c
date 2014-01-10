@@ -389,7 +389,7 @@ static const command_rec maxminddb_cmds[] = {
                      NULL,
                      OR_ALL,
                      "Set desired env var"),
-    { NULL }
+    { NULL,                                     NULL, NULL, NULL, NULL }
 };
 
 static void maxminddb_register_hooks(apr_pool_t * UNUSED(p))
