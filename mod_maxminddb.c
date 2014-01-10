@@ -92,8 +92,6 @@ static void set_env_for_ip(request_rec * r, maxminddb_server_config * mmsrvcfg,
 static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                          const char *ipaddr);
 
-static maxminddb_server_config *get_maxminddb_config(request_rec * r);
-
 static void init_maxminddb_server_config(maxminddb_server_config * srv)
 {
     srv->nextdb = NULL;
