@@ -264,8 +264,8 @@ void set_double(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
     MMDB_vget_value(entry, &result, keys);
     if (result.offset) {
         char *value;
-        asprintf(&value, "%.5f", result.double_value);
-        if (value) {
+        int len = asprintf(&value, "%.5f", result.double_value);
+        if (len >= 0) {
             apr_table_set(r->subprocess_env, env, value);
             free(value);
         }
