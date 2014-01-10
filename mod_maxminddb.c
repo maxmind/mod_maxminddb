@@ -234,45 +234,6 @@ static int maxminddb_header_parser(request_rec * r,
     return OK;
 }
 
-void set_string(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
-{
-    va_list keys;
-    MMDB_entry_data_s result;
-    if (!entry->offset) {
-        return;
-    }
-    va_start(keys, env);
-    MMDB_s *mmdb = entry->mmdb;
-    MMDB_vget_value(entry, &result, keys);
-    if (result.offset) {
-        char *value = alloca(result.data_size + 1);
-        memcpy(value, (void *)result.bytes, result.data_size);
-        value[result.data_size] = 0;
-        apr_table_set(r->subprocess_env, env, value);
-    }
-    va_end(keys);
-}
-
-void set_double(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
-{
-    va_list keys;
-    MMDB_entry_data_s result;
-    if (!entry->offset) {
-        return;
-    }
-    va_start(keys, env);
-    MMDB_vget_value(entry, &result, keys);
-    if (result.offset) {
-        char *value;
-        int len = asprintf(&value, "%.5f", result.double_value);
-        if (len >= 0) {
-            apr_table_set(r->subprocess_env, env, value);
-            free(value);
-        }
-    }
-    va_end(keys);
-}
-
 #define K(...) __VA_ARGS__, NULL
 
 static void set_env_for_ip(request_rec * r, maxminddb_server_config * mmsrvcfg,
