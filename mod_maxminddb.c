@@ -246,7 +246,7 @@ void set_string(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
     MMDB_vget_value(entry, &result, keys);
     if (result.offset) {
         char *value = alloca(result.data_size + 1);
-        memcpy(value, (void *)result.pointer, result.data_size);
+        memcpy(value, (void *)result.bytes, result.data_size);
         value[result.data_size] = 0;
         apr_table_set(r->subprocess_env, env, value);
     }
