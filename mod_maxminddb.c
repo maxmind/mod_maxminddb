@@ -427,13 +427,6 @@ AP_DECLARE_MODULE(maxminddb) = {
     maxminddb_register_hooks    /* register hooks                      */
 };
 
-static maxminddb_server_config *get_maxminddb_config(request_rec * r)
-{
-    maxminddb_server_config_rec *scfg =
-        ap_get_module_config(r->server->module_config, &maxminddb_module);
-    return scfg ? &scfg->mmsrvcfg : NULL;
-}
-
 static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                          const char *ipaddr)
 {
