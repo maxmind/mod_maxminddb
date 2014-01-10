@@ -526,38 +526,43 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                 MMDB_aget_value(&lookup_result.entry, &result, &kv->names[1]);
                 if (result.offset > 0) {
                     char *value;
+                    int len;
                     switch (result.type) {
                     case MMDB_DATA_TYPE_UTF8_STRING:
                         value = malloc(result.data_size + 1);
                         memcpy(value, result.utf8_string, result.data_size);
                         value[result.data_size] = '\0';
+                        len = result.data_size;
                         break;
                     case MMDB_DATA_TYPE_BYTES:
                         value = malloc(result.data_size + 1);
                         memcpy(value, result.bytes, result.data_size);
                         value[result.data_size] = '\0';
+                        len = result.data_size;
                         break;
                     case MMDB_DATA_TYPE_FLOAT:
-                        asprintf(&value, "%.5f", result.float_value);
+                        len = asprintf(&value, "%.5f", result.float_value);
                         break;
                     case MMDB_DATA_TYPE_DOUBLE:
-                        asprintf(&value, "%.5f", result.double_value);
+                        len = asprintf(&value, "%.5f", result.double_value);
                         break;
                     case MMDB_DATA_TYPE_UINT16:
-                        asprintf(&value, "%d", result.uint16);
+                        len = asprintf(&value, "%d", result.uint16);
                         break;
                     case MMDB_DATA_TYPE_UINT32:
-                        asprintf(&value, "%u", result.uint32);
+                        len = asprintf(&value, "%u", result.uint32);
                         break;
                     case MMDB_DATA_TYPE_INT32:
-                        asprintf(&value, "%d", result.int32);
+                        len = asprintf(&value, "%d", result.int32);
                         break;
                     default:
-                        asprintf(&value, "Unsupported");
+                        len = asprintf(&value, "Unsupported");
                         break;
                     }
-                    apr_table_set(r->subprocess_env, kv->env_key, value);
-                    free(value);
+                    if (len >= 0) {
+                        apr_table_set(r->subprocess_env, kv->env_key, value);
+                        free(value);
+                    }
                 }
             }
         }
