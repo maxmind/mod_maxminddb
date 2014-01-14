@@ -469,6 +469,9 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                     char *value;
                     int len;
                     switch (result.type) {
+                    case MMDB_DATA_TYPE_BOOLEAN:
+                        len = asprintf(&value, "%d", result.boolean);
+                        break;
                     case MMDB_DATA_TYPE_UTF8_STRING:
                         value = malloc(result.data_size + 1);
                         memcpy(value, result.utf8_string, result.data_size);
