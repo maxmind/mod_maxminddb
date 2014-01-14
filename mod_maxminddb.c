@@ -464,7 +464,7 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
 
                 MMDB_entry_data_s result;
                 MMDB_aget_value(&lookup_result.entry, &result,
-                                (char **)&kv->names[1]);
+                                &kv->names[1]);
                 if (result.offset > 0) {
                     char *value;
                     int len;
