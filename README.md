@@ -87,3 +87,4 @@ Another example to block users based on their country.
         SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
         Deny from env=BlockCountry
 
+/usr/local/apache24/bin/apxs -i -a -L/usr/local/lib -I/usr/local/include -lmaxminddb -Wc,-std=gnu99 -c mod_maxminddb.c
