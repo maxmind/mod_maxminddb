@@ -34,6 +34,7 @@
 #include "maxminddb.h"
 #include <string.h>
 #include <alloca.h>
+#include <inttypes.h>
 
 #if defined (MAXMINDDB_DEBUG)
 #define INFO(server_rec, ...)                                            \
@@ -41,6 +42,13 @@
                  "[mod_maxminddb]: " __VA_ARGS__);
 #else
 #define INFO(server_rec, ...)
+#endif
+
+#ifdef UNUSED
+#elif defined(__GNUC__)
+#define  UNUSED(x) UNUSED_ ## x __attribute__((unused))
+#else
+#define UNUSED
 #endif
 
 typedef struct key_value_list_s {
@@ -85,8 +93,6 @@ static void set_env_for_ip(request_rec * r, maxminddb_server_config * mmsrvcfg,
 static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                          const char *ipaddr);
 
-static maxminddb_server_config *get_maxminddb_config(request_rec * r);
-
 static void init_maxminddb_server_config(maxminddb_server_config * srv)
 {
     srv->nextdb = NULL;
@@ -101,7 +107,7 @@ static void init_maxminddb_config(maxminddb_config * cfg)
 
 /* create a disabled directory entry */
 
-static void *create_dir_config(apr_pool_t * p, char *d)
+static void *create_dir_config(apr_pool_t * p, char *UNUSED(d))
 {
 
     maxminddb_dir_config_rec *dcfg;
@@ -115,14 +121,15 @@ static void *create_dir_config(apr_pool_t * p, char *d)
     return dcfg;
 }
 
-static void *merge_dir_config(apr_pool_t * p, void *parent, void *cur)
+static void *merge_dir_config(apr_pool_t * UNUSED(p), void * UNUSED(
+                                  parent), void *cur)
 {
     return cur;
 }
 
 /* create a standard disabled server entry */
 
-static void *create_server_config(apr_pool_t * p, server_rec * srec)
+static void *create_server_config(apr_pool_t * p, server_rec * UNUSED(srec))
 {
     maxminddb_server_config_rec *conf =
         apr_pcalloc(p, sizeof(maxminddb_server_config_rec));
@@ -138,8 +145,8 @@ static void *create_server_config(apr_pool_t * p, server_rec * srec)
 
 static apr_status_t cleanup(void *cfgdata)
 {
-    int i;
     maxminddb_server_config_rec *cfg = (maxminddb_server_config_rec *)cfgdata;
+    (void)cfg;
     return APR_SUCCESS;
 }
 
@@ -155,21 +162,9 @@ static void server_init(apr_pool_t * p, server_rec * s)
 
 }
 
-static void child_init(apr_pool_t * p, server_rec * s)
-{
-    maxminddb_server_config_rec *cfg;
-    int i, flags;
-
-    INFO(s, "child_init");
-
-    cfg = (maxminddb_server_config_rec *)
-          ap_get_module_config(s->module_config, &maxminddb_module);
-
-}
-
 /* map into the first apache */
-static int post_config(apr_pool_t * p, apr_pool_t * plog,
-                       apr_pool_t * ptemp, server_rec * s)
+static int post_config(apr_pool_t * p, apr_pool_t * UNUSED(plog),
+                       apr_pool_t * UNUSED(ptemp), server_rec * s)
 {
     INFO(s, "post_config");
     server_init(p, s);
@@ -220,8 +215,6 @@ static int maxminddb_header_parser(request_rec * r,
                                    maxminddb_server_config * mmsrvcfg)
 {
     char *ipaddr;
-    char *free_me = NULL;
-    char *ipaddr_ptr = NULL;
 
     ipaddr = _get_client_ip(r);
     INFO(r->server, "maxminddb_header_parser %s", ipaddr);
@@ -232,45 +225,6 @@ static int maxminddb_header_parser(request_rec * r,
 
     set_env_for_ip(r, mmsrvcfg, ipaddr);
     return OK;
-}
-
-void set_string(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
-{
-    va_list keys;
-    MMDB_entry_data_s result;
-    if (!entry->offset) {
-        return;
-    }
-    va_start(keys, env);
-    MMDB_s *mmdb = entry->mmdb;
-    MMDB_vget_value(entry, &result, keys);
-    if (result.offset) {
-        char *value = alloca(result.data_size + 1);
-        memcpy(value, (void *)result.pointer, result.data_size);
-        value[result.data_size] = 0;
-        apr_table_set(r->subprocess_env, env, value);
-    }
-    va_end(keys);
-}
-
-void set_double(request_rec * r, MMDB_entry_s * entry, const char *env, ...)
-{
-    va_list keys;
-    MMDB_entry_data_s result;
-    if (!entry->offset) {
-        return;
-    }
-    va_start(keys, env);
-    MMDB_vget_value(entry, &result, keys);
-    if (result.offset) {
-        char *value;
-        asprintf(&value, "%.5f", result.double_value);
-        if (value) {
-            apr_table_set(r->subprocess_env, env, value);
-            free(value);
-        }
-    }
-    va_end(keys);
 }
 
 #define K(...) __VA_ARGS__, NULL
@@ -308,7 +262,7 @@ static const char *set_maxminddb_enable(cmd_parms * cmd, void *dummy, int arg)
     return NULL;
 }
 
-static const char *set_maxminddb_filename(cmd_parms * cmd, void *dummy,
+static const char *set_maxminddb_filename(cmd_parms * cmd, void *UNUSED(dummy),
                                           const char *nickname,
                                           const char *filename)
 {
@@ -365,7 +319,7 @@ static void insert_kvlist(struct server_rec * srv,
     const int max_names = 80;
     const char *names[max_names + 1];
     int i;
-    char *ptr, *cur, *tok;
+    char *ptr, *cur;
     apr_pool_t * pool = srv->process->pconf;
     cur = ptr = apr_pstrdup(pool, list->path);
     for (i = 0; i < max_names; i++) {
@@ -398,11 +352,9 @@ static void insert_kvlist(struct server_rec * srv,
     }
 }
 
-static const char *set_maxminddb_env(cmd_parms * cmd, void *dummy,
+static const char *set_maxminddb_env(cmd_parms * cmd, void *UNUSED(dummy),
                                      const char *env, const char *dbpath)
 {
-    int i;
-
     key_value_list_s *list = apr_palloc(cmd->pool, sizeof(key_value_list_s));
     list->path = dbpath;
     list->env_key = env;
@@ -439,7 +391,7 @@ static const command_rec maxminddb_cmds[] = {
     { NULL }
 };
 
-static void maxminddb_register_hooks(apr_pool_t * p)
+static void maxminddb_register_hooks(apr_pool_t * UNUSED(p))
 {
     /* make sure we run before mod_rewrite's handler */
     static const char *const aszSucc[] =
@@ -456,9 +408,6 @@ static void maxminddb_register_hooks(apr_pool_t * p)
      */
     ap_hook_post_read_request(maxminddb_post_read_request, NULL, aszSucc,
                               APR_HOOK_MIDDLE);
-
-    /* setup our childs maxminddb database once for every child */
-    ap_hook_child_init(child_init, NULL, NULL, APR_HOOK_MIDDLE);
 
     /* static const char * const list[]={ "mod_maxminddb.c", NULL }; */
     /* mmap the database(s) into the master process */
@@ -477,18 +426,9 @@ AP_DECLARE_MODULE(maxminddb) = {
     maxminddb_register_hooks    /* register hooks                      */
 };
 
-static maxminddb_server_config *get_maxminddb_config(request_rec * r)
-{
-    maxminddb_server_config_rec *scfg =
-        ap_get_module_config(r->server->module_config, &maxminddb_module);
-    return scfg ? &scfg->mmsrvcfg : NULL;
-}
-
 static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                          const char *ipaddr)
 {
-    struct in6_addr v6;
-
     if (ipaddr == NULL) {
         return;
     }
@@ -523,41 +463,75 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                 apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
 
                 MMDB_entry_data_s result;
-                MMDB_aget_value(&lookup_result.entry, &result, &kv->names[1]);
+                MMDB_aget_value(&lookup_result.entry, &result,
+                                &kv->names[1]);
                 if (result.offset > 0) {
                     char *value;
+                    int len;
                     switch (result.type) {
+                    case MMDB_DATA_TYPE_BOOLEAN:
+                        len = asprintf(&value, "%d", result.boolean);
+                        break;
                     case MMDB_DATA_TYPE_UTF8_STRING:
                         value = malloc(result.data_size + 1);
                         memcpy(value, result.utf8_string, result.data_size);
                         value[result.data_size] = '\0';
+                        len = result.data_size;
                         break;
                     case MMDB_DATA_TYPE_BYTES:
                         value = malloc(result.data_size + 1);
                         memcpy(value, result.bytes, result.data_size);
                         value[result.data_size] = '\0';
+                        len = result.data_size;
                         break;
                     case MMDB_DATA_TYPE_FLOAT:
-                        asprintf(&value, "%.5f", result.float_value);
+                        len = asprintf(&value, "%.5f", result.float_value);
                         break;
                     case MMDB_DATA_TYPE_DOUBLE:
-                        asprintf(&value, "%.5f", result.double_value);
+                        len = asprintf(&value, "%.5f", result.double_value);
                         break;
                     case MMDB_DATA_TYPE_UINT16:
-                        asprintf(&value, "%d", result.uint16);
+                        len = asprintf(&value, "%d", result.uint16);
                         break;
                     case MMDB_DATA_TYPE_UINT32:
-                        asprintf(&value, "%u", result.uint32);
+                        len = asprintf(&value, "%u", result.uint32);
                         break;
                     case MMDB_DATA_TYPE_INT32:
-                        asprintf(&value, "%d", result.int32);
+                        len = asprintf(&value, "%d", result.int32);
                         break;
+                     case MMDB_DATA_TYPE_UINT64:
+                        len = asprintf(&value, "%" PRIu64, result.uint64);
+                        break;
+                     case MMDB_DATA_TYPE_UINT128:
+#if MMDB_UINT128_IS_BYTE_ARRAY
+                     {
+                         uint8_t* p = (uint8_t*)result.uint128;
+                         len = asprintf(&value, "%02x%02x%02x%02x"
+                                                "%02x%02x%02x%02x"
+                                                "%02x%02x%02x%02x"
+                                                "%02x%02x%02x%02x",
+                                        p[0], p[1], p[2], p[3],
+                                        p[4], p[5], p[6], p[7],
+                                        p[8], p[9], p[10], p[11],
+                                        p[12], p[13], p[14], p[15]);
+                     }
+#else
+                     {
+                         mmdb_uint128_t v = result.uint128;
+                         len = asprintf(&value, "%016" PRIx64 "%016" PRIx64, (uint64_t)(v >> 64), (uint64_t)v);
+                     }
+
+#endif
+                     break;
+
                     default:
-                        asprintf(&value, "Unsupported");
+                        len = asprintf(&value, "Unsupported");
                         break;
                     }
-                    apr_table_set(r->subprocess_env, kv->env_key, value);
-                    free(value);
+                    if (len >= 0) {
+                        apr_table_set(r->subprocess_env, kv->env_key, value);
+                        free(value);
+                    }
                 }
             }
         }
