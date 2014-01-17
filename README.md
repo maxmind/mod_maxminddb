@@ -12,7 +12,7 @@ library installed before installing this module.
 
 To install the module, type the following from the source directory:
 
-    sudo apxs -i -a -lmaxminddb -Wc,-std=gnu99 -c mod_maxminddb.c
+    sudo apxs -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
 
 ## Usage ##
 
