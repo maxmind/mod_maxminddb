@@ -1,0 +1,14 @@
+*.a
+*.dll
+*.dylib
+*.elf
+*.ko
+*.l[ao]
+*.lib
+*.o
+*.obj
+*.slo
+*.so
+*.so.*
+*.sw?
+.libs
