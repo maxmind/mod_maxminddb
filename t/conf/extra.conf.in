@@ -1,0 +1,25 @@
+ScriptSock /tmp/cgisock
+ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
+<Directory "@ServerRoot@/cgi-bin">
+    AllowOverride None
+    Options +ExecCGI
+    Require all granted
+</Directory>
+LogLevel info
+RemoteIPHeader X-Forwarded-For
+RemoteIPProxiesHeader X-Forwarded-By
+
+<IfModule mod_maxminddb.c>
+  MaxMindDBEnable On
+LogLevel debug
+MaxMindDBFile AAA /usr/local/share/GeoIP/GeoLite2-City.mmdb
+MaxMindDBFile XXX /usr/local/share/GeoIP/GeoLite2-City.mmdb
+MaxMindDBFile XXX /usr/local/share/GeoIP/GeoLite2-City.mmdb
+
+MaxMindDBEnv MM_LATITUDE AAA/location/latitude
+MaxMindDBEnv MM_COUNTRY_CODE XXX/country/iso_code
+MaxMindDBEnv MM_COUNTRY_NAME XXX/country/names/en
+MaxMindDBEnv MM_LONGITUDE AAA/location/longitude
+MaxMindDBEnv MM_ location
+
+</IfModule>
