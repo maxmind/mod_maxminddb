@@ -286,7 +286,8 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *UNUSED(dummy),
 static void add_database(cmd_parms * cmd, maxminddb_server_config * conf,
                          const char *nickname, const char *filename)
 {
-    for (maxminddb_database_list * cur = conf->nextdb; cur; cur = cur->nextdb) {
+    for (maxminddb_database_list * cur = conf->nextdb; cur; cur =
+             cur->nextdb) {
         if (!strcmp(cur->nick_name, nickname)) {
             // we know the nickname already
             INFO(cmd->server, "We know already db (%s) skipping %s", nickname,
@@ -333,7 +334,8 @@ static void insert_kvlist(struct server_rec * srv,
         return;
     }
 
-    for (maxminddb_database_list * sl = mmsrvcfg->nextdb; sl; sl = sl->nextdb) {
+    for (maxminddb_database_list * sl = mmsrvcfg->nextdb; sl; sl =
+             sl->nextdb) {
         if (!strcmp(names[0], sl->nick_name)) {
             // found
             list->next = sl->next;
@@ -433,7 +435,8 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
         return;
     }
 
-    for (maxminddb_database_list * sl = mmsrvcfg->nextdb; sl; sl = sl->nextdb) {
+    for (maxminddb_database_list * sl = mmsrvcfg->nextdb; sl; sl =
+             sl->nextdb) {
 
         INFO(r->server, "sl %08lx n:%08lx", sl, sl->next);
 
@@ -499,30 +502,32 @@ static void set_user_env(request_rec * r, maxminddb_server_config * mmsrvcfg,
                     case MMDB_DATA_TYPE_INT32:
                         len = asprintf(&value, "%d", result.int32);
                         break;
-                     case MMDB_DATA_TYPE_UINT64:
+                    case MMDB_DATA_TYPE_UINT64:
                         len = asprintf(&value, "%" PRIu64, result.uint64);
                         break;
-                     case MMDB_DATA_TYPE_UINT128:
+                    case MMDB_DATA_TYPE_UINT128:
 #if MMDB_UINT128_IS_BYTE_ARRAY
-                     {
-                         uint8_t* p = (uint8_t*)result.uint128;
-                         len = asprintf(&value, "%02x%02x%02x%02x"
-                                                "%02x%02x%02x%02x"
-                                                "%02x%02x%02x%02x"
-                                                "%02x%02x%02x%02x",
-                                        p[0], p[1], p[2], p[3],
-                                        p[4], p[5], p[6], p[7],
-                                        p[8], p[9], p[10], p[11],
-                                        p[12], p[13], p[14], p[15]);
-                     }
+                        {
+                            uint8_t * p = (uint8_t *)result.uint128;
+                            len = asprintf(&value, "%02x%02x%02x%02x"
+                                           "%02x%02x%02x%02x"
+                                           "%02x%02x%02x%02x"
+                                           "%02x%02x%02x%02x",
+                                           p[0], p[1], p[2], p[3],
+                                           p[4], p[5], p[6], p[7],
+                                           p[8], p[9], p[10], p[11],
+                                           p[12], p[13], p[14], p[15]);
+                        }
 #else
-                     {
-                         mmdb_uint128_t v = result.uint128;
-                         len = asprintf(&value, "%016" PRIx64 "%016" PRIx64, (uint64_t)(v >> 64), (uint64_t)v);
-                     }
+                        {
+                            mmdb_uint128_t v = result.uint128;
+                            len =
+                                asprintf(&value, "%016" PRIx64 "%016" PRIx64,
+                                         (uint64_t)(v >> 64), (uint64_t)v);
+                        }
 
 #endif
-                     break;
+                        break;
 
                     default:
                         len = asprintf(&value, "Unsupported");
