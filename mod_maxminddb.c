@@ -39,7 +39,7 @@
 #if defined (MAXMINDDB_DEBUG)
 #define INFO(server_rec, ...)                                            \
     ap_log_error(APLOG_MARK, APLOG_DEBUG | APLOG_NOERRNO, 0, server_rec, \
-                 "[mod_maxminddb]: " __VA_ARGS__);
+                 "[mod_maxminddb]: " __VA_ARGS__)
 #else
 #define INFO(server_rec, ...)
 #endif
