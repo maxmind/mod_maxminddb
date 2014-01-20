@@ -418,7 +418,7 @@ static void maxminddb_register_hooks(apr_pool_t * UNUSED(p))
 }
 
 /* Dispatch list for API hooks */
-AP_DECLARE_MODULE(maxminddb) = {
+module AP_MODULE_DECLARE_DATA maxminddb_module  = {
     STANDARD20_MODULE_STUFF,    /* */
     create_dir_config,          /* create per-dir    config structures */
     merge_dir_config,           /* merge  per-dir    config structures */
