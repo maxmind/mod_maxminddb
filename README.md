@@ -2,7 +2,7 @@
 
 ## Overview ##
 
-This module allows you to query MaxMind DB files from Apache 2.4 using the
+This module allows you to query MaxMind DB files from Apache 2.2+ using the
 `libmaxminddb` library.
 
 ## Installation ##
@@ -98,7 +98,7 @@ page](http://www.maxmind.com/en/support).
 
 ## Requirements ##
 
-This module requires Apache 2.4.
+This module requires Apache 2.2+.
 
 ## Contributing ##
 
