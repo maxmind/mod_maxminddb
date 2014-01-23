@@ -53,18 +53,18 @@ recommend sticking to letters, numbers, and underscores.
 ### `MaxMindDBEnv` ###
 
 This directive assigns the lookup result to an environment variable. The first
-parameter after the directive is the environment variable and the second
-parameter is the name of the database followed by the path to the desired
-data using map keys or 0-based array indexes separated by `/`.
+parameter after the directive is the environment variable. The second
+parameter is the name of the database followed by the path to the desired data
+using map keys or 0-based array indexes separated by `/`.
 
     MaxMindDBEnv COUNTRY_CODE COUNTRY_DB/country/iso_code
     MaxMindDBEnv REGION_CODE  CITY_DB/subdivisions/0/iso_code
 
 ## Exported Environment Variables ##
 
-In addition to environment variable specified by `MaxMindDBEnv`, this module
-exports `MMDB_ADDR`, which contains the IP address used for lookups by the
-module. This is primarily intended for debugging purposes.
+In addition to the environment variable specified by `MaxMindDBEnv`, this
+module exports `MMDB_ADDR`, which contains the IP address used for lookups by
+the module. This is primarily intended for debugging purposes.
 
 ## Examples ##
 
