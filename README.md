@@ -47,6 +47,9 @@ disk. You may specify multiple databases, each with its own name.
     MaxMindDBFile COUNTRY_DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
     MaxMindDBFile CITY_DB    /usr/local/share/GeoIP/GeoLite2-City.mmdb
 
+The name placeholder can be any string that apache parses as a word. We
+recommend sticking to letters, numbers, and underscores.
+
 ### `MaxMindDBEnv` ###
 
 This directive assigns the lookup result to an environment variable. The first
