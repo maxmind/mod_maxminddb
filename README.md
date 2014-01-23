@@ -21,7 +21,7 @@ provide [free GeoLite2 databases](http://dev.maxmind.com/geoip/geoip2/geolite2)
 as well as [commercial GeoIP2 databases](http://www.maxmind.com/en/geolocation_landing).
 
 After installing this module and obtaining a database, you must now edit your
-Apache configuration file (e.g., `/etc/apache2/apache2.conf). This file must
+Apache configuration file (e.g., `/etc/apache2/apache2.conf`). This file must
 contain `MaxMindDBEnable` to enable the module, `MaxMindDBFile` to specify the
 database to use, and `MaxMindDBEnv` to bind the desired lookup result to an
 environment variable.
