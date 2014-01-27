@@ -90,6 +90,14 @@ This example shows how to block users based on their country:
     SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
     Deny from env=BlockCountry
 
+## Data Output Format ##
+
+All data is provided as strings bound to the specified Apache environment
+variable. Floating point numbers are provided to five digits after the decimal
+place. All integers types except 128-bit integers are provides as decimal.
+128-bit integers are returned as hexadecimal. Booleans are returned as "0" for
+false and "1" for true.
+
 ## Support ##
 
 Please report all issues with this code using the [GitHub issue tracker]
