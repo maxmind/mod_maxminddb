@@ -92,7 +92,7 @@ This example shows how to block users based on their country:
 
 ## Data Output Format ##
 
-All data is provided as strings bound to the specified Apache environment
+All data is provided as a string bound to the specified Apache environment
 variable. Floating point numbers are provided to five digits after the decimal
 place. All integers types except 128-bit integers are provides as decimal.
 128-bit integers are returned as hexadecimal. Booleans are returned as "0" for
