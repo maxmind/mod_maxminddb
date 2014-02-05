@@ -111,11 +111,6 @@ page](http://www.maxmind.com/en/support).
 
 This module requires Apache 2.2+.
 
-## Contributing ##
-
-Pull requests are encouraged. Please run `uncrustify` on your changes using
-the included `.uncrustify.cfg` before submitting your pull request.
-
 ## Versioning ##
 
 The MaxMind DB Apache module uses [Semantic Versioning](http://semver.org/).
