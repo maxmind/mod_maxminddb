@@ -8,7 +8,7 @@ use Apache::TestMM qw(test clean);    #enable 'make test'
 
 # prerequisites
 my %require = (
-    "Apache::Test" => "",             # any version will do
+    "Apache::Test" => 0,             # any version will do
 );
 my @scripts = qw(t/TEST);
 
@@ -18,7 +18,7 @@ Apache::TestMM::generate_script('t/TEST');
 
 WriteMakefile(
     NAME         => 'Apache::Test_mod_maxminddb',
-    VERSION_FROM => 'lib/Apache/Test_mod_maxminddb.pm',
+    VERSION_FROM => 't/lib/Apache/TestModMaxMindDB.pm',
     PREREQ_PM    => \%require,
     clean        => {
         FILES => "@{ clean_files() }",
@@ -26,7 +26,7 @@ WriteMakefile(
     (
         $] >= 5.005
         ? (
-            ABSTRACT_FROM => 'lib/Apache/Test_mod_maxminddb.pm',
+            ABSTRACT  => 'Testing mod_maxminddb',
             AUTHOR        => 'bz',
           )
         : ()
