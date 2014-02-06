@@ -22,20 +22,20 @@ use vars qw(@ISA);
 sub new_test_config {
     my $self = shift;
 
-        $self->{conf_opts}->{authname}      = 'gold club';
-            $self->{conf_opts}->{allowed_users} = 'dougm sterling';
+    $self->{conf_opts}->{authname}      = 'gold club';
+    $self->{conf_opts}->{allowed_users} = 'dougm sterling';
 
-                return $self->SUPER::new_test_config;
-                }
+    return $self->SUPER::new_test_config;
+}
 
-                sub bug_report {
-                    my $self = shift;
+sub bug_report {
+    my $self = shift;
 
-                        print <<EOI;
+    print <<EOI;
 +-----------------------------------------------------+
 | To report problems please refer to the SUPPORT file |
 +-----------------------------------------------------+
 EOI
-                        }
+}
 
-                        MyTest->new->run(@ARGV);
+MyTest->new->run( @ARGV );
