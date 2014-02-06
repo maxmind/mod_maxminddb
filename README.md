@@ -68,7 +68,7 @@ the module. This is primarily intended for debugging purposes.
 
 ## Examples ##
 
-This example use one database file:
+This example uses one database file:
 
     <IfModule mod_maxminddb.c>
         MaxMindDBEnable On
