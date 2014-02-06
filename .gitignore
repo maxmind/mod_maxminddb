@@ -12,3 +12,11 @@
 *.so.*
 *.sw?
 .libs
+.tidyall.d
+MYMETA.json
+MYMETA.yml
+Makefile
+blib
+perltidy.LOG
+pm_to_blib
+t/logs

@@ -1,0 +1,4 @@
+[PerlTidy]
+select = **/*.{pl,pm,t,psgi}
+ignore = **/blib/**/*.{pm}
+argv = --profile=$ROOT/.perltidyallrc
