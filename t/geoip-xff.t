@@ -4,13 +4,6 @@ use warnings FATAL => 'all';
 use Apache::Test qw(-withtestmore);
 use Apache::TestRequest;
 use JSON::XS;
-#use Data::Printer;
-
-Apache::Test::plan need need_module(
-    'mod_dir',      'mod_cgid', 'mod_env', 'mod_alias',
-    'mod_remoteip', 'mod_maxminddb'
-  ),
-  need_lwp;
 
 my $url = '/cgi-bin/json-env';
 
@@ -25,9 +18,6 @@ my $get_with_xff_c = sub {
         my $srv_env = decode_json $res->content;
 
         $code->( $res, $srv_env, $xff_ip );
-
-        #warn p $srv_env;
-        #warn p $res->content;
     }
 };
 
