@@ -16,11 +16,10 @@ RemoteIPProxiesHeader   X-Forwarded-By
 
     MaxMindDBEnable On
 
-    MaxMindDBFile CITY_DB           /usr/local/share/GeoIP/GeoLite2-City.mmdb
-    MaxMindDBFile COUNTRY_DB        /usr/local/share/GeoIP/GeoLite2-Country.mmdb
+    MaxMindDBFile CITY_DB           /usr/local/share/GeoIP/GeoIP2-City-Test.mmdb
 
-    MaxMindDBEnv MM_COUNTRY_CODE    COUNTRY_DB/country/iso_code
-    MaxMindDBEnv MM_COUNTRY_NAME    COUNTRY_DB/country/names/en
+    MaxMindDBEnv MM_COUNTRY_CODE    CITY_DB/country/iso_code
+    MaxMindDBEnv MM_COUNTRY_NAME    CITY_DB/country/names/en
     MaxMindDBEnv MM_LATITUDE        CITY_DB/location/latitude
     MaxMindDBEnv MM_LONGITUDE       CITY_DB/location/longitude
 

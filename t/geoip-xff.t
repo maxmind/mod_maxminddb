@@ -21,8 +21,8 @@ my $get_with_xff_c = sub {
     }
 };
 
-my @private = '127.0.0.1';
-my @public_us = ( '24.24.24.24', '8.8.8.8' );
+my @private   = '127.0.0.1';
+my @public_us = ('216.160.83.56');
 
 $get_with_xff_c->(
     sub {
