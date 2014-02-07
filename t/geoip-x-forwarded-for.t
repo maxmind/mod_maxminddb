@@ -82,8 +82,10 @@ $get_with_xff_c->(
         );
 
         foreach my $mm_key ( sort keys %mm_vars ) {
+            my $value = $srv_env->{$mm_key};
+            $value += 0 if $mm_key =~ m{TUDE};
             is(
-                $srv_env->{$mm_key},
+                $value,
                 $expected->{ $mm_vars{$mm_key} },
                 "$mm_key is " . $expected->{ $mm_vars{$mm_key} }
             );
