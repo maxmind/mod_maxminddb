@@ -18,9 +18,20 @@ RemoteIPProxiesHeader   X-Forwarded-By
 
     MaxMindDBFile CITY_DB           /usr/local/share/GeoIP/GeoIP2-City-Test.mmdb
 
-    MaxMindDBEnv MM_COUNTRY_CODE    CITY_DB/country/iso_code
-    MaxMindDBEnv MM_COUNTRY_NAME    CITY_DB/country/names/en
-    MaxMindDBEnv MM_LATITUDE        CITY_DB/location/latitude
-    MaxMindDBEnv MM_LONGITUDE       CITY_DB/location/longitude
+    MaxMindDBEnv MM_CONTINENT_CODE          CITY_DB/continent/code
+    MaxMindDBEnv MM_CONTINENT_GEONAME_ID    CITY_DB/continent/geoname_id
+    MaxMindDBEnv MM_COUNTRY_CODE            CITY_DB/country/iso_code
+    MaxMindDBEnv MM_COUNTRY_GEONAME_ID      CITY_DB/country/geoname_id
+    MaxMindDBEnv MM_COUNTRY_NAME            CITY_DB/country/names/en
+    MaxMindDBEnv MM_COUNTRY_NAME_DE         CITY_DB/country/names/de
+    MaxMindDBEnv MM_COUNTRY_NAME_EN         CITY_DB/country/names/en
+    MaxMindDBEnv MM_COUNTRY_NAME_ES         CITY_DB/country/names/es
+    MaxMindDBEnv MM_COUNTRY_NAME_FR         CITY_DB/country/names/fr
+    MaxMindDBEnv MM_COUNTRY_NAME_JA         CITY_DB/country/names/ja
+    MaxMindDBEnv MM_COUNTRY_NAME_PT_BR      CITY_DB/country/names/pt-BR
+    MaxMindDBEnv MM_COUNTRY_NAME_RU         CITY_DB/country/names/ru
+    MaxMindDBEnv MM_COUNTRY_NAME_ZH_CN      CITY_DB/country/names/zh-CN
+    MaxMindDBEnv MM_LATITUDE                CITY_DB/location/latitude
+    MaxMindDBEnv MM_LONGITUDE               CITY_DB/location/longitude
 
 </IfModule>
