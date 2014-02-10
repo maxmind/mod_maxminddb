@@ -23,8 +23,8 @@ before_install:
 install:
   - cpanm --verbose --installdeps --notest .
 script:
-  perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
-  ./t/TEST
+  - perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
+  - ./t/TEST -v
 notifications:
   email:
     recipients:
