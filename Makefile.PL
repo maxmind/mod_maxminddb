@@ -18,7 +18,7 @@ Apache::TestMM::generate_script('t/TEST');
 
 WriteMakefile(
     NAME         => 'Apache::Test_mod_maxminddb',
-    VERSION_FROM => 't/lib/Apache/TestModMaxMindDB.pm',
+    VERSION_FROM => 'lib/Apache/TestModMaxMindDB.pm',
     PREREQ_PM    => \%require,
     clean        => {
         FILES => "@{ clean_files() }",
