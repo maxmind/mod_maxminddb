@@ -3,7 +3,7 @@ use warnings;
 
 use Apache::Test qw(-withtestmore);
 use Apache::TestRequest;
-use JSON::XS;
+use Cpanel::JSON::XS qw( decode_json );
 
 my $url = '/cgi-bin/json-env';
 
