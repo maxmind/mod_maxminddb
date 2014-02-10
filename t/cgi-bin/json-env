@@ -1,9 +1,15 @@
-#!/usr/bin/env perl
+#!/usr/local/bin/mm-perl
 
 use strict;
 use warnings;
-use JSON::XS;
+
+#use utf8::all;
+
+use Encode qw( decode );
+use Cpanel::JSON::XS;
+
+my %env = map { $_ => decode( 'UTF-8', $ENV{$_} ) } keys %ENV;
 
 print "Content-type: application/json; charset=UTF-8\n\n";
-print encode_json(\%ENV);
+print Cpanel::JSON::XS->new->utf8->ascii->pretty->encode( \%env );
 
