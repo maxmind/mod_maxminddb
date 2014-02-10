@@ -1,12 +1,14 @@
 use strict;
-use warnings FATAL => 'all';
+use warnings;
+use utf8::all;
 
 use Apache::Test qw(-withtestmore);
 use Apache::TestModMaxMindDB;
 use Apache::TestRequest;
+use Cpanel::JSON::XS qw( decode_json );
 use DDP;
 use Hash::Flatten;
-use JSON::XS;
+use Net::Works::Network;
 
 my $url = '/cgi-bin/json-env';
 
@@ -67,32 +69,34 @@ my %mm_vars = (
 
 my $flattener = Hash::Flatten->new( { HashDelimiter => '/' } );
 
-$get_with_xff_c->(
-    sub {
-        my ( $res, $srv_env, $xff_ip ) = @_;
+foreach my $range ( sort keys %{ $test_data->city_source_data } ) {
 
-        my $expected = $flattener->flatten(
-            $test_data->city_source_data->{'::216.160.83.56/125'} );
+    my $network = Net::Works::Network->new_from_string( string => $range );
 
-        is( $xff_ip,               $public_us, 'XFF IP is public US IP' );
-        is( $srv_env->{MMDB_ADDR}, $public_us, 'MMDB_ADDR is public US ip' );
-        is(
-            $srv_env->{REMOTE_ADDR}, $public_us,
-            'REMOTE_ADDR is public US ip'
-        );
+    $get_with_xff_c->(
+        sub {
+            my ( $res, $srv_env, $xff_ip ) = @_;
+            use Data::Dump qw( dump );
+            diag p $srv_env;
 
-        foreach my $mm_key ( sort keys %mm_vars ) {
-            my $value = $srv_env->{$mm_key};
-            $value += 0 if $mm_key =~ m{TUDE};
-            is(
-                $value,
-                $expected->{ $mm_vars{$mm_key} },
-                "$mm_key is " . $expected->{ $mm_vars{$mm_key} }
-            );
-        }
-    },
-    $public_us
-);
+            my $expected = $flattener->flatten(
+                $test_data->city_source_data->{$range} );
+
+            foreach my $mm_key ( sort keys %mm_vars ) {
+                my $value = $srv_env->{$mm_key};
+                $value += 0 if $mm_key =~ m{TUDE};
+                is(
+                    $value,
+                    $expected->{ $mm_vars{$mm_key} },
+                    "$mm_key is "
+                        . $expected->{ $mm_vars{$mm_key} . ' ' . $value }
+                );
+            }
+        },
+        $network->first->as_string
+    );
+    last;
+}
 
 done_testing();
 
