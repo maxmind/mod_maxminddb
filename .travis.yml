@@ -5,6 +5,9 @@ perl:
   - "5.14"
   - "5.12"
   - "5.10"
+script:
+  perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
+  ./t/TEST
 notifications:
   email:
     recipients:
