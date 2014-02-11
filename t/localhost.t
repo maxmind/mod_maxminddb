@@ -3,7 +3,7 @@ use warnings FATAL => 'all';
 
 use Apache::Test qw(-withtestmore);
 use Apache::TestRequest;
-use Cpanel::JSON::XS qw( decode_json );
+use JSON::XS qw( decode_json );
 
 my $url = '/cgi-bin/valid-db/json-env';
 

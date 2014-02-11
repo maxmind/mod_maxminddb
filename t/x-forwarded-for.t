@@ -4,11 +4,10 @@ use warnings;
 use Apache::Test qw(-withtestmore);
 use Apache::TestModMaxMindDB;
 use Apache::TestRequest;
-use Cpanel::JSON::XS;
 use Data::Validate::IP;
-use DDP;
 use Encode qw( decode_utf8 );
 use Hash::Flatten;
+use JSON::XS;
 use Net::Works::Network;
 
 my $builder = Test::More->builder;
@@ -26,7 +25,7 @@ my $get_with_xff_c = sub {
         # Allow request to be redirected.
         my $res = GET $url, 'X-Forwarded-For' => $xff_ip;
         ok( $res, '$res is defined' );
-        my $srv_env = Cpanel::JSON::XS->new->decode( $res->content );
+        my $srv_env = JSON::XS->new->decode( $res->content );
 
         $code->( $res, $srv_env, $xff_ip );
     }
