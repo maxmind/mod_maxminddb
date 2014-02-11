@@ -6,10 +6,6 @@
 
     curl -L http://cpanmin.us | perl - App::cpanminus
 
-### Carton
-
-    cpanm Carton
-
 ### This repository
 
     git clone https://github.com/maxmind/mod_maxminddb.git
@@ -43,13 +39,15 @@
     sudo apxs2 -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
 
 ### Perl dependencies
+
     cpanm --installdeps --notest .
 
 ### Test scaffolding
     perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
 
 ### Run tests
-    carton exec "t/TEST -v"
+
+    ./t/TEST -v
 
 ### Apache Troubleshooting
 

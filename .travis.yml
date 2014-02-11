@@ -7,7 +7,6 @@ perl:
   - "5.10"
 before_install:
   - cpanm Carton
-  - carton install
   - git submodule update --init --recursive
   - git clone git://github.com/maxmind/libmaxminddb
   - cd libmaxminddb
@@ -29,7 +28,7 @@ install:
   - cpanm --installdeps --notest .
 script:
   - perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
-  - carton exec "t/TEST -v"
+  - ./t/TEST -v
 after_failure:
   - sudo apache2ctl -M
   - cat t/logs/error_log
