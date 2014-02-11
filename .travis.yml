@@ -24,6 +24,7 @@ before_install:
   - cd ..
   - sudo mkdir -p /usr/local/share/GeoIP
   - sudo cp maxmind-db/test-data/GeoIP2-City-Test.mmdb /usr/local/share/GeoIP/
+  - sudo apxs2 -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
 install:
   - cpanm --verbose --installdeps --notest .
 script:
