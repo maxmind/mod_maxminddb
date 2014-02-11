@@ -30,6 +30,7 @@ script:
   - perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - carton exec "t/TEST -v"
 after_failure:
+  - sudo apache2ctl -M
   - cat t/logs/error_log
 notifications:
   email:
