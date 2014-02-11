@@ -6,6 +6,7 @@ perl:
   - "5.12"
   - "5.10"
 before_install:
+  - perlbrew install-cpanm
   - git submodule update --init --recursive
   - git clone git://github.com/maxmind/libmaxminddb
   - cd libmaxminddb
