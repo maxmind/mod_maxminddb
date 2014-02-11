@@ -1,16 +1,64 @@
 #Testing
 
-perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
+##Installing Dependencies
 
-To run the test suite:
+### cpanminus
 
-    ./t/TEST
+    curl -L http://cpanmin.us | perl - App::cpanminus
 
-For a complete list of options to pass to t/TEST (or Makefile.PL):
+### Carton
 
-    ./t/TEST --help
+    cpanm Carton
 
-As you're running tests, you may find it helpful to track errors in t/logs/error_log
+### This repository
+
+    git clone https://github.com/maxmind/mod_maxminddb.git
+    cd mod_maxminddb
+    git submodule update --init --recursive
+    cd ..
+
+### maxminddb C library
+
+    git clone git://github.com/maxmind/libmaxminddb
+    cd libmaxminddb
+    ./bootstrap
+    ./configure
+    make
+    sudo make install
+    sudo ldconfig
+    cd ..
+
+### Apache 2 (assumes Debian/Ubuntu)
+    sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2.2-common apache2-prefork-dev apache2-utils
+
+#### mod_remoteip
+    git clone git://github.com/ttkzw/mod_remoteip-httpd22
+    cd mod_remoteip-httpd22
+    sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
+    cd ..
+
+### GeoIP2 test database
+    sudo mkdir -p /usr/local/share/GeoIP
+    sudo cp maxmind-db/test-data/GeoIP2-City-Test.mmdb /usr/local/share/GeoIP/
+    sudo apxs2 -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
+
+### Perl dependencies
+    cpanm --installdeps --notest .
+
+### Test scaffolding
+    perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
+
+### Run tests
+    carton exec "t/TEST -v"
+
+### Apache Troubleshooting
+
+#### Do you have all necessary modules installed?
+    sudo apache2ctl -M
+
+#### Check the error log
+
+### CGI Troubleshooting
 
 If you're having issues running the CGI scripts:
 
