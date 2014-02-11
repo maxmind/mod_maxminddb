@@ -5,4 +5,6 @@ requires 'Data::Printer';
 requires 'Data::Validate::IP';
 requires 'Encode';
 requires 'Hash::Flatten';
+requires 'List::AllUtils', '0.07';
+requires 'List::Util', '>= 1.38';
 requires 'Net::Works::Network';
