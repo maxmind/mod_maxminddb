@@ -26,7 +26,7 @@ before_install:
   - sudo cp maxmind-db/test-data/GeoIP2-City-Test.mmdb /usr/local/share/GeoIP/
   - sudo apxs2 -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
 install:
-  - cpanm --verbose --installdeps --notest .
+  - cpanm --installdeps --notest .
 script:
   - perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - carton exec "t/TEST -v"
@@ -36,6 +36,6 @@ after_failure:
 notifications:
   email:
     recipients:
-      - oalders@maxmind.com
+      - dev@maxmind.com
     on_success: change
     on_failure: always

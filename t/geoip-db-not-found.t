@@ -8,6 +8,5 @@ my $url = '/cgi-bin/missing-db/json-env';
 
 # Allow request to be redirected.
 ok my $res = GET $url;
-diag $res->content;
 
 done_testing();

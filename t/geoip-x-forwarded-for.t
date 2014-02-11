@@ -26,7 +26,6 @@ my $get_with_xff_c = sub {
         # Allow request to be redirected.
         my $res = GET $url, 'X-Forwarded-For' => $xff_ip;
         ok( $res, '$res is defined' );
-        diag( $res->content );
         my $srv_env = Cpanel::JSON::XS->new->decode( $res->content );
 
         $code->( $res, $srv_env, $xff_ip );
