@@ -22,6 +22,8 @@ before_install:
   - cd mod_remoteip-httpd22
   - sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
   - cd ..
+  - sudo mkdir -p /usr/local/share/GeoIP
+  - sudo cp maxmind-db/test-data/GeoIP2-City-Test.mmdb /usr/local/share/GeoIP/
 install:
   - cpanm --verbose --installdeps --notest .
 script:
