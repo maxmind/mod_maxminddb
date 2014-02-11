@@ -5,7 +5,7 @@ use Apache::Test qw(-withtestmore);
 use Apache::TestRequest;
 use Cpanel::JSON::XS qw( decode_json );
 
-my $url = '/cgi-bin/json-env';
+my $url = '/cgi-bin/valid-db/json-env';
 
 # Allow request to be redirected.
 ok my $res = GET $url;

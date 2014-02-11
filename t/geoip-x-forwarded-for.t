@@ -16,7 +16,7 @@ binmode $builder->output,         ":encoding(utf8)";
 binmode $builder->failure_output, ":encoding(utf8)";
 binmode $builder->todo_output,    ":encoding(utf8)";
 
-my $url = '/cgi-bin/json-env';
+my $url = '/cgi-bin/valid-db/json-env';
 
 my $get_with_xff_c = sub {
 

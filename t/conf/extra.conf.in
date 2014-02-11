@@ -3,7 +3,7 @@ ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
 LogLevel        debug
 
-<Directory "@ServerRoot@/cgi-bin">
+<Directory "@ServerRoot@/cgi-bin/valid-db">
     AllowOverride None
     Options +ExecCGI
 
@@ -54,6 +54,31 @@ LogLevel        debug
 
     </IfModule>
 </Directory>
+
+<Directory "@ServerRoot@/cgi-bin/missing-db">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile CITY_DB           /foo/GeoIP2-City-Test.mmdb
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/invalid-db">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile CITY_DB           /etc/apache2/apache2.conf
+    </IfModule>
+</Directory>
+
 
 LogLevel                info
 RemoteIPHeader          X-Forwarded-For
