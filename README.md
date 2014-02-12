@@ -68,7 +68,7 @@ the module. This is primarily intended for debugging purposes.
 
 ## Examples ##
 
-This example use one database file:
+This example uses one database file:
 
     <IfModule mod_maxminddb.c>
         MaxMindDBEnable On
@@ -110,11 +110,6 @@ page](http://www.maxmind.com/en/support).
 ## Requirements ##
 
 This module requires Apache 2.2+.
-
-## Contributing ##
-
-Pull requests are encouraged. Please run `uncrustify` on your changes using
-the included `.uncrustify.cfg` before submitting your pull request.
 
 ## Versioning ##
 

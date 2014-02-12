@@ -1,0 +1,86 @@
+ScriptSock /tmp/cgisock
+ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
+
+LogLevel        debug
+
+<Directory "@ServerRoot@/cgi-bin/valid-db">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile CITY_DB           /usr/local/share/GeoIP/GeoIP2-City-Test.mmdb
+
+        MaxMindDBEnv MM_CITY_NAME_EN                    CITY_DB/city/names/en
+        MaxMindDBEnv MM_CONTINENT_CODE                  CITY_DB/continent/code
+        MaxMindDBEnv MM_CONTINENT_GEONAME_ID            CITY_DB/continent/geoname_id
+        MaxMindDBEnv MM_CONTINENT_NAME_EN               CITY_DB/continent/names/en
+        MaxMindDBEnv MM_COUNTRY_CODE                    CITY_DB/country/iso_code
+        MaxMindDBEnv MM_COUNTRY_GEONAME_ID              CITY_DB/country/geoname_id
+        MaxMindDBEnv MM_COUNTRY_NAME                    CITY_DB/country/names/en
+        MaxMindDBEnv MM_COUNTRY_NAME_DE                 CITY_DB/country/names/de
+        MaxMindDBEnv MM_COUNTRY_NAME_EN                 CITY_DB/country/names/en
+        MaxMindDBEnv MM_COUNTRY_NAME_ES                 CITY_DB/country/names/es
+        MaxMindDBEnv MM_COUNTRY_NAME_FR                 CITY_DB/country/names/fr
+        MaxMindDBEnv MM_COUNTRY_NAME_JA                 CITY_DB/country/names/ja
+        MaxMindDBEnv MM_COUNTRY_NAME_PT_BR              CITY_DB/country/names/pt-BR
+        MaxMindDBEnv MM_COUNTRY_NAME_RU                 CITY_DB/country/names/ru
+        MaxMindDBEnv MM_COUNTRY_NAME_ZH_CN              CITY_DB/country/names/zh-CN
+        MaxMindDBEnv MM_LOCATION_LATITUDE               CITY_DB/location/latitude
+        MaxMindDBEnv MM_LOCATION_LONGITUDE              CITY_DB/location/longitude
+        MaxMindDBEnv MM_LOCATION_TIME_ZONE              CITY_DB/location/time_zone
+        MaxMindDBEnv MM_POSTAL_CODE                     CITY_DB/postal/code
+        MaxMindDBEnv MM_REGISTERED_COUNTRY_ISO_CODE     CITY_DB/registered_country/iso_code
+        MaxMindDBEnv MM_REGISTERED_COUNTRY_NAMES_DE     CITY_DB/registered_country/names/de
+        MaxMindDBEnv MM_REGISTERED_COUNTRY_NAMES_EN     CITY_DB/registered_country/names/en
+        MaxMindDBEnv MM_REGISTERED_COUNTRY_NAMES_ES     CITY_DB/registered_country/names/es
+        MaxMindDBEnv MM_REGISTERED_COUNTRY_NAMES_FR     CITY_DB/registered_country/names/fr
+        MaxMindDBEnv MM_REGISTERED_COUNTRY_NAMES_JA     CITY_DB/registered_country/names/ja
+        MaxMindDBEnv MM_REGISTERED_COUNTRY_NAMES_PT_BR  CITY_DB/registered_country/names/pt_br
+        MaxMindDBEnv MM_REGISTERED_COUNTRY_NAMES_RU     CITY_DB/registered_country/names/ru
+        MaxMindDBEnv MM_REGISTERED_COUNTRY_NAMES_ZH_CN  CITY_DB/registered_country/names/zh-CN
+        MaxMindDBEnv MM_SUBDIVISION_1_GEONAME_ID        CITY_DB/subdivisions/0/geoname_id
+        MaxMindDBEnv MM_SUBDIVISION_1_ISO_CODE          CITY_DB/subdivisions/0/iso_code
+        MaxMindDBEnv MM_SUBDIVISION_1_NAMES_DE          CITY_DB/subdivisions/0/names/de
+        MaxMindDBEnv MM_SUBDIVISION_1_NAMES_EN          CITY_DB/subdivisions/0/names/en
+        MaxMindDBEnv MM_SUBDIVISION_1_NAMES_ES          CITY_DB/subdivisions/0/names/es
+        MaxMindDBEnv MM_SUBDIVISION_1_NAMES_FR          CITY_DB/subdivisions/0/names/fr
+        MaxMindDBEnv MM_SUBDIVISION_1_NAMES_JA          CITY_DB/subdivisions/0/names/ja
+        MaxMindDBEnv MM_SUBDIVISION_1_NAMES_PT_BR       CITY_DB/subdivisions/0/names/pt_br
+        MaxMindDBEnv MM_SUBDIVISION_1_NAMES_RU          CITY_DB/subdivisions/0/names/ru
+        MaxMindDBEnv MM_SUBDIVISION_1_NAMES_ZH_CN       CITY_DB/subdivisions/0/names/zh-CN
+
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/missing-db">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile CITY_DB           /foo/GeoIP2-City-Test.mmdb
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/invalid-db">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile CITY_DB           /etc/apache2/apache2.conf
+    </IfModule>
+</Directory>
+
+
+LogLevel                info
+RemoteIPHeader          X-Forwarded-For
+RemoteIPProxiesHeader   X-Forwarded-By
+

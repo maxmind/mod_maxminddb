@@ -1,0 +1,5 @@
+[PerlTidy]
+select = **/*.{pl,pm,t,psgi}
+select = t/cgi-bin/json-env
+ignore = **/blib/**/*.{pm}
+argv = --profile=$ROOT/.perltidyallrc
