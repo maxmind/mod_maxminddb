@@ -271,10 +271,6 @@ static const char *set_maxminddb_filename(cmd_parms * cmd, void *UNUSED(dummy),
                                         ap_get_module_config(
         cmd->server->module_config, &maxminddb_module);
 
-    if (!filename) {
-        return NULL;
-    }
-
     INFO(cmd->server, "add-database (server) %s", filename);
     add_database(cmd, &conf->mmsrvcfg, nickname, filename);
 
@@ -380,11 +376,11 @@ static const command_rec maxminddb_cmds[] = {
                  NULL,
                  OR_FILEINFO,
                  "Turn on mod_maxminddb"),
-    AP_INIT_TAKE12("MaxMindDBFile",
-                   set_maxminddb_filename,
-                   NULL,
-                   OR_ALL,
-                   "Path to the Database File"),
+    AP_INIT_TAKE2("MaxMindDBFile",
+                  set_maxminddb_filename,
+                  NULL,
+                  OR_ALL,
+                  "Path to the Database File"),
     AP_INIT_ITERATE2("MaxMindDBEnv",
                      set_maxminddb_env,
                      NULL,
