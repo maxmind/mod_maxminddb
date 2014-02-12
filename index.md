@@ -1,3 +1,7 @@
+---
+layout: default
+title: mod_maxminddb - an Apache module that allows you to query MaxMind DB files
+---
 # MaxMind DB Apache Module #
 
 ## Overview ##
