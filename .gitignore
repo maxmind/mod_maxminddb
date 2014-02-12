@@ -16,6 +16,7 @@
 MYMETA.json
 MYMETA.yml
 Makefile
+_site
 blib
 local
 perltidy.LOG
