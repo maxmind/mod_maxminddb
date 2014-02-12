@@ -4,8 +4,6 @@ title: mod_maxminddb - an Apache module that allows you to query MaxMind DB file
 ---
 # MaxMind DB Apache Module #
 
-## Overview ##
-
 This module allows you to query MaxMind DB files from Apache 2.2+ using the
 `libmaxminddb` library.
 
