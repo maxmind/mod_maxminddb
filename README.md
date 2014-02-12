@@ -5,6 +5,11 @@
 This module allows you to query MaxMind DB files from Apache 2.2+ using the
 `libmaxminddb` library.
 
+## Version ##
+
+This is version 0.0.1 of the mod_maxminddb Apache module. This module is still
+considered beta, and the API may change before it is considered stable.
+
 ## Installation ##
 
 You must have the [libmaxminddb](https://github.com/maxmind/libmaxminddb) C
