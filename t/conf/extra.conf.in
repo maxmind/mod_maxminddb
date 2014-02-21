@@ -117,6 +117,20 @@ LogLevel        debug
     MaxMindDBEnable Off
 </Directory>
 
+<Directory "@ServerRoot@/cgi-bin/different-config">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile CITY_DB           /usr/local/share/GeoIP/GeoIP2-City-Test.mmdb
+
+        MaxMindDBEnv MM_CITY_NAME_EN    CITY_DB/country/names/fr
+    </IfModule>
+</Directory>
+
 LogLevel                info
 RemoteIPHeader          X-Forwarded-For
 RemoteIPProxiesHeader   X-Forwarded-By
