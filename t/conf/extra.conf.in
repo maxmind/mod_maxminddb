@@ -106,6 +106,17 @@ LogLevel        debug
     </IfModule>
 </Directory>
 
+<Directory "@ServerRoot@/cgi-bin/mod-not-enabled">
+    AllowOverride None
+    Options +ExecCGI
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/mod-disabled">
+    AllowOverride None
+    Options +ExecCGI
+    MaxMindDBEnable Off
+</Directory>
+
 LogLevel                info
 RemoteIPHeader          X-Forwarded-For
 RemoteIPProxiesHeader   X-Forwarded-By
