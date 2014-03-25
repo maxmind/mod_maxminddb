@@ -5,7 +5,7 @@ perl:
 before_install:
   - cpanm Carton
   - git submodule update --init --recursive
-  - git clone git://github.com/maxmind/libmaxminddb
+  - git clone --recursive git://github.com/maxmind/libmaxminddb
   - cd libmaxminddb
   - ./bootstrap
   - ./configure
