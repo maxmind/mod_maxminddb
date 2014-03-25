@@ -21,7 +21,7 @@ before_install:
   - cd mod_remoteip-httpd22
   - sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
   - cd ..
-  - sudo apxs2 -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
+  - sudo apxs2 -i -a -lmaxminddb -Wc,"-std=gnu99 -Wall -Wextra -Werror -Wno-missing-field-initializers" -c src/mod_maxminddb.c
 install:
   - cpanm --installdeps --notest .
 script:
