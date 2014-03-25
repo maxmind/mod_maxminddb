@@ -1,10 +1,7 @@
 language: perl
 perl:
   - "5.18"
-  - "5.16"
-  - "5.14"
-  - "5.12"
-  - "5.10"
+
 before_install:
   - cpanm Carton
   - git submodule update --init --recursive
@@ -22,14 +19,18 @@ before_install:
   - sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
   - cd ..
   - sudo apxs2 -i -a -lmaxminddb -Wc,"-std=gnu99 -Wall -Wextra -Werror -Wno-missing-field-initializers" -c src/mod_maxminddb.c
+
 install:
   - cpanm --installdeps --notest .
+
 script:
   - perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - ./t/TEST -v
+
 after_failure:
   - sudo apache2ctl -M
   - cat t/logs/error_log
+
 notifications:
   email:
     recipients:
