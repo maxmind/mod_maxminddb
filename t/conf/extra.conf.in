@@ -11,7 +11,7 @@ LogLevel        debug
 
         MaxMindDBEnable On
 
-        MaxMindDBFile CITY_DB           /usr/local/share/GeoIP/GeoIP2-City-Test.mmdb
+        MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
 
         MaxMindDBEnv MM_CITY_NAME_EN                    CITY_DB/city/names/en
         MaxMindDBEnv MM_CONTINENT_CODE                  CITY_DB/continent/code
@@ -51,7 +51,6 @@ LogLevel        debug
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_PT_BR       CITY_DB/subdivisions/0/names/pt_br
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_RU          CITY_DB/subdivisions/0/names/ru
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_ZH_CN       CITY_DB/subdivisions/0/names/zh-CN
-
     </IfModule>
 </Directory>
 
@@ -63,7 +62,7 @@ LogLevel        debug
 
         MaxMindDBEnable On
 
-        MaxMindDBFile CITY_DB           /foo/GeoIP2-City-Test.mmdb
+        MaxMindDBFile MISSING_DB           /foo/GeoIP2-City-Test.mmdb
     </IfModule>
 </Directory>
 
@@ -75,10 +74,37 @@ LogLevel        debug
 
         MaxMindDBEnable On
 
-        MaxMindDBFile CITY_DB           /etc/apache2/apache2.conf
+        MaxMindDBFile INVALID_DB           /etc/apache2/apache2.conf
     </IfModule>
 </Directory>
 
+<Directory "@ServerRoot@/cgi-bin/ipv4-only">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile IPV4_DB           @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-ipv4-24.mmdb
+
+        MaxMindDBEnv IPV4_BASE               IPV4_DB
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/broken-db">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile BROKEN_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test-Broken-Double-Format.mmdb
+
+        MaxMindDBEnv BROKEN_LATITUDE           BROKEN_DB/location/longitude
+    </IfModule>
+</Directory>
 
 LogLevel                info
 RemoteIPHeader          X-Forwarded-For
