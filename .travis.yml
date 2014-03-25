@@ -13,7 +13,8 @@ before_install:
   - sudo make install
   - sudo ldconfig
   - cd ..
-  - sudo apt-get update && apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2.2-common apache2-prefork-dev apache2-utils
+  - sudo apt-get update
+  - sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2.2-common apache2-prefork-dev apache2-utils
   - git clone git://github.com/ttkzw/mod_remoteip-httpd22
   - cd mod_remoteip-httpd22
   - sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
