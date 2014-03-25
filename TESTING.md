@@ -33,9 +33,7 @@
     sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
     cd ..
 
-### GeoIP2 test database
-    sudo mkdir -p /usr/local/share/GeoIP
-    sudo cp maxmind-db/test-data/GeoIP2-City-Test.mmdb /usr/local/share/GeoIP/
+### mod_maxminddb install
     sudo apxs2 -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
 
 ### Perl dependencies

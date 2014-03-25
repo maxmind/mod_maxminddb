@@ -1,6 +1,6 @@
 /* maxminddb module
  *
- * Version 0.1
+ * Version 0.0.1
  *
  * This module sets an environment variable to the remote country
  * based on the requestor's IP address.  It uses the maxminddb library
@@ -43,6 +43,10 @@
 #else
 #define INFO(server_rec, ...)
 #endif
+
+#define ERROR(server_rec, ...)                         \
+    ap_log_error(APLOG_MARK, APLOG_ERR, 0, server_rec, \
+                 "[mod_maxminddb]: " __VA_ARGS__)
 
 #ifdef UNUSED
 #elif defined(__GNUC__)
@@ -298,7 +302,8 @@ static void add_database(cmd_parms *cmd, maxminddb_server_config *conf,
     sl->mmdb = apr_palloc(cmd->pool, sizeof(MMDB_s));
     int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, sl->mmdb);
     if (mmdb_error != MMDB_SUCCESS) {
-        INFO(cmd->server, "Open database failed: %s %d", filename, mmdb_error);
+        ERROR(cmd->server, "Opening %s failed: %s", filename,
+              MMDB_strerror(mmdb_error));
         return;
     }
     sl->disk_name = (char *)apr_pstrdup(cmd->pool, filename);
@@ -444,10 +449,13 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
             MMDB_lookup_string(sl->mmdb, ipaddr, &gai_error, &mmdb_error);
 
         if (mmdb_error != MMDB_SUCCESS) {
+            ERROR(r->server, "Error looking up '%s': %s", ipaddr,
+                  MMDB_strerror(mmdb_error));
             continue;
         }
 
         if (gai_error != MMDB_SUCCESS) {
+            ERROR(r->server, "Error resolving '%s'.", ipaddr);
             continue;
         }
 
@@ -461,8 +469,16 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                 apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
 
                 MMDB_entry_data_s result;
-                MMDB_aget_value(&lookup_result.entry, &result,
-                                &kv->names[1]);
+                mmdb_error = MMDB_aget_value(&lookup_result.entry, &result,
+                                             &kv->names[1]);
+                if (mmdb_error == MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
+                    INFO(r->server, MMDB_strerror(mmdb_error));
+                    continue;
+                } else if (mmdb_error != MMDB_SUCCESS) {
+                    ERROR(r->server, "Error getting data for '%s': %s", ipaddr,
+                          MMDB_strerror(mmdb_error));
+                    continue;
+                }
                 if (result.offset > 0) {
                     char *value;
                     int len;
@@ -525,8 +541,8 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                         break;
 
                     default:
-                        len = asprintf(&value, "Unsupported");
-                        break;
+                        ERROR(r->server, "Database error: unknown data type");
+                        continue;
                     }
                     if (len >= 0) {
                         apr_table_set(r->subprocess_env, kv->env_key, value);
