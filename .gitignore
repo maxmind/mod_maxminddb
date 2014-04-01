@@ -28,3 +28,7 @@ t/conf/extra.conf
 t/conf/httpd.conf
 t/conf/mime.types
 t/logs
+/autom4te*.cache
+/config.log
+/config.status
+/configure
