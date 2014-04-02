@@ -2,6 +2,7 @@ AC_INIT(mod_maxminddb, 0.0.1, bzentner@maxmind.com)
 AC_ARG_WITH(apxs, AC_HELP_STRING([--with-apxs=NAME],
             [name of your apxs executable [[apxs]]]),
             [APXS="$with_apxs"])
+AC_PROG_CC_C99
 AC_CONFIG_AUX_DIR([.])
 if test -z "${APXS}"; then
     AC_PATH_PROGS(APXS, apxs2 apxs, no, [$PATH:/usr/sbin:/usr/local/apache2/bin])
