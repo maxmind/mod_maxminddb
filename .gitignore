@@ -32,3 +32,9 @@ t/logs
 /config.log
 /config.status
 /configure
+/Makefile.in
+/aclocal.m4
+/compile
+/install-sh
+/missing
+/src/Makefile.in
