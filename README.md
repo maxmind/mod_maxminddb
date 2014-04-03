@@ -15,7 +15,20 @@ library installed before installing this module.
 
 To install the module, type the following from the source directory:
 
-    sudo apxs -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
+   ./configure
+   make install
+
+If you are using the development from github
+[mod_maxminddb](https://github.com/maxmind/mod_maxminddb.git) use the following
+commands:
+
+    ./bootstrap
+    ./configure
+    make install
+
+To choice another apache installation use
+
+    ./configure --with-apxs=/foo/bar/apxs
 
 ## Usage ##
 
