@@ -5,7 +5,6 @@ WC=-Wc,"-std=c99 $(CFLAGS)"
 all: mod_maxminddb.so
 #   compile the DSO file
 mod_maxminddb.so: $(TARGET)
-#$(APXS) -c $(DEFS) -Wc,"$(CFLAGS)" $(LDFLAGS) $(LIBMAXMINDDB_LDFLAGS) $(LIBS) $(WC) $(APXS_LDFLAGS) mod_maxminddb.c
 	$(APXS) -c $(LDFLAGS) $(LIBMAXMINDDB_LDFLAGS) $(LIBS) $(WC) $(APXS_LDFLAGS) mod_maxminddb.c
 
 install:
