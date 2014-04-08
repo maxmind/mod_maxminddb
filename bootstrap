@@ -1,0 +1,4 @@
+#!/bin/sh
+rm -f ltmain.sh
+autoreconf -fiv
+

@@ -10,12 +10,26 @@ considered beta, and the API may change before it is considered stable.
 
 ## Installation ##
 
-You must have the [libmaxminddb](https://github.com/maxmind/libmaxminddb) C
-library installed before installing this module.
+You must install the [libmaxminddb](https://github.com/maxmind/libmaxminddb) C
+library before installing this module.
 
-To install the module, type the following from the source directory:
+To install the module from a tarball, run the following commands from the
+directory with the extracted source:
 
-    sudo apxs -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
+   ./configure
+   make install
+
+If you are compiling the module from
+[our GitHub repo](https://github.com/maxmind/mod_maxminddb.git), run the
+following commands:
+
+    ./bootstrap
+    ./configure
+    make install
+
+To use another apache installation, specify a path to the right apxs binary:
+
+    ./configure --with-apxs=/foo/bar/apxs
 
 ## Usage ##
 
@@ -120,6 +134,6 @@ The MaxMind DB Apache module uses [Semantic Versioning](http://semver.org/).
 
 ## Copyright and License ##
 
-This software is Copyright (c) 2013 by MaxMind, Inc.
+This software is Copyright (c) 2013-2014 by MaxMind, Inc.
 
 This is free software, licensed under the Apache License, Version 2.0.
