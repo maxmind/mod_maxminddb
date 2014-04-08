@@ -13,7 +13,7 @@ considered beta, and the API may change before it is considered stable.
 You must install the [libmaxminddb](https://github.com/maxmind/libmaxminddb) C
 library before installing this module.
 
-To install the module from the tarball, run the following commands from the
+To install the module from a tarball, run the following commands from the
 directory with the extracted source:
 
    ./configure
