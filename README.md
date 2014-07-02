@@ -85,7 +85,7 @@ the module. This is primarily intended for debugging purposes.
 
 ## Examples ##
 
-This example uses one database file:
+### City Database ###
 
     <IfModule mod_maxminddb.c>
         MaxMindDBEnable On
@@ -98,6 +98,38 @@ This example uses one database file:
         MaxMindDBEnv MM_LATITUDE DB/location/latitude
     </IfModule>
 
+### Connection-Type Database ###
+
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable On
+        MaxMindDBFile DB /usr/local/share/GeoIP/GeoIP2-Connection-Type.mmdb
+
+        MaxMindDBEnv MM_CONNECTION_TYPE DB/connection_type
+    </IfModule>
+
+### Domain Database ###
+
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable On
+        MaxMindDBFile DB /usr/local/share/GeoIP/GeoIP2-Domain.mmdb
+
+        MaxMindDBEnv MM_DOMAIN DB/domain
+    </IfModule>
+
+### ISP Database ###
+
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable On
+        MaxMindDBFile DB /usr/local/share/GeoIP/GeoIP2-ISP.mmdb
+
+        MaxMindDBEnv MM_ASN DB/autonomous_system_number
+        MaxMindDBEnv MM_ASORG DB/autonomous_system_organization
+        MaxMindDBEnv MM_ISP DB/isp
+        MaxMindDBEnv MM_ORG DB/organization
+    </IfModule>
+
+### Blocking by Country ###
+
 This example shows how to block users based on their country:
 
     MaxMindDBEnable On
@@ -106,6 +138,7 @@ This example shows how to block users based on their country:
 
     SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
     Deny from env=BlockCountry
+
 
 ## Data Output Format ##
 
