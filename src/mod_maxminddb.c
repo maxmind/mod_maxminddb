@@ -469,7 +469,8 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                 apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
 
                 MMDB_entry_data_s result;
-                mmdb_error = MMDB_aget_value(&lookup_result.entry, &result,
+                mmdb_error = MMDB_aget_value(
+                        &lookup_result.entry, &result,
                                              &kv->names[1]);
                 if (mmdb_error == MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
                     INFO(r->server, MMDB_strerror(mmdb_error));
@@ -484,7 +485,8 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                     int len;
                     switch (result.type) {
                     case MMDB_DATA_TYPE_BOOLEAN:
-                        len = apr_psprintf(r->pool, &value, "%d", result.boolean);
+                        value = apr_psprintf(r->pool, "%d", result.boolean);
+                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UTF8_STRING:
                         value = apr_palloc(r->pool, result.data_size + 1);
@@ -499,28 +501,34 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                         len = result.data_size;
                         break;
                     case MMDB_DATA_TYPE_FLOAT:
-                        len = apr_psprintf(&r->pool, value, "%.5f", result.float_value);
+                        value = apr_psprintf(r->pool, "%.5f", result.float_value);
+                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_DOUBLE:
-                        len = apr_psprintf(&r->pool, value, "%.5f", result.double_value);
+                        value = apr_psprintf(r->pool, "%.5f", result.double_value);
+                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UINT16:
-                        len = apr_psprintf(&r->pool, value, "%d", result.uint16);
+                        value = apr_psprintf(r->pool, "%d", result.uint16);
+                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UINT32:
-                        len = apr_psprintf(&r->pool, value, "%u", result.uint32);
+                        value = apr_psprintf(r->pool, "%u", result.uint32);
+                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_INT32:
-                        len = apr_psprintf(&r->pool, value, "%d", result.int32);
+                        value = apr_psprintf(r->pool, "%d", result.int32);
+                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UINT64:
-                        len = apr_psprintf(&r->pool, value, "%" PRIu64, result.uint64);
+                        value = apr_psprintf(r->pool, "%" PRIu64, result.uint64);
+                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UINT128:
 #if MMDB_UINT128_IS_BYTE_ARRAY
                         {
                             uint8_t *p = (uint8_t *)result.uint128;
-                            len = apr_psprintf(&r->pool, value, "%02x%02x%02x%02x"
+                            value = apr_psprintf(r->pool, "%02x%02x%02x%02x"
                                            "%02x%02x%02x%02x"
                                            "%02x%02x%02x%02x"
                                            "%02x%02x%02x%02x",
@@ -528,13 +536,15 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                                            p[4], p[5], p[6], p[7],
                                            p[8], p[9], p[10], p[11],
                                            p[12], p[13], p[14], p[15]);
+                            len = strlen(value);
                         }
 #else
                         {
                             mmdb_uint128_t v = result.uint128;
-                            len =
-                                apr_psprintf(&r->pool, value, "%016" PRIx64 "%016" PRIx64,
+                            value =
+                                apr_psprintf(r->pool, "%016" PRIx64 "%016" PRIx64,
                                          (uint64_t)(v >> 64), (uint64_t)v);
+                            len = strlen(value);
                         }
 
 #endif
