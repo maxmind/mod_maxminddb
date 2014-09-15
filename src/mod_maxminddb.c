@@ -97,6 +97,23 @@ static void set_env_for_ip(request_rec *r, maxminddb_server_config *mmsrvcfg,
 static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                          const char *ipaddr);
 
+static char *
+xstrsep(char **stringp, const char *delim)
+{
+    char *p, *end;
+    if ((p = *stringp)) {
+        end = p + strcspn(p, delim);
+        if (*end) {
+            *end++ = 0;
+        }
+        else {
+            end = NULL;
+        }
+        *stringp = end;
+    }
+    return p;
+}
+
 static void init_maxminddb_server_config(maxminddb_server_config *srv)
 {
     srv->nextdb = NULL;
@@ -324,7 +341,7 @@ static void insert_kvlist(struct server_rec *srv,
     apr_pool_t *pool = srv->process->pconf;
     cur = ptr = apr_pstrdup(pool, list->path);
     for (i = 0; i < max_names; i++) {
-        if ((names[i] = strsep(&cur, "/")) == NULL) {
+        if ((names[i] = xstrsep(&cur, "/")) == NULL) {
             break;
         }
     }
