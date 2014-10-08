@@ -22,7 +22,7 @@ before_install:
   - ./bootstrap
   - CFLAGS="-std=gnu99 -Wall -Wextra -Werror -Wno-missing-field-initializers" ./configure
   - make
-  - make install
+  - sudo make install
 
 install:
   - cpanm --installdeps --notest .
