@@ -54,4 +54,4 @@ addons:
     notification_email: dev@maxmind.com
     build_command_prepend: "make clean"
     build_command:   "make"
-    branch_pattern: coverity_scan
+    branch_pattern: .*coverity.*
