@@ -53,5 +53,5 @@ addons:
       description: "Apache module for libmaxminddb"
     notification_email: dev@maxmind.com
     build_command_prepend: "make clean"
-    build_command:   "make"
+    build_command:   "gcc -fpic -DSHARED_MODULE  -I/usr/include/apache2 -I/usr/include/apr-1.0 -I/usr/include/apr-1.0 -I/usr/include  -std=gnu99 -c src/mod_maxminddb.c"
     branch_pattern: .*coverity.*
