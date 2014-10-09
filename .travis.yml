@@ -19,7 +19,10 @@ before_install:
   - cd mod_remoteip-httpd22
   - sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
   - cd ..
-  - sudo apxs2 -i -a -lmaxminddb -Wc,"-std=gnu99 -Wall -Wextra -Werror -Wno-missing-field-initializers" -c src/mod_maxminddb.c
+  - ./bootstrap
+  - CFLAGS="-std=gnu99 -Wall -Wextra -Werror -Wno-missing-field-initializers" ./configure
+  - make
+  - sudo make install
 
 install:
   - cpanm --installdeps --notest .
@@ -38,3 +41,17 @@ notifications:
       - dev@maxmind.com
     on_success: change
     on_failure: always
+
+env:
+  global:
+   - secure: "SaZg9Tde8fwrRST4ik3S5isIRqevV49UiIpwyiAO5R7EBS3QrARGrAV3HUpkWPI+tvPFW98+WoC+CesX2rEV2mXRW8+7H+9sRcfDCQFzxQw0yUh/qjJjC/XSZNYb67LiP9Je8fSSpZfta4gn7MvJy4koFZlP/BKloVqUvxjydmk="
+
+addons:
+  coverity_scan:
+    project:
+      name: "maxmind/mod_maxminddb"
+      description: "Apache module for libmaxminddb"
+    notification_email: dev@maxmind.com
+    build_command_prepend: "make clean"
+    build_command:   "gcc -fpic -DSHARED_MODULE  -I/usr/include/apache2 -I/usr/include/apr-1.0 -I/usr/include/apr-1.0 -I/usr/include  -std=gnu99 -c src/mod_maxminddb.c"
+    branch_pattern: .*coverity.*
