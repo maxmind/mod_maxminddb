@@ -1,5 +1,5 @@
 AUTOMAKE_OPTIONS = foreign
-WC=-Wc,"-std=c99 $(CFLAGS)"
+WC=-Wc,"$(CFLAGS)"
 
 #   the default target
 all: mod_maxminddb.so
