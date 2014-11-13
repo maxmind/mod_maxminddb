@@ -142,8 +142,8 @@ LogLevel        debug
         MaxMindDBFile DECODER_DB        @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-decoder.mmdb
 
         MaxMindDBEnv MM_ARRAY_0         DECODER_DB/array/0
-        MaxMindDBEnv MM_ARRAY_1         DECODER_DB/array/0
-        MaxMindDBEnv MM_ARRAY_2         DECODER_DB/array/0
+        MaxMindDBEnv MM_ARRAY_1         DECODER_DB/array/1
+        MaxMindDBEnv MM_ARRAY_2         DECODER_DB/array/2
         MaxMindDBEnv MM_BOOLEAN         DECODER_DB/boolean
         MaxMindDBEnv MM_BYTES           DECODER_DB/bytes
         MaxMindDBEnv MM_DOUBLE          DECODER_DB/double
