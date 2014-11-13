@@ -20,8 +20,6 @@ before_install:
   - sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
   - cd ..
   - sudo mkdir -p /usr/local/share/GeoIP
-  - sudo cp maxmind-db/test-data/GeoIP2-City-Test.mmdb /usr/local/share/GeoIP/
-  - sudo cp maxmind-db/test-data/MaxMind-DB-test-decoder.mmdb /usr/local/share/GeoIP/
   - ./bootstrap
   - CFLAGS="-std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers" ./configure
   - make

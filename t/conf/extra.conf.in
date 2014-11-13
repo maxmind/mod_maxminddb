@@ -62,7 +62,7 @@ LogLevel        debug
 
         MaxMindDBEnable On
 
-        MaxMindDBFile MISSING_DB           /foo/GeoIP2-City-Test.mmdb
+#        MaxMindDBFile MISSING_DB           /foo/GeoIP2-City-Test.mmdb
     </IfModule>
 </Directory>
 
@@ -74,7 +74,7 @@ LogLevel        debug
 
         MaxMindDBEnable On
 
-        MaxMindDBFile INVALID_DB           /etc/apache2/apache2.conf
+#        MaxMindDBFile INVALID_DB           /etc/apache2/apache2.conf
     </IfModule>
 </Directory>
 
@@ -125,7 +125,7 @@ LogLevel        debug
 
         MaxMindDBEnable On
 
-        MaxMindDBFile CITY_DB           /usr/local/share/GeoIP/GeoIP2-City-Test.mmdb
+        MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
 
         MaxMindDBEnv MM_CITY_NAME_EN    CITY_DB/country/names/fr
     </IfModule>
@@ -139,7 +139,7 @@ LogLevel        debug
 
         MaxMindDBEnable On
 
-        MaxMindDBFile DECODER_DB        MaxMind-DB-test-decoder.mmdb
+        MaxMindDBFile DECODER_DB        @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-decoder.mmdb
 
         MaxMindDBEnv MM_ARRAY_0         DECODER_DB/array/0
         MaxMindDBEnv MM_ARRAY_1         DECODER_DB/array/0
@@ -163,7 +163,6 @@ LogLevel        debug
     </IfModule>
 </Directory>
 
-LogLevel                info
 RemoteIPHeader          X-Forwarded-For
 RemoteIPProxiesHeader   X-Forwarded-By
 

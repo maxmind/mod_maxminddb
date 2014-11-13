@@ -1,12 +1,9 @@
 /* maxminddb module
  *
- * Version 0.0.1
+ * This module populates environment variable from a MaxMind DB database
+ * using the requestor's IP address.
  *
- * This module sets an environment variable to the remote country
- * based on the requestor's IP address.  It uses the maxminddb library
- * to lookup the country by IP address.
- *
- * Copyright 2013, MaxMind Inc.
+ * Copyright 2014, MaxMind Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,14 +59,6 @@ typedef struct key_value_list_s {
     const char **names;
 } key_value_list_s;
 
-typedef struct {
-    int enabled;
-} maxminddb_config;
-
-typedef struct {
-    maxminddb_config mmcfg;
-} maxminddb_dir_config_rec;
-
 typedef struct maxminddb_database_list {
     struct maxminddb_database_list *nextdb;
     const char *disk_name;
@@ -78,27 +67,23 @@ typedef struct maxminddb_database_list {
     key_value_list_s *next;
 } maxminddb_database_list;
 
-typedef struct maxminddb_server_config {
+typedef struct maxminddb_config {
     maxminddb_database_list *nextdb;
     int enabled;
-} maxminddb_server_config;
-
-typedef struct {
-    maxminddb_server_config mmsrvcfg;
-} maxminddb_server_config_rec;
+} maxminddb_config;
 
 module AP_MODULE_DECLARE_DATA maxminddb_module;
-static void add_database(cmd_parms *cmd, maxminddb_server_config *conf,
+
+static void add_database(cmd_parms *cmd, maxminddb_config *conf,
                          const char *nickname, const char *filename);
 
-static void set_env_for_ip(request_rec *r, maxminddb_server_config *mmsrvcfg,
+static void set_env_for_ip(request_rec *r, maxminddb_config *mmsrvcfg,
                            const char *ipaddr);
 
-static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
+static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
                          const char *ipaddr);
 
-static char *
-xstrsep(char **stringp, const char *delim)
+static char *xstrsep(char **stringp, const char *delim)
 {
     char *p, *end;
     if ((p = *stringp)) {
@@ -113,50 +98,45 @@ xstrsep(char **stringp, const char *delim)
     return p;
 }
 
-static void init_maxminddb_server_config(maxminddb_server_config *srv)
+static void init_maxminddb_config(maxminddb_config *srv)
 {
     srv->nextdb = NULL;
     srv->enabled = 1;
 }
 
-
-static void init_maxminddb_config(maxminddb_config *cfg)
-{
-    cfg->enabled = 1;
-}
-
 /* create a disabled directory entry */
-
-static void *create_dir_config(apr_pool_t *p, char *UNUSED(d))
+static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context))
 {
 
-    maxminddb_dir_config_rec *dcfg;
+    maxminddb_config *conf;
 
-    dcfg =
-        (maxminddb_dir_config_rec *)
-        apr_pcalloc(p, sizeof(maxminddb_dir_config_rec));
-    init_maxminddb_config(&dcfg->mmcfg);
+    conf =
+        (maxminddb_config *)
+        apr_pcalloc(pool, sizeof(maxminddb_config));
 
-    return dcfg;
+    conf->enabled = 1;
+
+    init_maxminddb_config(conf);
+
+    return conf;
 }
 
-static void *merge_dir_config(apr_pool_t *UNUSED(p),
+static void *merge_dir_config(apr_pool_t *UNUSED(pool),
                               void *UNUSED(parent), void *cur)
 {
     return cur;
 }
 
 /* create a standard disabled server entry */
-
-static void *create_server_config(apr_pool_t *p, server_rec *UNUSED(srec))
+static void *create_server_config(apr_pool_t *p, server_rec *srec)
 {
-    maxminddb_server_config_rec *conf =
-        apr_pcalloc(p, sizeof(maxminddb_server_config_rec));
+    maxminddb_config *conf =
+        apr_pcalloc(p, sizeof(maxminddb_config));
     if (!conf) {
         return NULL;
     }
 
-    init_maxminddb_server_config(&conf->mmsrvcfg);
+    init_maxminddb_config(conf);
     INFO(srec, "create_server_config");
 
     return (void *)conf;
@@ -164,16 +144,16 @@ static void *create_server_config(apr_pool_t *p, server_rec *UNUSED(srec))
 
 static apr_status_t cleanup(void *cfgdata)
 {
-    maxminddb_server_config_rec *cfg = (maxminddb_server_config_rec *)cfgdata;
+    maxminddb_config *cfg = (maxminddb_config *)cfgdata;
     (void)cfg;
     return APR_SUCCESS;
 }
 
-/* initialize maxminddb once per server ( even virtal server! ) */
+/* initialize maxminddb once per server ( even virtual server! ) */
 static void server_init(apr_pool_t *p, server_rec *s)
 {
-    maxminddb_server_config_rec *cfg;
-    cfg = (maxminddb_server_config_rec *)
+    maxminddb_config *cfg;
+    cfg = (maxminddb_config *)
           ap_get_module_config(s->module_config, &maxminddb_module);
 
     apr_pool_cleanup_register(p, (void *)cfg, cleanup, cleanup);
@@ -191,34 +171,35 @@ static int post_config(apr_pool_t *p, apr_pool_t *UNUSED(plog),
 }
 
 static int maxminddb_header_parser(request_rec *r,
-                                   maxminddb_server_config *mmcfg);
+                                   maxminddb_config *);
+
 static int maxminddb_post_read_request(request_rec *r)
 {
-    maxminddb_server_config_rec *cfg;
-    cfg = ap_get_module_config(r->server->module_config, &maxminddb_module);
+    maxminddb_config *cfg;
+    cfg = ap_get_module_config(r->per_dir_config, &maxminddb_module);
 
     INFO(r->server, "maxminddb_post_read_request");
     if (!cfg) {
         return DECLINED;
     }
 
-    if (!cfg->mmsrvcfg.enabled) {
+    if (!cfg->enabled) {
         return DECLINED;
     }
 
-    return maxminddb_header_parser(r, &cfg->mmsrvcfg);
+    return maxminddb_header_parser(r, cfg);
 }
 
 static int maxminddb_per_dir(request_rec *r)
 {
     INFO(r->server, "maxminddb_per_dir ( enabled )");
-    maxminddb_server_config_rec *scfg =
-        ap_get_module_config(r->server->module_config, &maxminddb_module);
+    maxminddb_config *scfg =
+        ap_get_module_config(r->per_dir_config, &maxminddb_module);
     if (!scfg) {
         return DECLINED;
     }
 
-    return maxminddb_header_parser(r, &scfg->mmsrvcfg);
+    return maxminddb_header_parser(r, scfg);
 }
 
 char *_get_client_ip(request_rec *r)
@@ -231,7 +212,7 @@ char *_get_client_ip(request_rec *r)
 }
 
 static int maxminddb_header_parser(request_rec *r,
-                                   maxminddb_server_config *mmsrvcfg)
+                                   maxminddb_config *mmsrvcfg)
 {
     char *ipaddr;
 
@@ -248,7 +229,7 @@ static int maxminddb_header_parser(request_rec *r,
 
 #define K(...) __VA_ARGS__, NULL
 
-static void set_env_for_ip(request_rec *r, maxminddb_server_config *mmsrvcfg,
+static void set_env_for_ip(request_rec *r, maxminddb_config *mmsrvcfg,
                            const char *ipaddr)
 {
     apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
@@ -259,46 +240,44 @@ static const char *set_maxminddb_enable(cmd_parms *cmd, void *dummy, int arg)
 {
     /* is per directory config? */
     if (cmd->path) {
-        maxminddb_dir_config_rec *dcfg = dummy;
-        dcfg->mmcfg.enabled = arg;
+        maxminddb_config *dcfg = dummy;
+        dcfg->enabled = arg;
 
         INFO(cmd->server, "set_maxminddb_enable: (dir) %d", arg);
 
         return NULL;
     }
     /* no then it is server config */
-    maxminddb_server_config_rec *conf =
-        (maxminddb_server_config_rec *)
+    maxminddb_config *conf =
+        (maxminddb_config *)
         ap_get_module_config(cmd->server->module_config, &maxminddb_module);
 
     if (!conf) {
         return "mod_maxminddb: server structure not allocated";
     }
 
-    conf->mmsrvcfg.enabled = arg;
+    conf->enabled = arg;
     INFO(cmd->server, "set_maxminddb_enable: (server) %d", arg);
 
     return NULL;
 }
 
-static const char *set_maxminddb_filename(cmd_parms *cmd, void *UNUSED(dummy),
+static const char *set_maxminddb_filename(cmd_parms *cmd, void *config,
                                           const char *nickname,
                                           const char *filename)
 {
 
-    maxminddb_server_config_rec *conf =
-        (maxminddb_server_config_rec *)
-        ap_get_module_config(cmd->server->module_config, &maxminddb_module);
+    maxminddb_config *cfg = (maxminddb_config *) config;
 
     INFO(cmd->server, "add-database (server) %s", filename);
-    add_database(cmd, &conf->mmsrvcfg, nickname, filename);
+    add_database(cmd, cfg, nickname, filename);
 
     INFO(cmd->server, "set_maxminddb_filename (server) %s", filename);
 
     return NULL;
 }
 
-static void add_database(cmd_parms *cmd, maxminddb_server_config *conf,
+static void add_database(cmd_parms *cmd, maxminddb_config *conf,
                          const char *nickname, const char *filename)
 {
     for (maxminddb_database_list *cur = conf->nextdb;
@@ -330,7 +309,7 @@ static void add_database(cmd_parms *cmd, maxminddb_server_config *conf,
 }
 
 static void insert_kvlist(struct server_rec *srv,
-                          maxminddb_server_config *mmsrvcfg,
+                          maxminddb_config *mmsrvcfg,
                           key_value_list_s *list)
 {
     const int max_names = 80;
@@ -370,7 +349,7 @@ static void insert_kvlist(struct server_rec *srv,
     }
 }
 
-static const char *set_maxminddb_env(cmd_parms *cmd, void *UNUSED(dummy),
+static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
                                      const char *env, const char *dbpath)
 {
     key_value_list_s *list = apr_palloc(cmd->pool, sizeof(key_value_list_s));
@@ -379,18 +358,17 @@ static const char *set_maxminddb_env(cmd_parms *cmd, void *UNUSED(dummy),
     list->next = NULL;
     list->names = NULL;
 
-    maxminddb_server_config_rec *conf = (maxminddb_server_config_rec *)
-                                        ap_get_module_config(
-        cmd->server->module_config, &maxminddb_module);
+    maxminddb_config *conf = (maxminddb_config *)
+                                        config;
 
     INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, dbpath);
 
-    insert_kvlist(cmd->server, &conf->mmsrvcfg, list);
+    insert_kvlist(cmd->server, conf, list);
 
     return NULL;
 }
 
-static const command_rec maxminddb_cmds[] = {
+static const command_rec maxminddb_directives[] = {
     AP_INIT_FLAG("MaxMindDBEnable",
                  set_maxminddb_enable,
                  NULL,
@@ -416,12 +394,12 @@ static void maxminddb_register_hooks(apr_pool_t *UNUSED(p))
     { "mod_setenvif.c", "mod_rewrite.c", NULL };
 
     /* we have two entry points, the header_parser hook, right before
-     * the authentication hook used for Dirctory specific enabled maxminddblookups
-     * or right before directory rewrite rules.
+     * the authentication hook used for Directory specific enabled maxminddb
+     * lookups or right before directory rewrite rules.
      */
     ap_hook_header_parser(maxminddb_per_dir, NULL, aszSucc, APR_HOOK_MIDDLE);
 
-    /* and the servectly wide hook, after reading the request. Perfecly
+    /* and the servectly wide hook, after reading the request. Perfectly
      * suitable to serve serverwide mod_rewrite actions
      */
     ap_hook_post_read_request(maxminddb_post_read_request, NULL, aszSucc,
@@ -440,11 +418,11 @@ module AP_MODULE_DECLARE_DATA maxminddb_module = {
     merge_dir_config,        /* merge  per-dir    config structures */
     create_server_config,    /* create per-server config structures */
     NULL,                    /* merge  per-server config structures */
-    maxminddb_cmds,          /* table of config file commands       */
+    maxminddb_directives,    /* table of config file commands       */
     maxminddb_register_hooks /* register hooks                      */
 };
 
-static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
+static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
                          const char *ipaddr)
 {
     if (ipaddr == NULL) {
@@ -454,7 +432,7 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
     for (maxminddb_database_list *sl = mmsrvcfg->nextdb; sl; sl =
              sl->nextdb) {
 
-        INFO(r->server, "sl %08lx n:%08lx", sl, sl->next);
+        // INFO(r->server, "sl %08lx n:%08lx", sl, sl->next);
 
         if (sl->next == NULL) {
             continue;
@@ -489,7 +467,7 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                     &lookup_result.entry, &result,
                     &kv->names[1]);
                 if (mmdb_error == MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
-                    INFO(r->server, MMDB_strerror(mmdb_error));
+                    // INFO(r->server, MMDB_strerror(mmdb_error));
                     continue;
                 } else if (mmdb_error != MMDB_SUCCESS) {
                     ERROR(r->server, "Error getting data for '%s': %s", ipaddr,
@@ -546,7 +524,7 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
 #if MMDB_UINT128_IS_BYTE_ARRAY
                         {
                             uint8_t *p = (uint8_t *)result.uint128;
-                            value = apr_psprintf(r->pool, "%02x%02x%02x%02x"
+                            value = apr_psprintf(r->pool, "0x%02x%02x%02x%02x"
                                                  "%02x%02x%02x%02x"
                                                  "%02x%02x%02x%02x"
                                                  "%02x%02x%02x%02x",
@@ -561,7 +539,7 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                             mmdb_uint128_t v = result.uint128;
                             value =
                                 apr_psprintf(r->pool,
-                                             "%016" PRIx64 "%016" PRIx64,
+                                             "0x%016" PRIx64 "%016" PRIx64,
                                              (uint64_t)(v >> 64),
                                              (uint64_t)v);
                             len = strlen(value);
