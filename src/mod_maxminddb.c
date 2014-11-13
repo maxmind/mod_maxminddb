@@ -105,8 +105,7 @@ xstrsep(char **stringp, const char *delim)
         end = p + strcspn(p, delim);
         if (*end) {
             *end++ = 0;
-        }
-        else {
+        }else {
             end = NULL;
         }
         *stringp = end;
@@ -487,8 +486,8 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
 
                 MMDB_entry_data_s result;
                 mmdb_error = MMDB_aget_value(
-                        &lookup_result.entry, &result,
-                                             &kv->names[1]);
+                    &lookup_result.entry, &result,
+                    &kv->names[1]);
                 if (mmdb_error == MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
                     INFO(r->server, MMDB_strerror(mmdb_error));
                     continue;
@@ -518,11 +517,13 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                         len = result.data_size;
                         break;
                     case MMDB_DATA_TYPE_FLOAT:
-                        value = apr_psprintf(r->pool, "%.5f", result.float_value);
+                        value = apr_psprintf(r->pool, "%.5f",
+                                             result.float_value);
                         len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_DOUBLE:
-                        value = apr_psprintf(r->pool, "%.5f", result.double_value);
+                        value = apr_psprintf(r->pool, "%.5f",
+                                             result.double_value);
                         len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UINT16:
@@ -546,21 +547,23 @@ static void set_user_env(request_rec *r, maxminddb_server_config *mmsrvcfg,
                         {
                             uint8_t *p = (uint8_t *)result.uint128;
                             value = apr_psprintf(r->pool, "%02x%02x%02x%02x"
-                                           "%02x%02x%02x%02x"
-                                           "%02x%02x%02x%02x"
-                                           "%02x%02x%02x%02x",
-                                           p[0], p[1], p[2], p[3],
-                                           p[4], p[5], p[6], p[7],
-                                           p[8], p[9], p[10], p[11],
-                                           p[12], p[13], p[14], p[15]);
+                                                 "%02x%02x%02x%02x"
+                                                 "%02x%02x%02x%02x"
+                                                 "%02x%02x%02x%02x",
+                                                 p[0], p[1], p[2], p[3],
+                                                 p[4], p[5], p[6], p[7],
+                                                 p[8], p[9], p[10], p[11],
+                                                 p[12], p[13], p[14], p[15]);
                             len = strlen(value);
                         }
 #else
                         {
                             mmdb_uint128_t v = result.uint128;
                             value =
-                                apr_psprintf(r->pool, "%016" PRIx64 "%016" PRIx64,
-                                         (uint64_t)(v >> 64), (uint64_t)v);
+                                apr_psprintf(r->pool,
+                                             "%016" PRIx64 "%016" PRIx64,
+                                             (uint64_t)(v >> 64),
+                                             (uint64_t)v);
                             len = strlen(value);
                         }
 
