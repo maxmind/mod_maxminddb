@@ -77,6 +77,8 @@ module AP_MODULE_DECLARE_DATA maxminddb_module;
 static void add_database(cmd_parms *cmd, maxminddb_config *conf,
                          const char *nickname, const char *filename);
 
+static apr_status_t cleanup_database(void *mmdb);
+
 static char * from_uint128(apr_pool_t *pool,
                            const MMDB_entry_data_s *result);
 
@@ -120,34 +122,6 @@ static void *merge_dir_config(apr_pool_t *UNUSED(pool),
     return cur;
 }
 
-static apr_status_t cleanup(void *cfgdata)
-{
-    maxminddb_config *cfg = (maxminddb_config *)cfgdata;
-    (void)cfg;
-    return APR_SUCCESS;
-}
-
-/* initialize maxminddb once per server ( even virtual server! ) */
-static void server_init(apr_pool_t *p, server_rec *s)
-{
-    maxminddb_config *cfg;
-    cfg = (maxminddb_config *)
-          ap_get_module_config(s->module_config, &maxminddb_module);
-
-    apr_pool_cleanup_register(p, (void *)cfg, cleanup, cleanup);
-    INFO(s, "server_init");
-
-}
-
-/* map into the first apache */
-static int post_config(apr_pool_t *p, apr_pool_t *UNUSED(plog),
-                       apr_pool_t *UNUSED(ptemp), server_rec *s)
-{
-    INFO(s, "post_config");
-    server_init(p, s);
-    return OK;
-}
-
 static int maxminddb_header_parser(request_rec *r,
                                    maxminddb_config *);
 
@@ -163,7 +137,7 @@ static int maxminddb_per_dir(request_rec *r)
     return maxminddb_header_parser(r, cfg);
 }
 
-char *_get_client_ip(request_rec *r)
+static char *get_client_ip(request_rec *r)
 {
 # if AP_SERVER_MAJORVERSION_NUMBER == 2 && AP_SERVER_MINORVERSION_NUMBER == 4
     return r->useragent_ip;
@@ -177,7 +151,7 @@ static int maxminddb_header_parser(request_rec *r,
 {
     char *ipaddr;
 
-    ipaddr = _get_client_ip(r);
+    ipaddr = get_client_ip(r);
     INFO(r->server, "maxminddb_header_parser %s", ipaddr);
 
     if (!mmsrvcfg || !mmsrvcfg->enabled) {
@@ -250,12 +224,23 @@ static void add_database(cmd_parms *cmd, maxminddb_config *conf,
               MMDB_strerror(mmdb_error));
         return;
     }
+
+    apr_pool_pre_cleanup_register(cmd->pool, sl->mmdb, cleanup_database);
+
     sl->disk_name = (char *)apr_pstrdup(cmd->pool, filename);
     sl->nick_name = (char *)apr_pstrdup(cmd->pool, nickname);
     sl->nextdb = conf->nextdb;
     conf->nextdb = sl;
     INFO(cmd->server, "Insert db (%s)%s", nickname, filename);
 }
+
+static apr_status_t cleanup_database(void *mmdb)
+{
+    MMDB_close((MMDB_s *)mmdb);
+
+    return APR_SUCCESS;
+}
+
 
 static void insert_kvlist(struct server_rec *srv,
                           maxminddb_config *mmsrvcfg,
@@ -340,9 +325,6 @@ static void maxminddb_register_hooks(apr_pool_t *UNUSED(p))
     { "mod_setenvif.c", "mod_rewrite.c", NULL };
 
     ap_hook_header_parser(maxminddb_per_dir, NULL, asz_succ, APR_HOOK_MIDDLE);
-
-    /* mmap the database(s) into the master process */
-    ap_hook_post_config(post_config, NULL, NULL, APR_HOOK_MIDDLE);
 }
 
 /* Dispatch list for API hooks */
