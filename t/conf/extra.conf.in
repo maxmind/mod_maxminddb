@@ -150,10 +150,10 @@ LogLevel        debug
         MaxMindDBEnv MM_FLOAT           DECODER_DB/float
         MaxMindDBEnv MM_INT32           DECODER_DB/int32
         MaxMindDBEnv MM_MAP             DECODER_DB/map
-        MaxMindDBEnv MM_MAP_ARRAY_0     DECODER_DB/mapX/arrayX/0
-        MaxMindDBEnv MM_MAP_ARRAY_1     DECODER_DB/mapX/arrayX/1
-        MaxMindDBEnv MM_MAP_ARRAY_2     DECODER_DB/mapX/arrayX/2
-        MaxMindDBEnv MM_MAP_UTF8_STRING DECODER_DB/mapX/utf8_stringX
+        MaxMindDBEnv MM_MAP_ARRAY_0     DECODER_DB/map/mapX/arrayX/0
+        MaxMindDBEnv MM_MAP_ARRAY_1     DECODER_DB/map/mapX/arrayX/1
+        MaxMindDBEnv MM_MAP_ARRAY_2     DECODER_DB/map/mapX/arrayX/2
+        MaxMindDBEnv MM_MAP_UTF8_STRING DECODER_DB/map/mapX/utf8_stringX
         MaxMindDBEnv MM_UINT128         DECODER_DB/uint128
         MaxMindDBEnv MM_UINT16          DECODER_DB/uint16
         MaxMindDBEnv MM_UINT32          DECODER_DB/uint32

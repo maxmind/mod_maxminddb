@@ -9,7 +9,7 @@ use Test::ModMaxMindDB qw( get_env );
 
 my $env = get_env( '/cgi-bin/decoder/json-env', '1.1.1.0' );
 
-like( $env->{MMDB_INFO}, qr/lookup success/, 'success message' );
+like( $env->{MMDB_INFO}, qr/result found/, 'success message' );
 ok( !exists $env->{MM_CONTINENT_CODE}, 'MM_CONTINENT_CODE does not exist' );
 
 my %expect = (
