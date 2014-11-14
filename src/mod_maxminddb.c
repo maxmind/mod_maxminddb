@@ -163,19 +163,6 @@ static int post_config(apr_pool_t *p, apr_pool_t *UNUSED(plog),
 static int maxminddb_header_parser(request_rec *r,
                                    maxminddb_config *);
 
-static int maxminddb_post_read_request(request_rec *r)
-{
-    maxminddb_config *cfg;
-    cfg = ap_get_module_config(r->per_dir_config, &maxminddb_module);
-
-    INFO(r->server, "maxminddb_post_read_request");
-    if (!cfg || !cfg->enabled) {
-        return DECLINED;
-    }
-
-    return maxminddb_header_parser(r, cfg);
-}
-
 static int maxminddb_per_dir(request_rec *r)
 {
     INFO(r->server, "maxminddb_per_dir ( enabled )");
@@ -364,25 +351,13 @@ static const command_rec maxminddb_directives[] = {
 static void maxminddb_register_hooks(apr_pool_t *UNUSED(p))
 {
     /* make sure we run before mod_rewrite's handler */
-    static const char *const aszSucc[] =
+    static const char *const asz_succ[] =
     { "mod_setenvif.c", "mod_rewrite.c", NULL };
 
-    /* we have two entry points, the header_parser hook, right before
-     * the authentication hook used for Directory specific enabled maxminddb
-     * lookups or right before directory rewrite rules.
-     */
-    ap_hook_header_parser(maxminddb_per_dir, NULL, aszSucc, APR_HOOK_MIDDLE);
+    ap_hook_header_parser(maxminddb_per_dir, NULL, asz_succ, APR_HOOK_MIDDLE);
 
-    /* and the servectly wide hook, after reading the request. Perfectly
-     * suitable to serve serverwide mod_rewrite actions
-     */
-    ap_hook_post_read_request(maxminddb_post_read_request, NULL, aszSucc,
-                              APR_HOOK_MIDDLE);
-
-    /* static const char * const list[]={ "mod_maxminddb.c", NULL }; */
     /* mmap the database(s) into the master process */
     ap_hook_post_config(post_config, NULL, NULL, APR_HOOK_MIDDLE);
-
 }
 
 /* Dispatch list for API hooks */
@@ -417,7 +392,7 @@ static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
         if (0 != gai_error || MMDB_SUCCESS != mmdb_error) {
             apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup failed");
 
-            char *msg = 0 != gai_error ? "failed to resolve IP address" :
+            const char *msg = 0 != gai_error ? "failed to resolve IP address" :
                         MMDB_strerror(mmdb_error);
             ERROR(r->server, "Error looking up '%s': %s", ipaddr,
                   msg);
