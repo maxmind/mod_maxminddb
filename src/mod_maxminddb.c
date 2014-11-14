@@ -87,7 +87,6 @@ static void set_env_for_lookup(request_rec *r, const char *ip_address,
 /* create a disabled directory entry */
 static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context))
 {
-    printf("\n\n***CREATING DIR CONFIG***\n\n");
     maxminddb_config *conf = apr_pcalloc(pool, sizeof(maxminddb_config));
 
     conf->databases = NULL;
