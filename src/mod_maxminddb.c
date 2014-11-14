@@ -86,21 +86,6 @@ static void set_env_for_ip(request_rec *r, maxminddb_config *mmsrvcfg,
 static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
                          const char *ipaddr);
 
-static char *xstrsep(char **stringp, const char *delim)
-{
-    char *p, *end;
-    if ((p = *stringp)) {
-        end = p + strcspn(p, delim);
-        if (*end) {
-            *end++ = 0;
-        }else {
-            end = NULL;
-        }
-        *stringp = end;
-    }
-    return p;
-}
-
 static void init_maxminddb_config(maxminddb_config *conf)
 {
     conf->nextdb = NULL;
@@ -277,17 +262,20 @@ static void insert_kvlist(struct server_rec *srv,
                           key_value_list_s *list)
 {
     const int max_names = 80;
-    const char *names[max_names + 1];
-    int i;
-    char *ptr, *cur;
+    char *names[max_names + 1];
+
     apr_pool_t *pool = srv->process->pconf;
-    cur = ptr = apr_pstrdup(pool, list->path);
-    for (i = 0; i < max_names; i++) {
-        if ((names[i] = xstrsep(&cur, "/")) == NULL) {
-            break;
-        }
+
+    names[0] = apr_pstrdup(pool, list->path);
+
+    int i;
+    char* strtok_last = NULL;
+
+    char *token = apr_strtok(names[0], "/", &strtok_last);
+    for (i = 1; i <= max_names && token; i++) {
+        token = apr_strtok(NULL, "/", &strtok_last);
+        names[i] = token;
     }
-    names[i] = NULL;
 
     if (!i) {
         return;
@@ -304,7 +292,7 @@ static void insert_kvlist(struct server_rec *srv,
                                                             (1 +
                                                              i) *
                                                             sizeof(char *));
-            const char **from = &names[0];
+            char **from = &names[0];
             while ((*to++ = *from++)) {
                 ;
             }
