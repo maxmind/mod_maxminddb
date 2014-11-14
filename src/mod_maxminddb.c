@@ -77,8 +77,8 @@ module AP_MODULE_DECLARE_DATA maxminddb_module;
 static void add_database(cmd_parms *cmd, maxminddb_config *conf,
                          const char *nickname, const char *filename);
 
-static char* from_uint128(apr_pool_t *pool,
-                         const MMDB_entry_data_s *result);
+static char * from_uint128(apr_pool_t *pool,
+                           const MMDB_entry_data_s *result);
 
 static void set_env_for_ip(request_rec *r, maxminddb_config *mmsrvcfg,
                            const char *ipaddr);
@@ -269,7 +269,7 @@ static void insert_kvlist(struct server_rec *srv,
     names[0] = apr_pstrdup(pool, list->path);
 
     int i;
-    char* strtok_last = NULL;
+    char * strtok_last = NULL;
 
     char *token = apr_strtok(names[0], "/", &strtok_last);
     for (i = 1; i <= max_names && token; i++) {
@@ -287,15 +287,9 @@ static void insert_kvlist(struct server_rec *srv,
             // found
             list->next = sl->next;
             sl->next = list;
-            const char **to = list->names =
-                                  (const char **)apr_palloc(pool,
-                                                            (1 +
-                                                             i) *
-                                                            sizeof(char *));
-            char **from = &names[0];
-            while ((*to++ = *from++)) {
-                ;
-            }
+            list->names = (const char **)apr_pmemdup(pool, names,
+                                                     (1 + i) *
+                                                     sizeof(char *));
             break;
         }
     }
@@ -384,7 +378,7 @@ static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
             apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup failed");
 
             const char *msg = 0 != gai_error ? "failed to resolve IP address" :
-                        MMDB_strerror(mmdb_error);
+                              MMDB_strerror(mmdb_error);
             ERROR(r->server, "Error looking up '%s': %s", ipaddr,
                   msg);
             continue;
@@ -420,14 +414,14 @@ static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
                         break;
                     case MMDB_DATA_TYPE_UTF8_STRING:
                         value = apr_pstrmemdup(r->pool, result.utf8_string,
-                                            result.data_size);
+                                               result.data_size);
                         break;
                     case MMDB_DATA_TYPE_BYTES:
                         /* XXX - treating bytes as strings is broken.
                            They may contain null characters */
                         value = apr_pstrmemdup(r->pool,
-                                            (const char*) result.bytes,
-                                            result.data_size);
+                                               (const char *)result.bytes,
+                                               result.data_size);
                         break;
                     case MMDB_DATA_TYPE_FLOAT:
                         value = apr_psprintf(r->pool, "%.5f",
@@ -466,26 +460,27 @@ static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
     }
 }
 
-static char* from_uint128(apr_pool_t *pool,
-                         const MMDB_entry_data_s *result) {
+static char * from_uint128(apr_pool_t *pool,
+                           const MMDB_entry_data_s *result)
+{
 
 #if MMDB_UINT128_IS_BYTE_ARRAY
     uint8_t *p = (uint8_t *)result->uint128;
     return apr_psprintf(pool, "0x"
-                         "%02x%02x%02x%02x"
-                         "%02x%02x%02x%02x"
-                         "%02x%02x%02x%02x"
-                         "%02x%02x%02x%02x",
-                         p[0], p[1], p[2], p[3],
-                         p[4], p[5], p[6], p[7],
-                         p[8], p[9], p[10], p[11],
-                         p[12], p[13], p[14], p[15]);
+                        "%02x%02x%02x%02x"
+                        "%02x%02x%02x%02x"
+                        "%02x%02x%02x%02x"
+                        "%02x%02x%02x%02x",
+                        p[0], p[1], p[2], p[3],
+                        p[4], p[5], p[6], p[7],
+                        p[8], p[9], p[10], p[11],
+                        p[12], p[13], p[14], p[15]);
 #else
 
     mmdb_uint128_t v = result->uint128;
     return apr_psprintf(pool,
-                     "0x%016" PRIx64 "%016" PRIx64,
-                     (uint64_t)(v >> 64),
-                     (uint64_t)v);
+                        "0x%016" PRIx64 "%016" PRIx64,
+                        (uint64_t)(v >> 64),
+                        (uint64_t)v);
 #endif
 }
