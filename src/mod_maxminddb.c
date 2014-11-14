@@ -77,6 +77,9 @@ module AP_MODULE_DECLARE_DATA maxminddb_module;
 static void add_database(cmd_parms *cmd, maxminddb_config *conf,
                          const char *nickname, const char *filename);
 
+static char* from_uint128(apr_pool_t *pool,
+                         const MMDB_entry_data_s *result);
+
 static void set_env_for_ip(request_rec *r, maxminddb_config *mmsrvcfg,
                            const char *ipaddr);
 
@@ -421,89 +424,80 @@ static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
                     continue;
                 }
                 if (result.offset > 0) {
-                    char *value;
-                    int len;
+                    char *value = NULL;
+
                     switch (result.type) {
                     case MMDB_DATA_TYPE_BOOLEAN:
                         value = apr_psprintf(r->pool, "%d", result.boolean);
-                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UTF8_STRING:
-                        value = apr_palloc(r->pool, result.data_size + 1);
-                        memcpy(value, result.utf8_string, result.data_size);
-                        value[result.data_size] = '\0';
-                        len = result.data_size;
+                        value = apr_pstrmemdup(r->pool, result.utf8_string,
+                                            result.data_size);
                         break;
                     case MMDB_DATA_TYPE_BYTES:
-                        value = apr_palloc(r->pool, result.data_size + 1);
-                        memcpy(value, result.bytes, result.data_size);
-                        value[result.data_size] = '\0';
-                        len = result.data_size;
+                        /* XXX - treating bytes as strings is broken.
+                           They may contain null characters */
+                        value = apr_pstrmemdup(r->pool,
+                                            (const char*) result.bytes,
+                                            result.data_size);
                         break;
                     case MMDB_DATA_TYPE_FLOAT:
                         value = apr_psprintf(r->pool, "%.5f",
                                              result.float_value);
-                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_DOUBLE:
                         value = apr_psprintf(r->pool, "%.5f",
                                              result.double_value);
-                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UINT16:
                         value = apr_psprintf(r->pool, "%d", result.uint16);
-                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UINT32:
                         value = apr_psprintf(r->pool, "%u", result.uint32);
-                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_INT32:
                         value = apr_psprintf(r->pool, "%d", result.int32);
-                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UINT64:
                         value = apr_psprintf(r->pool, "%" PRIu64, result.uint64);
-                        len = strlen(value);
                         break;
                     case MMDB_DATA_TYPE_UINT128:
-#if MMDB_UINT128_IS_BYTE_ARRAY
-                        {
-                            uint8_t *p = (uint8_t *)result.uint128;
-                            value = apr_psprintf(r->pool, "0x"
-                                                 "%02x%02x%02x%02x"
-                                                 "%02x%02x%02x%02x"
-                                                 "%02x%02x%02x%02x"
-                                                 "%02x%02x%02x%02x",
-                                                 p[0], p[1], p[2], p[3],
-                                                 p[4], p[5], p[6], p[7],
-                                                 p[8], p[9], p[10], p[11],
-                                                 p[12], p[13], p[14], p[15]);
-                            len = strlen(value);
-                        }
-#else
-                        {
-                            mmdb_uint128_t v = result.uint128;
-                            value =
-                                apr_psprintf(r->pool,
-                                             "0x%016" PRIx64 "%016" PRIx64,
-                                             (uint64_t)(v >> 64),
-                                             (uint64_t)v);
-                            len = strlen(value);
-                        }
-
-#endif
+                        value = from_uint128(r->pool, &result);
                         break;
-
                     default:
                         ERROR(r->server, "Database error: unknown data type");
                         continue;
                     }
-                    if (len >= 0) {
+
+                    if (NULL != value) {
                         apr_table_set(r->subprocess_env, kv->env_key, value);
                     }
                 }
             }
         }
     }
+}
+
+static char* from_uint128(apr_pool_t *pool,
+                         const MMDB_entry_data_s *result) {
+
+#if MMDB_UINT128_IS_BYTE_ARRAY
+    uint8_t *p = (uint8_t *)result->uint128;
+    return apr_psprintf(pool, "0x"
+                         "%02x%02x%02x%02x"
+                         "%02x%02x%02x%02x"
+                         "%02x%02x%02x%02x"
+                         "%02x%02x%02x%02x",
+                         p[0], p[1], p[2], p[3],
+                         p[4], p[5], p[6], p[7],
+                         p[8], p[9], p[10], p[11],
+                         p[12], p[13], p[14], p[15]);
+#else
+
+    mmdb_uint128_t v = result->uint128;
+    return apr_psprintf(pool,
+                     "0x%016" PRIx64 "%016" PRIx64,
+                     (uint64_t)(v >> 64),
+                     (uint64_t)v);
+#endif
 }
