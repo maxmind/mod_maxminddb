@@ -105,16 +105,6 @@ static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context))
     return conf;
 }
 
-/* create a standard disabled server entry */
-static void *create_server_config(apr_pool_t *pool, server_rec *srec)
-{
-    maxminddb_config *conf = apr_pcalloc(pool, sizeof(maxminddb_config));
-
-    init_maxminddb_config(conf);
-    INFO(srec, "create_server_config");
-
-    return conf;
-}
 
 static void *merge_dir_config(apr_pool_t *UNUSED(pool),
                               void *UNUSED(parent), void *cur)
@@ -332,7 +322,7 @@ module AP_MODULE_DECLARE_DATA maxminddb_module = {
     STANDARD20_MODULE_STUFF,
     create_dir_config,       /* create per-dir    config structures */
     merge_dir_config,        /* merge  per-dir    config structures */
-    create_server_config,    /* create per-server config structures */
+    NULL,                    /* create per-server config structures */
     NULL,                    /* merge  per-server config structures */
     maxminddb_directives,    /* table of config file commands       */
     maxminddb_register_hooks /* register hooks                      */
