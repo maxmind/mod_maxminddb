@@ -14,7 +14,7 @@ t_start_error_log_watch();
 
 my $env = get_env( '/cgi-bin/ipv4-only/json-env', '2001::1' );
 
-like( $env->{MMDB_INFO}, qr/lookup failed/, 'failure message' );
+is( $env->{MMDB_INFO}, undef, 'MMDB_INFO was not set on failed lookup' );
 
 ok any {/IPv6 address in an IPv4-only database/} t_finish_error_log_watch(),
     'Error logged when looking up IPv6 address in IPv4 database';

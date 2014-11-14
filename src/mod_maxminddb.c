@@ -52,30 +52,25 @@
 #define UNUSED
 #endif
 
-typedef struct key_value_list_s {
-    const char *path;
+typedef struct lookup_path_list {
+    struct lookup_path_list *next;
     const char *env_key;
-    struct key_value_list_s *next;
     const char **names;
-} key_value_list_s;
+} lookup_path_list;
 
-typedef struct maxminddb_database_list {
-    struct maxminddb_database_list *nextdb;
-    const char *disk_name;
-    const char *nick_name;
+typedef struct database_list {
+    struct database_list *next;
+    const char *name;
     MMDB_s *mmdb;
-    key_value_list_s *next;
-} maxminddb_database_list;
+    lookup_path_list *lookup_paths;
+} database_list;
 
 typedef struct maxminddb_config {
-    maxminddb_database_list *nextdb;
+    database_list *databases;
     int enabled;
 } maxminddb_config;
 
 module AP_MODULE_DECLARE_DATA maxminddb_module;
-
-static void add_database(cmd_parms *cmd, maxminddb_config *conf,
-                         const char *nickname, const char *filename);
 
 static apr_status_t cleanup_database(void *mmdb);
 
@@ -85,19 +80,22 @@ static char * from_uint128(apr_pool_t *pool,
 static int maxminddb_header_parser(request_rec *r,
                                    maxminddb_config *);
 
-static void set_env_for_ip(request_rec *r, maxminddb_config *mmsrvcfg,
-                           const char *ipaddr);
+static void set_env(request_rec *r, maxminddb_config *conf,
+                    const char *ipaddr);
 
-static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
-                         const char *ipaddr);
+static void set_env_for_database(request_rec *r, const char *ipaddr,
+                                 database_list *sl);
+
+static void set_env_for_lookup(request_rec *r, const char *ipaddr,
+                               MMDB_lookup_result_s *lookup_result,
+                               lookup_path_list *lookup_paths);
 
 /* create a disabled directory entry */
 static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context))
 {
-
     maxminddb_config *conf = apr_pcalloc(pool, sizeof(maxminddb_config));
 
-    conf->nextdb = NULL;
+    conf->databases = NULL;
     conf->enabled = 0;
 
     return conf;
@@ -130,29 +128,6 @@ static char *get_client_ip(request_rec *r)
 #endif
 }
 
-static int maxminddb_header_parser(request_rec *r,
-                                   maxminddb_config *mmsrvcfg)
-{
-    char *ipaddr;
-
-    ipaddr = get_client_ip(r);
-    INFO(r->server, "maxminddb_header_parser %s", ipaddr);
-
-    if (!mmsrvcfg || !mmsrvcfg->enabled) {
-        return DECLINED;
-    }
-
-    set_env_for_ip(r, mmsrvcfg, ipaddr);
-    return OK;
-}
-
-static void set_env_for_ip(request_rec *r, maxminddb_config *mmsrvcfg,
-                           const char *ipaddr)
-{
-    apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
-    set_user_env(r, mmsrvcfg, ipaddr);
-}
-
 static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg)
 {
     maxminddb_config *conf = (maxminddb_config *)config;
@@ -168,52 +143,43 @@ static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg)
 }
 
 static const char *set_maxminddb_filename(cmd_parms *cmd, void *config,
-                                          const char *nickname,
+                                          const char *database_name,
                                           const char *filename)
 {
-
-    maxminddb_config *cfg = (maxminddb_config *)config;
-
-    INFO(cmd->server, "add-database (server) %s", filename);
-    add_database(cmd, cfg, nickname, filename);
+    maxminddb_config *conf = (maxminddb_config *)config;
 
     INFO(cmd->server, "set_maxminddb_filename (server) %s", filename);
 
-    return NULL;
-}
-
-static void add_database(cmd_parms *cmd, maxminddb_config *conf,
-                         const char *nickname, const char *filename)
-{
-    for (maxminddb_database_list *cur = conf->nextdb;
-         cur; cur = cur->nextdb) {
-        if (!strcmp(cur->nick_name, nickname)) {
-            // we know the nickname already
-            INFO(cmd->server, "We know already db (%s) skipping %s", nickname,
-                 filename);
-            return;
+    for (database_list *cur = conf->databases;
+         cur; cur = cur->next) {
+        if (!strcmp(cur->name, database_name)) {
+            // we already have a record for the database
+            INFO(cmd->server, "We know already db (%s) skipping %s",
+                 database_name, filename);
+            return NULL;
         }
     }
     // insert
-    maxminddb_database_list *sl =
-        apr_palloc(cmd->pool, sizeof(maxminddb_database_list));
-    sl->nextdb = NULL;
+    database_list *sl =
+        apr_palloc(cmd->pool, sizeof(database_list));
     sl->next = NULL;
+    sl->lookup_paths = NULL;
     sl->mmdb = apr_palloc(cmd->pool, sizeof(MMDB_s));
     int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, sl->mmdb);
     if (mmdb_error != MMDB_SUCCESS) {
         ERROR(cmd->server, "Opening %s failed: %s", filename,
               MMDB_strerror(mmdb_error));
-        return;
+        return NULL;
     }
 
     apr_pool_pre_cleanup_register(cmd->pool, sl->mmdb, cleanup_database);
 
-    sl->disk_name = (char *)apr_pstrdup(cmd->pool, filename);
-    sl->nick_name = (char *)apr_pstrdup(cmd->pool, nickname);
-    sl->nextdb = conf->nextdb;
-    conf->nextdb = sl;
-    INFO(cmd->server, "Insert db (%s)%s", nickname, filename);
+    sl->name = (char *)apr_pstrdup(cmd->pool, database_name);
+    sl->next = conf->databases;
+    conf->databases = sl;
+    INFO(cmd->server, "Insert db (%s)%s", database_name, filename);
+
+    return NULL;
 }
 
 static apr_status_t cleanup_database(void *mmdb)
@@ -223,17 +189,22 @@ static apr_status_t cleanup_database(void *mmdb)
     return APR_SUCCESS;
 }
 
-
-static void insert_kvlist(struct server_rec *srv,
-                          maxminddb_config *mmsrvcfg,
-                          key_value_list_s *list)
+static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
+                                     const char *env, const char *path)
 {
+    lookup_path_list *list = apr_palloc(cmd->pool, sizeof(lookup_path_list));
+    list->env_key = env;
+    list->next = NULL;
+    list->names = NULL;
+
+    maxminddb_config *conf = (maxminddb_config *)config;
+
+    INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, path);
+
     const int max_names = 80;
     char *names[max_names + 1];
 
-    apr_pool_t *pool = srv->process->pconf;
-
-    names[0] = apr_pstrdup(pool, list->path);
+    names[0] = apr_pstrdup(cmd->pool, path);
 
     int i;
     char * strtok_last = NULL;
@@ -245,41 +216,181 @@ static void insert_kvlist(struct server_rec *srv,
     }
 
     if (!i) {
-        return;
+        return NULL;
     }
 
-    for (maxminddb_database_list *sl = mmsrvcfg->nextdb; sl; sl =
-             sl->nextdb) {
-        if (!strcmp(names[0], sl->nick_name)) {
+    for (database_list *sl = conf->databases; sl; sl =
+             sl->next) {
+        if (!strcmp(names[0], sl->name)) {
             // found
-            list->next = sl->next;
-            sl->next = list;
-            list->names = (const char **)apr_pmemdup(pool, names,
+            list->next = sl->lookup_paths;
+            sl->lookup_paths = list;
+            list->names = (const char **)apr_pmemdup(cmd->pool,
+                                                     names,
                                                      (1 + i) *
                                                      sizeof(char *));
             break;
         }
     }
-}
-
-static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
-                                     const char *env, const char *dbpath)
-{
-    key_value_list_s *list = apr_palloc(cmd->pool, sizeof(key_value_list_s));
-    list->path = dbpath;
-    list->env_key = env;
-    list->next = NULL;
-    list->names = NULL;
-
-    maxminddb_config *conf = (maxminddb_config *)
-                             config;
-
-    INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, dbpath);
-
-    insert_kvlist(cmd->server, conf, list);
-
     return NULL;
 }
+
+static int maxminddb_header_parser(request_rec *r,
+                                   maxminddb_config *conf)
+{
+    char *ipaddr;
+
+    ipaddr = get_client_ip(r);
+    INFO(r->server, "maxminddb_header_parser %s", ipaddr);
+
+    if (!conf || !conf->enabled) {
+        return DECLINED;
+    }
+
+    set_env(r, conf, ipaddr);
+    return OK;
+}
+
+static void set_env(request_rec *r, maxminddb_config *conf,
+                    const char *ipaddr)
+{
+    if (ipaddr == NULL) {
+        return;
+    }
+
+    apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
+
+    for (database_list *sl = conf->databases; sl; sl =
+             sl->next) {
+        set_env_for_database(r, ipaddr, sl);
+    }
+}
+
+static void set_env_for_database(request_rec *r, const char *ipaddr,
+                                 database_list *sl)
+{
+
+    if (sl->lookup_paths == NULL) {
+        return;
+    }
+
+    int gai_error, mmdb_error;
+    MMDB_lookup_result_s lookup_result =
+        MMDB_lookup_string(sl->mmdb, ipaddr, &gai_error, &mmdb_error);
+
+    if (0 != gai_error || MMDB_SUCCESS != mmdb_error) {
+        const char *msg = 0 != gai_error ? "failed to resolve IP address" :
+                          MMDB_strerror(mmdb_error);
+        ERROR(r->server, "Error looking up '%s': %s", ipaddr,
+              msg);
+        return;
+    }
+
+    apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup success");
+
+    INFO(r->server, "MMDB_lookup_string %s works", ipaddr);
+
+    if (lookup_result.found_entry) {
+        set_env_for_lookup(r, ipaddr, &lookup_result, sl->lookup_paths);
+    }
+}
+
+static void set_env_for_lookup(request_rec *r, const char *ipaddr,
+                               MMDB_lookup_result_s *lookup_result,
+                               lookup_path_list *  lookup_paths)
+{
+    for (lookup_path_list *kv = lookup_paths; kv; kv = kv->next) {
+        apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
+
+        MMDB_entry_data_s result;
+        int mmdb_error = MMDB_aget_value(
+            &lookup_result->entry, &result,
+            &kv->names[1]);
+        if (mmdb_error == MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
+            // INFO(r->server, MMDB_strerror(mmdb_error));
+            continue;
+        } else if (mmdb_error != MMDB_SUCCESS) {
+            ERROR(r->server, "Error getting data for '%s': %s", ipaddr,
+                  MMDB_strerror(mmdb_error));
+            continue;
+        }
+        if (result.offset > 0) {
+            char *value = NULL;
+
+            switch (result.type) {
+            case MMDB_DATA_TYPE_BOOLEAN:
+                value = apr_psprintf(r->pool, "%d", result.boolean);
+                break;
+            case MMDB_DATA_TYPE_UTF8_STRING:
+                value = apr_pstrmemdup(r->pool, result.utf8_string,
+                                       result.data_size);
+                break;
+            case MMDB_DATA_TYPE_BYTES:
+                /* XXX - treating bytes as strings is broken.
+                   They may contain null characters */
+                value = apr_pstrmemdup(r->pool,
+                                       (const char *)result.bytes,
+                                       result.data_size);
+                break;
+            case MMDB_DATA_TYPE_FLOAT:
+                value = apr_psprintf(r->pool, "%.5f",
+                                     result.float_value);
+                break;
+            case MMDB_DATA_TYPE_DOUBLE:
+                value = apr_psprintf(r->pool, "%.5f",
+                                     result.double_value);
+                break;
+            case MMDB_DATA_TYPE_UINT16:
+                value = apr_psprintf(r->pool, "%d", result.uint16);
+                break;
+            case MMDB_DATA_TYPE_UINT32:
+                value = apr_psprintf(r->pool, "%u", result.uint32);
+                break;
+            case MMDB_DATA_TYPE_INT32:
+                value = apr_psprintf(r->pool, "%d", result.int32);
+                break;
+            case MMDB_DATA_TYPE_UINT64:
+                value = apr_psprintf(r->pool, "%" PRIu64, result.uint64);
+                break;
+            case MMDB_DATA_TYPE_UINT128:
+                value = from_uint128(r->pool, &result);
+                break;
+            default:
+                ERROR(r->server, "Database error: unknown data type");
+                continue;
+            }
+
+            if (NULL != value) {
+                apr_table_set(r->subprocess_env, kv->env_key, value);
+            }
+        }
+    }
+}
+
+static char * from_uint128(apr_pool_t *pool,
+                           const MMDB_entry_data_s *result)
+{
+#if MMDB_UINT128_IS_BYTE_ARRAY
+    uint8_t *p = (uint8_t *)result->uint128;
+    return apr_psprintf(pool, "0x"
+                        "%02x%02x%02x%02x"
+                        "%02x%02x%02x%02x"
+                        "%02x%02x%02x%02x"
+                        "%02x%02x%02x%02x",
+                        p[0], p[1], p[2], p[3],
+                        p[4], p[5], p[6], p[7],
+                        p[8], p[9], p[10], p[11],
+                        p[12], p[13], p[14], p[15]);
+#else
+
+    mmdb_uint128_t v = result->uint128;
+    return apr_psprintf(pool,
+                        "0x%016" PRIx64 "%016" PRIx64,
+                        (uint64_t)(v >> 64),
+                        (uint64_t)v);
+#endif
+}
+
 
 static const command_rec maxminddb_directives[] = {
     AP_INIT_FLAG("MaxMindDBEnable",
@@ -319,132 +430,3 @@ module AP_MODULE_DECLARE_DATA maxminddb_module = {
     maxminddb_directives,    /* table of config file commands       */
     maxminddb_register_hooks /* register hooks                      */
 };
-
-static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
-                         const char *ipaddr)
-{
-    if (ipaddr == NULL) {
-        return;
-    }
-
-    for (maxminddb_database_list *sl = mmsrvcfg->nextdb; sl; sl =
-             sl->nextdb) {
-
-        if (sl->next == NULL) {
-            continue;
-        }
-
-        int gai_error, mmdb_error;
-        MMDB_lookup_result_s lookup_result =
-            MMDB_lookup_string(sl->mmdb, ipaddr, &gai_error, &mmdb_error);
-
-        if (0 != gai_error || MMDB_SUCCESS != mmdb_error) {
-            apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup failed");
-
-            const char *msg = 0 != gai_error ? "failed to resolve IP address" :
-                              MMDB_strerror(mmdb_error);
-            ERROR(r->server, "Error looking up '%s': %s", ipaddr,
-                  msg);
-            continue;
-        }
-
-        apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup success");
-
-        INFO(r->server, "MMDB_lookup_string %s works", ipaddr);
-
-        if (lookup_result.found_entry) {
-
-            for (key_value_list_s *kv = sl->next; kv; kv = kv->next) {
-                apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
-
-                MMDB_entry_data_s result;
-                mmdb_error = MMDB_aget_value(
-                    &lookup_result.entry, &result,
-                    &kv->names[1]);
-                if (mmdb_error == MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
-                    // INFO(r->server, MMDB_strerror(mmdb_error));
-                    continue;
-                } else if (mmdb_error != MMDB_SUCCESS) {
-                    ERROR(r->server, "Error getting data for '%s': %s", ipaddr,
-                          MMDB_strerror(mmdb_error));
-                    continue;
-                }
-                if (result.offset > 0) {
-                    char *value = NULL;
-
-                    switch (result.type) {
-                    case MMDB_DATA_TYPE_BOOLEAN:
-                        value = apr_psprintf(r->pool, "%d", result.boolean);
-                        break;
-                    case MMDB_DATA_TYPE_UTF8_STRING:
-                        value = apr_pstrmemdup(r->pool, result.utf8_string,
-                                               result.data_size);
-                        break;
-                    case MMDB_DATA_TYPE_BYTES:
-                        /* XXX - treating bytes as strings is broken.
-                           They may contain null characters */
-                        value = apr_pstrmemdup(r->pool,
-                                               (const char *)result.bytes,
-                                               result.data_size);
-                        break;
-                    case MMDB_DATA_TYPE_FLOAT:
-                        value = apr_psprintf(r->pool, "%.5f",
-                                             result.float_value);
-                        break;
-                    case MMDB_DATA_TYPE_DOUBLE:
-                        value = apr_psprintf(r->pool, "%.5f",
-                                             result.double_value);
-                        break;
-                    case MMDB_DATA_TYPE_UINT16:
-                        value = apr_psprintf(r->pool, "%d", result.uint16);
-                        break;
-                    case MMDB_DATA_TYPE_UINT32:
-                        value = apr_psprintf(r->pool, "%u", result.uint32);
-                        break;
-                    case MMDB_DATA_TYPE_INT32:
-                        value = apr_psprintf(r->pool, "%d", result.int32);
-                        break;
-                    case MMDB_DATA_TYPE_UINT64:
-                        value = apr_psprintf(r->pool, "%" PRIu64, result.uint64);
-                        break;
-                    case MMDB_DATA_TYPE_UINT128:
-                        value = from_uint128(r->pool, &result);
-                        break;
-                    default:
-                        ERROR(r->server, "Database error: unknown data type");
-                        continue;
-                    }
-
-                    if (NULL != value) {
-                        apr_table_set(r->subprocess_env, kv->env_key, value);
-                    }
-                }
-            }
-        }
-    }
-}
-
-static char * from_uint128(apr_pool_t *pool,
-                           const MMDB_entry_data_s *result)
-{
-
-#if MMDB_UINT128_IS_BYTE_ARRAY
-    uint8_t *p = (uint8_t *)result->uint128;
-    return apr_psprintf(pool, "0x"
-                        "%02x%02x%02x%02x"
-                        "%02x%02x%02x%02x"
-                        "%02x%02x%02x%02x"
-                        "%02x%02x%02x%02x",
-                        p[0], p[1], p[2], p[3],
-                        p[4], p[5], p[6], p[7],
-                        p[8], p[9], p[10], p[11],
-                        p[12], p[13], p[14], p[15]);
-#else
-
-    mmdb_uint128_t v = result->uint128;
-    return apr_psprintf(pool,
-                        "0x%016" PRIx64 "%016" PRIx64,
-                        (uint64_t)(v >> 64),
-                        (uint64_t)v);
-#endif
-}
