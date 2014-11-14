@@ -82,17 +82,14 @@ static apr_status_t cleanup_database(void *mmdb);
 static char * from_uint128(apr_pool_t *pool,
                            const MMDB_entry_data_s *result);
 
+static int maxminddb_header_parser(request_rec *r,
+                                   maxminddb_config *);
+
 static void set_env_for_ip(request_rec *r, maxminddb_config *mmsrvcfg,
                            const char *ipaddr);
 
 static void set_user_env(request_rec *r, maxminddb_config *mmsrvcfg,
                          const char *ipaddr);
-
-static void init_maxminddb_config(maxminddb_config *conf)
-{
-    conf->nextdb = NULL;
-    conf->enabled = 0;
-}
 
 /* create a disabled directory entry */
 static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context))
@@ -100,20 +97,17 @@ static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context))
 
     maxminddb_config *conf = apr_pcalloc(pool, sizeof(maxminddb_config));
 
-    init_maxminddb_config(conf);
+    conf->nextdb = NULL;
+    conf->enabled = 0;
 
     return conf;
 }
-
 
 static void *merge_dir_config(apr_pool_t *UNUSED(pool),
                               void *UNUSED(parent), void *cur)
 {
     return cur;
 }
-
-static int maxminddb_header_parser(request_rec *r,
-                                   maxminddb_config *);
 
 static int maxminddb_per_dir(request_rec *r)
 {
@@ -151,8 +145,6 @@ static int maxminddb_header_parser(request_rec *r,
     set_env_for_ip(r, mmsrvcfg, ipaddr);
     return OK;
 }
-
-#define K(...) __VA_ARGS__, NULL
 
 static void set_env_for_ip(request_rec *r, maxminddb_config *mmsrvcfg,
                            const char *ipaddr)
