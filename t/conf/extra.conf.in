@@ -54,30 +54,6 @@ LogLevel        debug
     </IfModule>
 </Directory>
 
-<Directory "@ServerRoot@/cgi-bin/missing-db">
-    AllowOverride None
-    Options +ExecCGI
-
-    <IfModule mod_maxminddb.c>
-
-        MaxMindDBEnable On
-
-#        MaxMindDBFile MISSING_DB           /foo/GeoIP2-City-Test.mmdb
-    </IfModule>
-</Directory>
-
-<Directory "@ServerRoot@/cgi-bin/invalid-db">
-    AllowOverride None
-    Options +ExecCGI
-
-    <IfModule mod_maxminddb.c>
-
-        MaxMindDBEnable On
-
-#        MaxMindDBFile INVALID_DB           /etc/apache2/apache2.conf
-    </IfModule>
-</Directory>
-
 <Directory "@ServerRoot@/cgi-bin/ipv4-only">
     AllowOverride None
     Options +ExecCGI
@@ -160,6 +136,29 @@ LogLevel        debug
         MaxMindDBEnv MM_UINT64          DECODER_DB/uint64
         MaxMindDBEnv MM_UTF8_STRING     DECODER_DB/utf8_string
 
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/merged">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile DECODER_DB        @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-decoder.mmdb
+
+        MaxMindDBEnv MM_PARENT          DECODER_DB/int32
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/merged/child">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnv MM_CHILD          DECODER_DB/uint32
     </IfModule>
 </Directory>
 

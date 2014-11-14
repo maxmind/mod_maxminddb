@@ -87,18 +87,40 @@ static void set_env_for_lookup(request_rec *r, const char *ip_address,
 /* create a disabled directory entry */
 static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context))
 {
+    printf("\n\n***CREATING DIR CONFIG***\n\n");
     maxminddb_config *conf = apr_pcalloc(pool, sizeof(maxminddb_config));
 
     conf->databases = NULL;
-    conf->enabled = 0;
+
+    /* We use -1 for off but not set */
+    conf->enabled = -1;
 
     return conf;
 }
 
-static void *merge_dir_config(apr_pool_t *UNUSED(pool),
-                              void *UNUSED(parent), void *cur)
+static void *merge_dir_config(apr_pool_t *pool,
+                              void *parent, void *child)
 {
-    return cur;
+    maxminddb_config *conf = (maxminddb_config *) child;
+    maxminddb_config *parent_conf = (maxminddb_config *) parent;
+
+    if (conf->enabled == -1) {
+        conf->enabled = parent_conf->enabled;
+    }
+
+    if (conf->databases && parent_conf->databases) {
+        database_list *database = conf->databases;
+        while (database->next) {
+            database = database->next;
+        }
+
+        // set the last element in the child list to point to the head
+        // of the parent list
+        database->next = parent_conf->databases;
+    } else if (parent_conf->databases) {
+        conf->databases = parent_conf->databases;
+    }
+    return conf;
 }
 
 static char *get_client_ip(request_rec *r)
@@ -223,7 +245,7 @@ static int set_env(request_rec *r)
     INFO(r->server, "maxminddb_per_dir ( enabled )");
     maxminddb_config *conf =
         ap_get_module_config(r->per_dir_config, &maxminddb_module);
-    if (!conf || !conf->enabled) {
+    if (!conf || conf->enabled != 1) {
         return DECLINED;
     }
 
