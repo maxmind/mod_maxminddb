@@ -55,7 +55,7 @@
 typedef struct lookup_path_list {
     struct lookup_path_list *next;
     const char *env_key;
-    const char **names;
+    const char **path_segments;
 } lookup_path_list;
 
 typedef struct database_list {
@@ -77,16 +77,10 @@ static apr_status_t cleanup_database(void *mmdb);
 static char * from_uint128(apr_pool_t *pool,
                            const MMDB_entry_data_s *result);
 
-static int maxminddb_header_parser(request_rec *r,
-                                   maxminddb_config *);
+static void set_env_for_database(request_rec *r, const char *ip_address,
+                                 database_list *databases);
 
-static void set_env(request_rec *r, maxminddb_config *conf,
-                    const char *ipaddr);
-
-static void set_env_for_database(request_rec *r, const char *ipaddr,
-                                 database_list *sl);
-
-static void set_env_for_lookup(request_rec *r, const char *ipaddr,
+static void set_env_for_lookup(request_rec *r, const char *ip_address,
                                MMDB_lookup_result_s *lookup_result,
                                lookup_path_list *lookup_paths);
 
@@ -105,18 +99,6 @@ static void *merge_dir_config(apr_pool_t *UNUSED(pool),
                               void *UNUSED(parent), void *cur)
 {
     return cur;
-}
-
-static int maxminddb_per_dir(request_rec *r)
-{
-    INFO(r->server, "maxminddb_per_dir ( enabled )");
-    maxminddb_config *cfg =
-        ap_get_module_config(r->per_dir_config, &maxminddb_module);
-    if (!cfg || !cfg->enabled) {
-        return DECLINED;
-    }
-
-    return maxminddb_header_parser(r, cfg);
 }
 
 static char *get_client_ip(request_rec *r)
@@ -160,23 +142,23 @@ static const char *set_maxminddb_filename(cmd_parms *cmd, void *config,
         }
     }
     // insert
-    database_list *sl =
+    database_list *databases =
         apr_palloc(cmd->pool, sizeof(database_list));
-    sl->next = NULL;
-    sl->lookup_paths = NULL;
-    sl->mmdb = apr_palloc(cmd->pool, sizeof(MMDB_s));
-    int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, sl->mmdb);
+    databases->next = NULL;
+    databases->lookup_paths = NULL;
+    databases->mmdb = apr_palloc(cmd->pool, sizeof(MMDB_s));
+    int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, databases->mmdb);
     if (mmdb_error != MMDB_SUCCESS) {
         ERROR(cmd->server, "Opening %s failed: %s", filename,
               MMDB_strerror(mmdb_error));
         return NULL;
     }
 
-    apr_pool_pre_cleanup_register(cmd->pool, sl->mmdb, cleanup_database);
+    apr_pool_pre_cleanup_register(cmd->pool, databases->mmdb, cleanup_database);
 
-    sl->name = (char *)apr_pstrdup(cmd->pool, database_name);
-    sl->next = conf->databases;
-    conf->databases = sl;
+    databases->name = (char *)apr_pstrdup(cmd->pool, database_name);
+    databases->next = conf->databases;
+    conf->databases = databases;
     INFO(cmd->server, "Insert db (%s)%s", database_name, filename);
 
     return NULL;
@@ -195,107 +177,104 @@ static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
     lookup_path_list *list = apr_palloc(cmd->pool, sizeof(lookup_path_list));
     list->env_key = env;
     list->next = NULL;
-    list->names = NULL;
+    list->path_segments = NULL;
 
     maxminddb_config *conf = (maxminddb_config *)config;
 
     INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, path);
 
-    const int max_names = 80;
-    char *names[max_names + 1];
+    const int max_path_segments = 80;
+    char *path_segments[max_path_segments + 1];
 
-    names[0] = apr_pstrdup(cmd->pool, path);
+    path_segments[0] = apr_pstrdup(cmd->pool, path);
 
     int i;
     char * strtok_last = NULL;
 
-    char *token = apr_strtok(names[0], "/", &strtok_last);
-    for (i = 1; i <= max_names && token; i++) {
+    char *token = apr_strtok(path_segments[0], "/", &strtok_last);
+    for (i = 1; i <= max_path_segments && token; i++) {
         token = apr_strtok(NULL, "/", &strtok_last);
-        names[i] = token;
+        path_segments[i] = token;
     }
 
     if (!i) {
         return NULL;
     }
 
-    for (database_list *sl = conf->databases; sl; sl =
-             sl->next) {
-        if (!strcmp(names[0], sl->name)) {
+    for (database_list *databases = conf->databases;
+         databases;
+         databases = databases->next) {
+        if (!strcmp(path_segments[0], databases->name)) {
             // found
-            list->next = sl->lookup_paths;
-            sl->lookup_paths = list;
-            list->names = (const char **)apr_pmemdup(cmd->pool,
-                                                     names,
-                                                     (1 + i) *
-                                                     sizeof(char *));
+            list->next = databases->lookup_paths;
+            databases->lookup_paths = list;
+            list->path_segments = (const char **)apr_pmemdup(cmd->pool,
+                                                             path_segments,
+                                                             (1 + i) *
+                                                             sizeof(char *));
             break;
         }
     }
     return NULL;
 }
 
-static int maxminddb_header_parser(request_rec *r,
-                                   maxminddb_config *conf)
+static int set_env(request_rec *r)
 {
-    char *ipaddr;
-
-    ipaddr = get_client_ip(r);
-    INFO(r->server, "maxminddb_header_parser %s", ipaddr);
-
+    INFO(r->server, "maxminddb_per_dir ( enabled )");
+    maxminddb_config *conf =
+        ap_get_module_config(r->per_dir_config, &maxminddb_module);
     if (!conf || !conf->enabled) {
         return DECLINED;
     }
 
-    set_env(r, conf, ipaddr);
+    char *ip_address = get_client_ip(r);
+    INFO(r->server, "maxminddb_header_parser %s", ip_address);
+
+    if (NULL == ip_address) {
+        return DECLINED;
+    }
+
+    apr_table_set(r->subprocess_env, "MMDB_ADDR", ip_address);
+
+    for (database_list *databases = conf->databases; databases; databases =
+             databases->next) {
+        set_env_for_database(r, ip_address, databases);
+    }
+
     return OK;
 }
 
-static void set_env(request_rec *r, maxminddb_config *conf,
-                    const char *ipaddr)
-{
-    if (ipaddr == NULL) {
-        return;
-    }
-
-    apr_table_set(r->subprocess_env, "MMDB_ADDR", ipaddr);
-
-    for (database_list *sl = conf->databases; sl; sl =
-             sl->next) {
-        set_env_for_database(r, ipaddr, sl);
-    }
-}
-
-static void set_env_for_database(request_rec *r, const char *ipaddr,
-                                 database_list *sl)
+static void set_env_for_database(request_rec *r, const char *ip_address,
+                                 database_list *databases)
 {
 
-    if (sl->lookup_paths == NULL) {
+    if (databases->lookup_paths == NULL) {
         return;
     }
 
     int gai_error, mmdb_error;
     MMDB_lookup_result_s lookup_result =
-        MMDB_lookup_string(sl->mmdb, ipaddr, &gai_error, &mmdb_error);
+        MMDB_lookup_string(databases->mmdb, ip_address, &gai_error, &mmdb_error);
 
     if (0 != gai_error || MMDB_SUCCESS != mmdb_error) {
         const char *msg = 0 != gai_error ? "failed to resolve IP address" :
                           MMDB_strerror(mmdb_error);
-        ERROR(r->server, "Error looking up '%s': %s", ipaddr,
+        ERROR(r->server, "Error looking up '%s': %s", ip_address,
               msg);
         return;
     }
 
     apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup success");
 
-    INFO(r->server, "MMDB_lookup_string %s works", ipaddr);
+    INFO(r->server, "MMDB_lookup_string %s works", ip_address);
 
     if (lookup_result.found_entry) {
-        set_env_for_lookup(r, ipaddr, &lookup_result, sl->lookup_paths);
+        set_env_for_lookup(r, ip_address, &lookup_result,
+                           databases->lookup_paths);
     }
 }
 
-static void set_env_for_lookup(request_rec *r, const char *ipaddr,
+static void set_env_for_lookup(request_rec *r, const char *ip_address,
                                MMDB_lookup_result_s *lookup_result,
                                lookup_path_list *  lookup_paths)
 {
@@ -305,12 +284,12 @@ static void set_env_for_lookup(request_rec *r, const char *ipaddr,
         MMDB_entry_data_s result;
         int mmdb_error = MMDB_aget_value(
             &lookup_result->entry, &result,
-            &kv->names[1]);
+            &kv->path_segments[1]);
         if (mmdb_error == MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
             // INFO(r->server, MMDB_strerror(mmdb_error));
             continue;
         } else if (mmdb_error != MMDB_SUCCESS) {
-            ERROR(r->server, "Error getting data for '%s': %s", ipaddr,
+            ERROR(r->server, "Error getting data for '%s': %s", ip_address,
                   MMDB_strerror(mmdb_error));
             continue;
         }
@@ -391,7 +370,6 @@ static char * from_uint128(apr_pool_t *pool,
 #endif
 }
 
-
 static const command_rec maxminddb_directives[] = {
     AP_INIT_FLAG("MaxMindDBEnable",
                  set_maxminddb_enable,
@@ -417,7 +395,7 @@ static void maxminddb_register_hooks(apr_pool_t *UNUSED(p))
     static const char *const asz_succ[] =
     { "mod_setenvif.c", "mod_rewrite.c", NULL };
 
-    ap_hook_header_parser(maxminddb_per_dir, NULL, asz_succ, APR_HOOK_MIDDLE);
+    ap_hook_header_parser(set_env, NULL, asz_succ, APR_HOOK_MIDDLE);
 }
 
 /* Dispatch list for API hooks */
