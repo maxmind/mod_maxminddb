@@ -154,11 +154,16 @@ LogLevel        debug
 </Directory>
 
 <Directory "@ServerRoot@/cgi-bin/merged/child">
-    AllowOverride None
-    Options +ExecCGI
-
     <IfModule mod_maxminddb.c>
         MaxMindDBEnv MM_CHILD          DECODER_DB/uint32
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/merged/disabled">
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable Off
+
+        MaxMindDBEnv MM_DISABLED          DECODER_DB/uint32
     </IfModule>
 </Directory>
 
