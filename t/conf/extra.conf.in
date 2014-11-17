@@ -54,30 +54,6 @@ LogLevel        debug
     </IfModule>
 </Directory>
 
-<Directory "@ServerRoot@/cgi-bin/missing-db">
-    AllowOverride None
-    Options +ExecCGI
-
-    <IfModule mod_maxminddb.c>
-
-        MaxMindDBEnable On
-
-        MaxMindDBFile MISSING_DB           /foo/GeoIP2-City-Test.mmdb
-    </IfModule>
-</Directory>
-
-<Directory "@ServerRoot@/cgi-bin/invalid-db">
-    AllowOverride None
-    Options +ExecCGI
-
-    <IfModule mod_maxminddb.c>
-
-        MaxMindDBEnable On
-
-        MaxMindDBFile INVALID_DB           /etc/apache2/apache2.conf
-    </IfModule>
-</Directory>
-
 <Directory "@ServerRoot@/cgi-bin/ipv4-only">
     AllowOverride None
     Options +ExecCGI
@@ -106,7 +82,102 @@ LogLevel        debug
     </IfModule>
 </Directory>
 
-LogLevel                info
+<Directory "@ServerRoot@/cgi-bin/mod-not-enabled">
+    AllowOverride None
+    Options +ExecCGI
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/mod-disabled">
+    AllowOverride None
+    Options +ExecCGI
+    MaxMindDBEnable Off
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/different-config">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+
+        MaxMindDBEnv MM_CITY_NAME_EN    CITY_DB/country/names/fr
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/decoder">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile DECODER_DB        @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-decoder.mmdb
+
+        MaxMindDBEnv MM_ARRAY_0         DECODER_DB/array/0
+        MaxMindDBEnv MM_ARRAY_1         DECODER_DB/array/1
+        MaxMindDBEnv MM_ARRAY_2         DECODER_DB/array/2
+        MaxMindDBEnv MM_BOOLEAN         DECODER_DB/boolean
+        MaxMindDBEnv MM_BYTES           DECODER_DB/bytes
+        MaxMindDBEnv MM_DOUBLE          DECODER_DB/double
+        MaxMindDBEnv MM_FLOAT           DECODER_DB/float
+        MaxMindDBEnv MM_INT32           DECODER_DB/int32
+        MaxMindDBEnv MM_MAP             DECODER_DB/map
+        MaxMindDBEnv MM_MAP_ARRAY_0     DECODER_DB/map/mapX/arrayX/0
+        MaxMindDBEnv MM_MAP_ARRAY_1     DECODER_DB/map/mapX/arrayX/1
+        MaxMindDBEnv MM_MAP_ARRAY_2     DECODER_DB/map/mapX/arrayX/2
+        MaxMindDBEnv MM_MAP_UTF8_STRING DECODER_DB/map/mapX/utf8_stringX
+        MaxMindDBEnv MM_UINT128         DECODER_DB/uint128
+        MaxMindDBEnv MM_UINT16          DECODER_DB/uint16
+        MaxMindDBEnv MM_UINT32          DECODER_DB/uint32
+        MaxMindDBEnv MM_UINT64          DECODER_DB/uint64
+        MaxMindDBEnv MM_UTF8_STRING     DECODER_DB/utf8_string
+
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/merged">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile DECODER_DB        @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-decoder.mmdb
+
+        MaxMindDBEnv MM_PARENT          DECODER_DB/int32
+        MaxMindDBEnv MM_PARENT_2          DECODER_DB/int32
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/merged/child">
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnv MM_CHILD          DECODER_DB/uint32
+
+        MaxMindDBEnv MM_PARENT_2          DECODER_DB/uint32
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/merged/disabled">
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable Off
+
+        MaxMindDBEnv MM_DISABLED          DECODER_DB/uint32
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/overwrite-db">
+    <IfModule mod_maxminddb.c>
+        MaxMindDBFile DECODER_DB        @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+        MaxMindDBEnv MM_COUNTRY_CODE    DECODER_DB/country/iso_code
+    </IfModule>
+</Directory>
+
+
 RemoteIPHeader          X-Forwarded-For
 RemoteIPProxiesHeader   X-Forwarded-By
 
