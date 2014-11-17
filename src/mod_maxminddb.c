@@ -68,12 +68,12 @@ void *merge_lookups(apr_pool_t *pool, const void *UNUSED(key),
                     const void *h2_val, const void *UNUSED(data));
 static int export_env(request_rec *r);
 static void export_env_for_database(request_rec *r, maxminddb_config *conf,
-                                 const char *ip_address,
-                                 const char *database_name,
-                                 MMDB_s *mmdb);
+                                    const char *ip_address,
+                                    const char *database_name,
+                                    MMDB_s *mmdb);
 static void export_env_for_lookups(request_rec *r, const char *ip_address,
-                                MMDB_lookup_result_s *lookup_result,
-                                apr_hash_t *lookups_for_db);
+                                   MMDB_lookup_result_s *lookup_result,
+                                   apr_hash_t *lookups_for_db);
 static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg);
 static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
                                      const char *env, const char *path);
@@ -285,9 +285,9 @@ static char *get_client_ip(request_rec *r)
 }
 
 static void export_env_for_database(request_rec *r, maxminddb_config *conf,
-                                 const char *ip_address,
-                                 const char *database_name,
-                                 MMDB_s *mmdb)
+                                    const char *ip_address,
+                                    const char *database_name,
+                                    MMDB_s *mmdb)
 {
     apr_hash_t *lookups_for_db = apr_hash_get(conf->lookups, database_name,
                                               APR_HASH_KEY_STRING);
@@ -317,8 +317,8 @@ static void export_env_for_database(request_rec *r, maxminddb_config *conf,
 }
 
 static void export_env_for_lookups(request_rec *r, const char *ip_address,
-                                MMDB_lookup_result_s *lookup_result,
-                                apr_hash_t *  lookups_for_db)
+                                   MMDB_lookup_result_s *lookup_result,
+                                   apr_hash_t *  lookups_for_db)
 {
     for (apr_hash_index_t *lp_index =
              apr_hash_first(r->pool, lookups_for_db);
@@ -356,8 +356,9 @@ static void export_env_for_lookups(request_rec *r, const char *ip_address,
                                        result.data_size);
                 break;
             case MMDB_DATA_TYPE_BYTES:
-                /* XXX - treating bytes as strings is broken.
-                   They may contain null characters */
+                /* XXX - treating bytes as strings is broken as they may
+                   contain null characters, but there may not be a good
+                   fix (short of base 64 encoding it). */
                 value = apr_pstrmemdup(r->pool,
                                        (const char *)result.bytes,
                                        result.data_size);
