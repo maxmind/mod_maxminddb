@@ -1,9 +1,0 @@
-#!/bin/sh
-
-if [ $# -eq 0 ]; then
-    echo "You need to provide a version!";
-    exit;
-fi
-
-git tag "$1"
-tar -czf  ../mod_maxminddb-"$1".tar.gz --exclude=.git --exclude=*.tar.gz *
