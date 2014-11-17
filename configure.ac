@@ -1,4 +1,4 @@
-AC_INIT(mod_maxminddb, 0.0.1, support@maxmind.com)
+AC_INIT(mod_maxminddb, 0.1.0, support@maxmind.com)
 AC_ARG_WITH(apxs, AC_HELP_STRING([--with-apxs=NAME],
             [name of your apxs executable [[apxs]]]),
             [APXS="$with_apxs"])
@@ -15,7 +15,8 @@ AC_CHECK_LIB(maxminddb, MMDB_lib_version, [
     AC_DEFINE([HAVE_LIBMAXMINDDB], [1], [Have found libmaxminddb])
     LIBMAXMINDDB_LDFLAGS='-lmaxminddb'
     AC_SUBST(LIBMAXMINDDB_LDFLAGS)
-][])
+    ],
+    [AC_MSG_ERROR([libmaxminddb was not found])])
 AM_INIT_AUTOMAKE
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT

@@ -1,5 +1,5 @@
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = \
-	  src
+SUBDIRS = src
 
+EXTRA_DIST = t Changes.md CONTRIBUTING.md LICENSE README.md TESTING.md
 
