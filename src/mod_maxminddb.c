@@ -372,13 +372,13 @@ static void export_env_for_lookups(request_rec *r, const char *ip_address,
                                      result.double_value);
                 break;
             case MMDB_DATA_TYPE_UINT16:
-                value = apr_psprintf(r->pool, "%d", result.uint16);
+                value = apr_psprintf(r->pool, "%" PRIu16, result.uint16);
                 break;
             case MMDB_DATA_TYPE_UINT32:
-                value = apr_psprintf(r->pool, "%u", result.uint32);
+                value = apr_psprintf(r->pool, "%" PRIu32, result.uint32);
                 break;
             case MMDB_DATA_TYPE_INT32:
-                value = apr_psprintf(r->pool, "%d", result.int32);
+                value = apr_psprintf(r->pool, "%" PRIi32, result.int32);
                 break;
             case MMDB_DATA_TYPE_UINT64:
                 value = apr_psprintf(r->pool, "%" PRIu64, result.uint64);
