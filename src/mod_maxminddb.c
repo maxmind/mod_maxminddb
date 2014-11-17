@@ -19,18 +19,14 @@
  *
  */
 
-#include "httpd.h"
-#include "http_config.h"
-#include "http_protocol.h"
-#include "http_log.h"
-#include "ap_config.h"
-#include "apr_strings.h"
-#include "util_script.h"
-#include <netdb.h>
-#include <arpa/inet.h>
-#include "maxminddb.h"
-#include <string.h>
-#include <alloca.h>
+#include <httpd.h>
+#include <http_config.h>
+#include <http_protocol.h>
+#include <http_log.h>
+#include <ap_config.h>
+#include <apr_hash.h>
+#include <apr_strings.h>
+#include <maxminddb.h>
 #include <inttypes.h>
 
 #if defined (MAXMINDDB_DEBUG)
@@ -52,44 +48,84 @@
 #define UNUSED
 #endif
 
-typedef struct lookup_path_list {
-    struct lookup_path_list *next;
-    const char *env_key;
-    const char **path_segments;
-} lookup_path_list;
-
-typedef struct database_list {
-    struct database_list *next;
-    const char *name;
-    MMDB_s *mmdb;
-    lookup_path_list *lookup_paths;
-} database_list;
-
 typedef struct maxminddb_config {
-    database_list *databases;
+    apr_hash_t *databases;
+    apr_hash_t *lookups;
     int enabled;
 } maxminddb_config;
 
 module AP_MODULE_DECLARE_DATA maxminddb_module;
 
+static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context));
 static apr_status_t cleanup_database(void *mmdb);
+static char *from_uint128(apr_pool_t *pool,
+                          const MMDB_entry_data_s *result);
+static char *get_client_ip(request_rec *r);
+static void maxminddb_register_hooks(apr_pool_t *UNUSED(p));
+static void *merge_dir_config(apr_pool_t *pool, void *parent, void *child);
+void *merge_lookups(apr_pool_t *pool, const void *UNUSED(key),
+                    apr_ssize_t UNUSED(klen), const void *h1_val,
+                    const void *h2_val, const void *UNUSED(data));
+static int export_env(request_rec *r);
+static void export_env_for_database(request_rec *r, maxminddb_config *conf,
+                                 const char *ip_address,
+                                 const char *database_name,
+                                 MMDB_s *mmdb);
+static void export_env_for_lookups(request_rec *r, const char *ip_address,
+                                MMDB_lookup_result_s *lookup_result,
+                                apr_hash_t *lookups_for_db);
+static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg);
+static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
+                                     const char *env, const char *path);
+static const char *set_maxminddb_filename(cmd_parms *cmd, void *config,
+                                          const char *database_name,
+                                          const char *filename);
 
-static char * from_uint128(apr_pool_t *pool,
-                           const MMDB_entry_data_s *result);
+static const command_rec maxminddb_directives[] = {
+    AP_INIT_FLAG("MaxMindDBEnable",
+                 set_maxminddb_enable,
+                 NULL,
+                 OR_FILEINFO,
+                 "Turn on mod_maxminddb"),
+    AP_INIT_TAKE2("MaxMindDBFile",
+                  set_maxminddb_filename,
+                  NULL,
+                  OR_ALL,
+                  "Path to the Database File"),
+    AP_INIT_ITERATE2("MaxMindDBEnv",
+                     set_maxminddb_env,
+                     NULL,
+                     OR_ALL,
+                     "Set desired env var"),
+    { NULL }
+};
 
-static void set_env_for_database(request_rec *r, const char *ip_address,
-                                 database_list *databases);
+/* Dispatch list for API hooks */
+module AP_MODULE_DECLARE_DATA maxminddb_module = {
+    STANDARD20_MODULE_STUFF,
+    create_dir_config,       /* create per-dir    config structures */
+    merge_dir_config,        /* merge  per-dir    config structures */
+    NULL,                    /* create per-server config structures */
+    NULL,                    /* merge  per-server config structures */
+    maxminddb_directives,    /* table of config file commands       */
+    maxminddb_register_hooks /* register hooks                      */
+};
 
-static void set_env_for_lookup(request_rec *r, const char *ip_address,
-                               MMDB_lookup_result_s *lookup_result,
-                               lookup_path_list *lookup_paths);
+static void maxminddb_register_hooks(apr_pool_t *UNUSED(p))
+{
+    /* make sure we run before mod_rewrite's handler */
+    static const char *const asz_succ[] =
+    { "mod_setenvif.c", "mod_rewrite.c", NULL };
 
-/* create a disabled directory entry */
+    ap_hook_header_parser(export_env, NULL, asz_succ, APR_HOOK_MIDDLE);
+}
+
 static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context))
 {
     maxminddb_config *conf = apr_pcalloc(pool, sizeof(maxminddb_config));
 
-    conf->databases = NULL;
+    conf->databases = apr_hash_make(pool);
+    conf->lookups = apr_hash_make(pool);
 
     /* We use -1 for off but not set */
     conf->enabled = -1;
@@ -97,38 +133,31 @@ static void *create_dir_config(apr_pool_t *pool, char *UNUSED(context))
     return conf;
 }
 
-static void *merge_dir_config(apr_pool_t *pool,
-                              void *parent, void *child)
+static void *merge_dir_config(apr_pool_t *pool, void *parent, void *child)
 {
-    maxminddb_config *conf = (maxminddb_config *) child;
-    maxminddb_config *parent_conf = (maxminddb_config *) parent;
+    maxminddb_config *child_conf = (maxminddb_config *)child;
+    maxminddb_config *parent_conf = (maxminddb_config *)parent;
 
-    if (conf->enabled == -1) {
-        conf->enabled = parent_conf->enabled;
-    }
+    maxminddb_config *conf = apr_pcalloc(pool, sizeof(maxminddb_config));
 
-    if (conf->databases && parent_conf->databases) {
-        database_list *database = conf->databases;
-        while (database->next) {
-            database = database->next;
-        }
+    conf->enabled = child_conf->enabled == -1 ?
+                    parent_conf->enabled : child_conf->enabled;
 
-        // set the last element in the child list to point to the head
-        // of the parent list
-        database->next = parent_conf->databases;
-    } else if (parent_conf->databases) {
-        conf->databases = parent_conf->databases;
-    }
+    conf->databases = apr_hash_overlay(pool, child_conf->databases,
+                                       parent_conf->databases);
+    conf->lookups = apr_hash_merge(pool, child_conf->lookups,
+                                   parent_conf->lookups,
+                                   merge_lookups,
+                                   NULL);
+
     return conf;
 }
 
-static char *get_client_ip(request_rec *r)
+void *merge_lookups(apr_pool_t *pool, const void *UNUSED(key),
+                    apr_ssize_t UNUSED(klen), const void *h1_val,
+                    const void *h2_val, const void *UNUSED(data))
 {
-# if AP_SERVER_MAJORVERSION_NUMBER == 2 && AP_SERVER_MINORVERSION_NUMBER == 4
-    return r->useragent_ip;
-# else
-    return r->connection->remote_ip;
-#endif
+    return apr_hash_overlay(pool, h1_val, h2_val);
 }
 
 static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg)
@@ -153,33 +182,17 @@ static const char *set_maxminddb_filename(cmd_parms *cmd, void *config,
 
     INFO(cmd->server, "set_maxminddb_filename (server) %s", filename);
 
-    for (database_list *cur = conf->databases;
-         cur; cur = cur->next) {
-        if (!strcmp(cur->name, database_name)) {
-            // we already have a record for the database
-            INFO(cmd->server, "We know already db (%s) skipping %s",
-                 database_name, filename);
-            return NULL;
-        }
-    }
-    // insert
-    database_list *databases =
-        apr_palloc(cmd->pool, sizeof(database_list));
-    databases->next = NULL;
-    databases->lookup_paths = NULL;
-    databases->mmdb = apr_palloc(cmd->pool, sizeof(MMDB_s));
-    int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, databases->mmdb);
+    MMDB_s *mmdb = apr_pcalloc(cmd->pool, sizeof(MMDB_s));
+    int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, mmdb);
     if (mmdb_error != MMDB_SUCCESS) {
         ERROR(cmd->server, "Opening %s failed: %s", filename,
               MMDB_strerror(mmdb_error));
         return NULL;
     }
 
-    apr_pool_pre_cleanup_register(cmd->pool, databases->mmdb, cleanup_database);
+    apr_pool_pre_cleanup_register(cmd->pool, mmdb, cleanup_database);
 
-    databases->name = (char *)apr_pstrdup(cmd->pool, database_name);
-    databases->next = conf->databases;
-    conf->databases = databases;
+    apr_hash_set(conf->databases, database_name, APR_HASH_KEY_STRING, mmdb);
     INFO(cmd->server, "Insert db (%s)%s", database_name, filename);
 
     return NULL;
@@ -188,32 +201,27 @@ static const char *set_maxminddb_filename(cmd_parms *cmd, void *config,
 static apr_status_t cleanup_database(void *mmdb)
 {
     MMDB_close((MMDB_s *)mmdb);
-
     return APR_SUCCESS;
 }
 
 static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
                                      const char *env, const char *path)
 {
-    lookup_path_list *list = apr_palloc(cmd->pool, sizeof(lookup_path_list));
-    list->env_key = env;
-    list->next = NULL;
-    list->path_segments = NULL;
-
     maxminddb_config *conf = (maxminddb_config *)config;
 
     INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, path);
 
     const int max_path_segments = 80;
-    char *path_segments[max_path_segments + 1];
+    char *path_segments[max_path_segments];
 
-    path_segments[0] = apr_pstrdup(cmd->pool, path);
-
+    char *tokenized_path = apr_pstrdup(cmd->pool, path);
     int i;
-    char * strtok_last = NULL;
+    char *strtok_last = NULL;
+    char *token;
+    const char * database_name = token = apr_strtok(tokenized_path, "/",
+                                                    &strtok_last);
 
-    char *token = apr_strtok(path_segments[0], "/", &strtok_last);
-    for (i = 1; i <= max_path_segments && token; i++) {
+    for (i = 0; i < max_path_segments && token; i++) {
         token = apr_strtok(NULL, "/", &strtok_last);
         path_segments[i] = token;
     }
@@ -222,24 +230,22 @@ static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
         return NULL;
     }
 
-    for (database_list *databases = conf->databases;
-         databases;
-         databases = databases->next) {
-        if (!strcmp(path_segments[0], databases->name)) {
-            // found
-            list->next = databases->lookup_paths;
-            databases->lookup_paths = list;
-            list->path_segments = (const char **)apr_pmemdup(cmd->pool,
-                                                             path_segments,
-                                                             (1 + i) *
-                                                             sizeof(char *));
-            break;
-        }
+    char **new_path_segments = (char **)apr_pmemdup(cmd->pool, path_segments,
+                                                    (1 + i) * sizeof(char *));
+    apr_hash_t *lookups_for_db = apr_hash_get(conf->lookups, database_name,
+                                              APR_HASH_KEY_STRING);
+    if (NULL == lookups_for_db) {
+        lookups_for_db = apr_hash_make(cmd->pool);
+        apr_hash_set(conf->lookups, database_name, APR_HASH_KEY_STRING,
+                     lookups_for_db);
     }
+
+    apr_hash_set(lookups_for_db, env, APR_HASH_KEY_STRING,
+                 new_path_segments);
     return NULL;
 }
 
-static int set_env(request_rec *r)
+static int export_env(request_rec *r)
 {
     INFO(r->server, "maxminddb_per_dir ( enabled )");
     maxminddb_config *conf =
@@ -250,32 +256,48 @@ static int set_env(request_rec *r)
 
     char *ip_address = get_client_ip(r);
     INFO(r->server, "maxminddb_header_parser %s", ip_address);
-
     if (NULL == ip_address) {
         return DECLINED;
     }
 
     apr_table_set(r->subprocess_env, "MMDB_ADDR", ip_address);
 
-    for (database_list *databases = conf->databases; databases; databases =
-             databases->next) {
-        set_env_for_database(r, ip_address, databases);
+    for (apr_hash_index_t *db_index = apr_hash_first(r->pool, conf->databases);
+         db_index; db_index = apr_hash_next(db_index)) {
+        const char *database_name;
+        MMDB_s *mmdb;
+        apr_hash_this(db_index, (const void **)&database_name, NULL,
+                      (void **)&mmdb);
+
+        export_env_for_database(r, conf, ip_address, database_name, mmdb);
     }
 
     return OK;
 }
 
-static void set_env_for_database(request_rec *r, const char *ip_address,
-                                 database_list *databases)
+static char *get_client_ip(request_rec *r)
 {
+# if AP_SERVER_MAJORVERSION_NUMBER == 2 && AP_SERVER_MINORVERSION_NUMBER == 4
+    return r->useragent_ip;
+# else
+    return r->connection->remote_ip;
+#endif
+}
 
-    if (databases->lookup_paths == NULL) {
+static void export_env_for_database(request_rec *r, maxminddb_config *conf,
+                                 const char *ip_address,
+                                 const char *database_name,
+                                 MMDB_s *mmdb)
+{
+    apr_hash_t *lookups_for_db = apr_hash_get(conf->lookups, database_name,
+                                              APR_HASH_KEY_STRING);
+    if (NULL == lookups_for_db) {
         return;
     }
 
     int gai_error, mmdb_error;
     MMDB_lookup_result_s lookup_result =
-        MMDB_lookup_string(databases->mmdb, ip_address, &gai_error, &mmdb_error);
+        MMDB_lookup_string(mmdb, ip_address, &gai_error, &mmdb_error);
 
     if (0 != gai_error || MMDB_SUCCESS != mmdb_error) {
         const char *msg = 0 != gai_error ? "failed to resolve IP address" :
@@ -290,22 +312,30 @@ static void set_env_for_database(request_rec *r, const char *ip_address,
     INFO(r->server, "MMDB_lookup_string %s works", ip_address);
 
     if (lookup_result.found_entry) {
-        set_env_for_lookup(r, ip_address, &lookup_result,
-                           databases->lookup_paths);
+        export_env_for_lookups(r, ip_address, &lookup_result, lookups_for_db);
     }
 }
 
-static void set_env_for_lookup(request_rec *r, const char *ip_address,
-                               MMDB_lookup_result_s *lookup_result,
-                               lookup_path_list *  lookup_paths)
+static void export_env_for_lookups(request_rec *r, const char *ip_address,
+                                MMDB_lookup_result_s *lookup_result,
+                                apr_hash_t *  lookups_for_db)
 {
-    for (lookup_path_list *kv = lookup_paths; kv; kv = kv->next) {
+    for (apr_hash_index_t *lp_index =
+             apr_hash_first(r->pool, lookups_for_db);
+         lp_index;
+         lp_index = apr_hash_next(lp_index)) {
+
+        char *env_key;
+        const char **lookup_path;
+        apr_hash_this(lp_index, (const void **)&env_key, NULL,
+                      (void **)&lookup_path);
+
         apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
 
         MMDB_entry_data_s result;
         int mmdb_error = MMDB_aget_value(
             &lookup_result->entry, &result,
-            &kv->path_segments[1]);
+            lookup_path);
         if (mmdb_error == MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR) {
             // INFO(r->server, MMDB_strerror(mmdb_error));
             continue;
@@ -361,7 +391,7 @@ static void set_env_for_lookup(request_rec *r, const char *ip_address,
             }
 
             if (NULL != value) {
-                apr_table_set(r->subprocess_env, kv->env_key, value);
+                apr_table_set(r->subprocess_env, env_key, value);
             }
         }
     }
@@ -382,7 +412,6 @@ static char * from_uint128(apr_pool_t *pool,
                         p[8], p[9], p[10], p[11],
                         p[12], p[13], p[14], p[15]);
 #else
-
     mmdb_uint128_t v = result->uint128;
     return apr_psprintf(pool,
                         "0x%016" PRIx64 "%016" PRIx64,
@@ -390,42 +419,3 @@ static char * from_uint128(apr_pool_t *pool,
                         (uint64_t)v);
 #endif
 }
-
-static const command_rec maxminddb_directives[] = {
-    AP_INIT_FLAG("MaxMindDBEnable",
-                 set_maxminddb_enable,
-                 NULL,
-                 OR_FILEINFO,
-                 "Turn on mod_maxminddb"),
-    AP_INIT_TAKE2("MaxMindDBFile",
-                  set_maxminddb_filename,
-                  NULL,
-                  OR_ALL,
-                  "Path to the Database File"),
-    AP_INIT_ITERATE2("MaxMindDBEnv",
-                     set_maxminddb_env,
-                     NULL,
-                     OR_ALL,
-                     "Set desired env var"),
-    { NULL }
-};
-
-static void maxminddb_register_hooks(apr_pool_t *UNUSED(p))
-{
-    /* make sure we run before mod_rewrite's handler */
-    static const char *const asz_succ[] =
-    { "mod_setenvif.c", "mod_rewrite.c", NULL };
-
-    ap_hook_header_parser(set_env, NULL, asz_succ, APR_HOOK_MIDDLE);
-}
-
-/* Dispatch list for API hooks */
-module AP_MODULE_DECLARE_DATA maxminddb_module = {
-    STANDARD20_MODULE_STUFF,
-    create_dir_config,       /* create per-dir    config structures */
-    merge_dir_config,        /* merge  per-dir    config structures */
-    NULL,                    /* create per-server config structures */
-    NULL,                    /* merge  per-server config structures */
-    maxminddb_directives,    /* table of config file commands       */
-    maxminddb_register_hooks /* register hooks                      */
-};
