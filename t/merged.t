@@ -19,6 +19,8 @@ use Test::ModMaxMindDB qw( get_env );
 
     is( $env->{MM_PARENT}, -268435456, 'child dir can access parent record' );
     is( $env->{MM_CHILD}, 268435456, 'child dir can access child record' );
+
+    is( $env->{MM_PARENT_2}, 268435456, 'child can overwrite parent env' );
 }
 
 { # disabled child
@@ -28,6 +30,11 @@ use Test::ModMaxMindDB qw( get_env );
     is( $env->{MM_DISABLED}, undef, 'disabled child cannot set child record' );
 }
 
+{ # overwrite parent DB name
+    my $env = get_env( '/cgi-bin/merged/overwrite-db/json-env', '216.160.83.56' );
+
+    is( $env->{MM_COUNTRY_CODE}, undef, 'disabled child cannot set child record' );
+}
 
 
 done_testing();

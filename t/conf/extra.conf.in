@@ -150,12 +150,15 @@ LogLevel        debug
         MaxMindDBFile DECODER_DB        @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-decoder.mmdb
 
         MaxMindDBEnv MM_PARENT          DECODER_DB/int32
+        MaxMindDBEnv MM_PARENT_2          DECODER_DB/int32
     </IfModule>
 </Directory>
 
 <Directory "@ServerRoot@/cgi-bin/merged/child">
     <IfModule mod_maxminddb.c>
         MaxMindDBEnv MM_CHILD          DECODER_DB/uint32
+
+        MaxMindDBEnv MM_PARENT_2          DECODER_DB/uint32
     </IfModule>
 </Directory>
 
@@ -166,6 +169,14 @@ LogLevel        debug
         MaxMindDBEnv MM_DISABLED          DECODER_DB/uint32
     </IfModule>
 </Directory>
+
+<Directory "@ServerRoot@/cgi-bin/overwrite-db">
+    <IfModule mod_maxminddb.c>
+        MaxMindDBFile DECODER_DB        @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+        MaxMindDBEnv MM_COUNTRY_CODE    DECODER_DB/country/iso_code
+    </IfModule>
+</Directory>
+
 
 RemoteIPHeader          X-Forwarded-For
 RemoteIPProxiesHeader   X-Forwarded-By
