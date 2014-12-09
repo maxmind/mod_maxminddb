@@ -21,8 +21,10 @@ sub _build_city_source_data {
     my @lines = read_file('maxmind-db/source-data/GeoIP2-City-Test.json');
 
     # hashref keyed on IP ranges
-    return { map { my $record = decode_json($_); shift @{$record} => $record->[0] }
-            @lines };
+    return {
+        map { my $record = decode_json($_); shift @{$record} => $record->[0] }
+            @lines
+    };
 }
 
 1;

@@ -177,6 +177,16 @@ LogLevel        debug
     </IfModule>
 </Directory>
 
+<Directory "@ServerRoot@/cgi-bin/htaccess">
+    AllowOverride All
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable On
+        MaxMindDBFile GEOIP2_DB        @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+        MaxMindDBEnv MM_CODE    GEOIP2_DB/country/iso_code
+    </IfModule>
+</Directory>
+
+
 
 RemoteIPHeader          X-Forwarded-For
 RemoteIPProxiesHeader   X-Forwarded-By

@@ -85,7 +85,7 @@ static const command_rec maxminddb_directives[] = {
     AP_INIT_FLAG("MaxMindDBEnable",
                  set_maxminddb_enable,
                  NULL,
-                 OR_FILEINFO,
+                 OR_ALL,
                  "Turn on mod_maxminddb"),
     AP_INIT_TAKE2("MaxMindDBFile",
                   set_maxminddb_filename,
