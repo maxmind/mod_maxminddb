@@ -20,7 +20,7 @@ directory with the extracted source:
    ./configure
    make install
 
-To use another apache installation, specify a path to the right apxs binary:
+To use another Apache installation, specify a path to the right apxs binary:
 
     ./configure --with-apxs=/foo/bar/apxs
 
@@ -154,10 +154,10 @@ place. All integers types except 128-bit integers are provides as decimal.
 false and "1" for true.
 
 Note that data stored as the "bytes" type in a MaxMind DB database can contain
-null values and may end up truncated when stored in an environment
-variable. If you really need to access this data, we recommend using
-[one of our programming language APIs](http://dev.maxmind.com/geoip/geoip2/downloadable/#MaxMind_APIs)
-instead.
+null bytes and may end up truncated when stored in an environment variable. If
+you really need to access this data, we recommend using [one of our
+programming language
+APIs](http://dev.maxmind.com/geoip/geoip2/downloadable/#MaxMind_APIs) instead.
 
 ## Support ##
 
