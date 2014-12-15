@@ -149,7 +149,7 @@ This example shows how to block users based on their country:
 
 All data is provided as a string bound to the specified Apache environment
 variable. Floating point numbers are provided to five digits after the decimal
-place. All integers types except 128-bit integers are provides as decimal.
+place. All integers types except 128-bit integers are provided as decimal.
 128-bit integers are returned as hexadecimal. Booleans are returned as "0" for
 false and "1" for true.
 
