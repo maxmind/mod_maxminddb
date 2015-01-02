@@ -11,6 +11,7 @@
 *.so
 *.so.*
 *.sw?
+.gh-pages
 .libs
 .tidyall.d
 MYMETA.json
