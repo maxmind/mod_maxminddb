@@ -1,21 +1,23 @@
 ---
 layout: default
 title: mod_maxminddb - an Apache module that allows you to query MaxMind DB files
+version: 1.0.0
 ---
 # MaxMind DB Apache Module #
 
 This module allows you to query MaxMind DB files from Apache 2.2+ using the
 `libmaxminddb` library.
 
-## Beta Notice ##
+## Requirements ##
 
-This module is still beta, and the API may change before it is considered
-stable.
+This module requires Apache 2.2 or 2.4 to be installed, including any
+corresponding "dev" package, such as `apache2-dev` on Ubuntu. You should have
+`apxs` or `apxs2` in your `$PATH`.
+
+You also must install the [libmaxminddb](https://github.com/maxmind/libmaxminddb)
+C library.
 
 ## Installation ##
-
-You must install the [libmaxminddb](https://github.com/maxmind/libmaxminddb) C
-library before installing this module.
 
 To install the module from a tarball, run the following commands from the
 directory with the extracted source:
@@ -23,35 +25,40 @@ directory with the extracted source:
    ./configure
    make install
 
-If you are compiling the module from
-[our GitHub repo](https://github.com/maxmind/mod_maxminddb.git), run the
-following commands:
-
-    ./bootstrap
-    ./configure
-    make install
-
-To use another apache installation, specify a path to the right apxs binary:
+To use another Apache installation, specify a path to the right apxs binary:
 
     ./configure --with-apxs=/foo/bar/apxs
+
+If you are compiling the module from a Git checkout, you must have `automake`,
+`autoconf`, and `libtool` installed and you must run `./bootstrap` before
+running `configure`.
 
 ## Usage ##
 
 To use this module, you must first download or create a MaxMind DB file. We
 provide [free GeoLite2 databases](http://dev.maxmind.com/geoip/geoip2/geolite2)
-as well as [commercial GeoIP2 databases](http://www.maxmind.com/en/geolocation_landing).
+as well as [commercial GeoIP2 databases](https://www.maxmind.com/en/geoip2-databases).
 
-After installing this module and obtaining a database, you must now edit your
-Apache configuration file (e.g., `/etc/apache2/apache2.conf`). This file must
-contain `MaxMindDBEnable` to enable the module, `MaxMindDBFile` to specify the
-database to use, and `MaxMindDBEnv` to bind the desired lookup result to an
-environment variable.
+After installing this module and obtaining a database, you must now set up the
+module in your Apache configuration file (e.g., `/etc/apache2/apache2.conf`)
+or in an `.htaccess` file. You must set `MaxMindDBEnable` to enable the
+module, `MaxMindDBFile` to specify the database to use, and `MaxMindDBEnv` to
+bind the desired lookup result to an environment variable.
 
 This module uses the client IP address for the lookup. This is not always what
 you want. If you need to use an IP address specified in a header (e.g., by
 your proxy frontend),
 [mod_remoteip](http://httpd.apache.org/docs/current/mod/mod_remoteip.html) may
 be used to set the client IP address.
+
+## Directives ##
+
+All directives may appear either in your server configuration or an
+`.htaccess` file. Directives in `<Location>` and `<Directory>` blocks will
+also apply to sub-locations and subdirectories. The configuration will be
+merged with the most specific taking precedence. For instance, a conflicting
+directive set for a subdirectory will be used for the subdirectory rather
+than the directive set for the parent location.
 
 ### `MaxMindDBEnable` ###
 
@@ -68,7 +75,7 @@ disk. You may specify multiple databases, each with its own name.
     MaxMindDBFile COUNTRY_DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
     MaxMindDBFile CITY_DB    /usr/local/share/GeoIP/GeoLite2-City.mmdb
 
-The name placeholder can be any string that apache parses as a word. We
+The name placeholder can be any string that Apache parses as a word. We
 recommend sticking to letters, numbers, and underscores.
 
 ### `MaxMindDBEnv` ###
@@ -93,43 +100,43 @@ the module. This is primarily intended for debugging purposes.
 
     <IfModule mod_maxminddb.c>
         MaxMindDBEnable On
-        MaxMindDBFile DB /usr/local/share/GeoIP/GeoLite2-City.mmdb
+        MaxMindDBFile CITY_DB /usr/local/share/GeoIP/GeoLite2-City.mmdb
 
-        MaxMindDBEnv MM_COUNTRY_CODE DB/country/iso_code
-        MaxMindDBEnv MM_COUNTRY_NAME DB/country/names/en
-        MaxMindDBEnv MM_CITY_NAME DB/city/names/en
-        MaxMindDBEnv MM_LONGITUDE DB/location/longitude
-        MaxMindDBEnv MM_LATITUDE DB/location/latitude
+        MaxMindDBEnv MM_COUNTRY_CODE CITY_DB/country/iso_code
+        MaxMindDBEnv MM_COUNTRY_NAME CITY_DB/country/names/en
+        MaxMindDBEnv MM_CITY_NAME CITY_DB/city/names/en
+        MaxMindDBEnv MM_LONGITUDE CITY_DB/location/longitude
+        MaxMindDBEnv MM_LATITUDE CITY_DB/location/latitude
     </IfModule>
 
 ### Connection-Type Database ###
 
     <IfModule mod_maxminddb.c>
         MaxMindDBEnable On
-        MaxMindDBFile DB /usr/local/share/GeoIP/GeoIP2-Connection-Type.mmdb
+        MaxMindDBFile CONNECTION_TYPE_DB /usr/local/share/GeoIP/GeoIP2-Connection-Type.mmdb
 
-        MaxMindDBEnv MM_CONNECTION_TYPE DB/connection_type
+        MaxMindDBEnv MM_CONNECTION_TYPE CONNECTION_TYPE_DB/connection_type
     </IfModule>
 
 ### Domain Database ###
 
     <IfModule mod_maxminddb.c>
         MaxMindDBEnable On
-        MaxMindDBFile DB /usr/local/share/GeoIP/GeoIP2-Domain.mmdb
+        MaxMindDBFile DOMAIN_DB /usr/local/share/GeoIP/GeoIP2-Domain.mmdb
 
-        MaxMindDBEnv MM_DOMAIN DB/domain
+        MaxMindDBEnv MM_DOMAIN DOMAIN_DB/domain
     </IfModule>
 
 ### ISP Database ###
 
     <IfModule mod_maxminddb.c>
         MaxMindDBEnable On
-        MaxMindDBFile DB /usr/local/share/GeoIP/GeoIP2-ISP.mmdb
+        MaxMindDBFile ISP_DB /usr/local/share/GeoIP/GeoIP2-ISP.mmdb
 
-        MaxMindDBEnv MM_ASN DB/autonomous_system_number
-        MaxMindDBEnv MM_ASORG DB/autonomous_system_organization
-        MaxMindDBEnv MM_ISP DB/isp
-        MaxMindDBEnv MM_ORG DB/organization
+        MaxMindDBEnv MM_ASN ISP_DB/autonomous_system_number
+        MaxMindDBEnv MM_ASORG ISP_DB/autonomous_system_organization
+        MaxMindDBEnv MM_ISP ISP_DB/isp
+        MaxMindDBEnv MM_ORG ISP_DB/organization
     </IfModule>
 
 ### Blocking by Country ###
@@ -147,15 +154,15 @@ This example shows how to block users based on their country:
 
 All data is provided as a string bound to the specified Apache environment
 variable. Floating point numbers are provided to five digits after the decimal
-place. All integers types except 128-bit integers are provides as decimal.
+place. All integers types except 128-bit integers are provided as decimal.
 128-bit integers are returned as hexadecimal. Booleans are returned as "0" for
 false and "1" for true.
 
 Note that data stored as the "bytes" type in a MaxMind DB database can contain
-null values, and may end up truncated when stored in an environment
-variable. If you really need to access this data, we recommend using
-[one of our programming language APIs](http://dev.maxmind.com/geoip/geoip2/downloadable/#MaxMind_APIs)
-instead.
+null bytes and may end up truncated when stored in an environment variable. If
+you really need to access this data, we recommend using [one of our
+programming language
+APIs](http://dev.maxmind.com/geoip/geoip2/downloadable/#MaxMind_APIs) instead.
 
 ## Support ##
 
@@ -165,10 +172,6 @@ Please report all issues with this code using the [GitHub issue tracker]
 If you are having an issue with a commercial MaxMind database that is not
 specific to this module, please see [our support
 page](http://www.maxmind.com/en/support).
-
-## Requirements ##
-
-This module requires Apache 2.2+.
 
 ## Versioning ##
 
