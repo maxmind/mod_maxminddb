@@ -1,3 +1,9 @@
+## 1.0.0 - 2014-01-02
+
+* First non-beta release.
+* Updated documentation for completeness and correctness.
+* Added maxminddb.h check to configure.ac.
+
 ## 0.2.0 - 2014-12-10
 
 * The `MaxMindDBEnable` directive was changed from `OR_FILEINFO` to `OR_ALL`.
