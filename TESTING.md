@@ -25,9 +25,16 @@
     cd ..
 
 ### Apache 2 (assumes Debian/Ubuntu)
+
+#### 2.2
+
     sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2.2-common apache2-prefork-dev apache2-utils
 
-#### mod_remoteip
+#### 2.4
+
+    sudo apt-get install --assume-yes apache2-mpm-prefork apache2-utils apache2-dev
+
+#### mod_remoteip (Apache 2.2 only)
     git clone git://github.com/ttkzw/mod_remoteip-httpd22
     cd mod_remoteip-httpd22
     sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
@@ -41,6 +48,7 @@
     cpanm --installdeps --notest .
 
 ### Test scaffolding
+
     perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
 
 ### Run tests
