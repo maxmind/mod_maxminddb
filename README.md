@@ -17,8 +17,8 @@ C library.
 To install the module from a tarball, run the following commands from the
 directory with the extracted source:
 
-   ./configure
-   make install
+    ./configure
+    make install
 
 To use another Apache installation, specify a path to the right apxs binary:
 
