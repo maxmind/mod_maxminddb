@@ -1,7 +1,7 @@
 ---
 layout: default
 title: mod_maxminddb - an Apache module that allows you to query MaxMind DB files
-version: 1.0.0
+version: 1.0.1
 ---
 # MaxMind DB Apache Module #
 
@@ -22,8 +22,8 @@ C library.
 To install the module from a tarball, run the following commands from the
 directory with the extracted source:
 
-   ./configure
-   make install
+    ./configure
+    make install
 
 To use another Apache installation, specify a path to the right apxs binary:
 
