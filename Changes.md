@@ -1,4 +1,9 @@
-## 1.0.0 - 2014-01-02
+## 1.0.1 - 2015-03-16
+
+* The module is now compiled with the `-std=c99 -fms-extensions` flags. This
+  fixes compilation errors on older version of `gcc`.
+
+## 1.0.0 - 2015-01-02
 
 * First non-beta release.
 * Updated documentation for completeness and correctness.
