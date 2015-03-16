@@ -32,7 +32,7 @@ EOF
   fi
 ])dnl AX_CHECK_CFLAGS
 
-AX_CHECK_CFLAGS([-std=c99])
+AX_CHECK_CFLAGS([-std=c99 -fms-extensions])
 
 if test -z "${APXS}"; then
     AC_PATH_PROGS(APXS, apxs2 apxs, no, [$PATH:/usr/sbin:/usr/local/apache2/bin])
