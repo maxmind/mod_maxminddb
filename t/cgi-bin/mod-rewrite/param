@@ -1,0 +1,11 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use CGI;
+use JSON::XS;
+
+print "Content-type: text/plain\n\n";
+print CGI->new->param('country_code');
+
