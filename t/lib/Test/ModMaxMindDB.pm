@@ -6,14 +6,19 @@ use warnings;
 use Apache::TestRequest;
 use JSON::XS;
 
-use Sub::Exporter -setup => { exports => ['get_env'] };
+use Sub::Exporter -setup => { exports => ['get_env', 'get_request',] };
 
 sub get_env {
+    my $res = get_request(@_);
+
+    return JSON::XS->new->decode( $res->content );
+}
+
+sub get_request {
     my $url = shift;
     my $ip = shift || '216.160.83.56';
 
-    my $res = GET $url, 'X-Forwarded-For' => $ip;
-    return JSON::XS->new->decode( $res->content );
+    return GET $url, 'X-Forwarded-For' => $ip;
 }
 
 1;

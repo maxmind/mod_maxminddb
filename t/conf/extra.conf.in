@@ -187,6 +187,21 @@ LogLevel        debug
 </Directory>
 
 
+<Directory "@ServerRoot@/cgi-bin/mod-rewrite">
+    AllowOverride None
+    Options +ExecCGI
+
+    MaxMindDBEnable On
+    MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+    MaxMindDBEnv MM_COUNTRY_CODE    CITY_DB/country/iso_code
+
+    RewriteEngine on
+    RewriteBase "@ServerRoot@"
+    RewriteCond %{ENV:MM_COUNTRY_CODE} ^US$
+    RewriteRule "^(.*)"         "$1?country_code=%{ENV:MM_COUNTRY_CODE}"    [L]
+
+</Directory>
+
 
 RemoteIPHeader          X-Forwarded-For
 RemoteIPProxiesHeader   X-Forwarded-By

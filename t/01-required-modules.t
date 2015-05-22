@@ -8,7 +8,7 @@ plan tests => 1,
     need need_module(
     [
         'mod_dir',      'mod_cgid', 'mod_env', 'mod_alias',
-        'mod_remoteip', 'mod_maxminddb',
+        'mod_remoteip', 'mod_maxminddb', 'mod_rewrite',
     ]
     ),
     need_lwp;
