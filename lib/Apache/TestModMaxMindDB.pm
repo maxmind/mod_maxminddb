@@ -16,15 +16,11 @@ has city_source_data => (
 );
 
 sub _build_city_source_data {
-    my $self  = shift;
-    my $json  = JSON::XS->new;
-    my @lines = read_file('maxmind-db/source-data/GeoIP2-City-Test.json');
+    my $self = shift;
 
-    # hashref keyed on IP ranges
-    return {
-        map { my $record = decode_json($_); shift @{$record} => $record->[0] }
-            @lines
-    };
+    my $file = read_file('maxmind-db/source-data/GeoIP2-City-Test.json');
+
+    return { map { %{$_} } @{ decode_json($file) } };
 }
 
 1;
