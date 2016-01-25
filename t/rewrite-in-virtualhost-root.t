@@ -18,5 +18,6 @@ sub get {
 get('foo.com', '?country_code=');
 get('bar.com', '?country_code=');
 get('moo.com', '?country_code=CN');
+get('baz.com', '?country_code=CN');
 
 done_testing;
