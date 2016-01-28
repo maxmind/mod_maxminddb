@@ -55,6 +55,11 @@ merged with the most specific taking precedence. For instance, a conflicting
 directive set for a subdirectory will be used for the subdirectory rather
 than the directive set for the parent location.
 
+Similarly, the main server configuration may set defaults that will be merged
+into the configuration provided by individual virtual hosts. However, please
+note that currently no configuration merging is performed between server/vhost
+and directory configurations.
+
 ### `MaxMindDBEnable` ###
 
 This directive enables or disables the MaxMind DB lookup. Valid settings are
