@@ -202,7 +202,39 @@ LogLevel        debug
 
 </Directory>
 
-
 RemoteIPHeader          X-Forwarded-For
 RemoteIPProxiesHeader   X-Forwarded-By
 
+<VirtualHost 0.0.0.0:42>
+    ServerName foo.com
+
+    MaxMindDBEnable Off
+    MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+    MaxMindDBEnv MM_COUNTRY_CODE    CITY_DB/country/iso_code
+
+    RewriteEngine on
+    RewriteRule "^(.*)"         "$1?country_code=%{ENV:MM_COUNTRY_CODE}"    [L,R=301]
+</VirtualHost>
+
+<VirtualHost 0.0.0.0:42>
+    ServerName moo.com
+
+    MaxMindDBEnable On
+    MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+    MaxMindDBEnv MM_COUNTRY_CODE    CITY_DB/country/iso_code
+
+    RewriteEngine on
+    RewriteRule "^(.*)"         "$1?country_code=%{ENV:MM_COUNTRY_CODE}"    [L,R=301]
+</VirtualHost>
+
+MaxMindDBFile GLOBAL_CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+
+<VirtualHost 0.0.0.0:42>
+    ServerName baz.com
+
+    MaxMindDBEnable On
+    MaxMindDBEnv MM_COUNTRY_CODE    GLOBAL_CITY_DB/country/iso_code
+
+    RewriteEngine on
+    RewriteRule "^(.*)"         "$1?country_code=%{ENV:MM_COUNTRY_CODE}"    [L,R=301]
+</VirtualHost>
