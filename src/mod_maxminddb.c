@@ -210,9 +210,9 @@ static const char *set_maxminddb_filename(cmd_parms *cmd, void *dir_config,
     MMDB_s *mmdb = apr_pcalloc(cmd->pool, sizeof(MMDB_s));
     int mmdb_error = MMDB_open(filename, MMDB_MODE_MMAP, mmdb);
     if (mmdb_error != MMDB_SUCCESS) {
-        ERROR(cmd->server, "Opening %s failed: %s", filename,
-              MMDB_strerror(mmdb_error));
-        return NULL;
+        return apr_psprintf(cmd->temp_pool,
+                            "MaxMindDBFile: Failed to open %s: %s",
+                            filename, MMDB_strerror(mmdb_error));
     }
 
     apr_pool_pre_cleanup_register(cmd->pool, mmdb, cleanup_database);
