@@ -1,3 +1,7 @@
+* Fail loudly if any configured `MaxMindDBFile`s don't exist.
+  Previously we would accept the configuration and silently do nothing.
+* Support lookups in the root of VHost sections.
+
 ## 1.0.1 - 2015-03-16
 
 * The module is now compiled with the `-std=c99 -fms-extensions` flags. This
