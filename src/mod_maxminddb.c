@@ -29,6 +29,10 @@
 #include <maxminddb.h>
 #include <inttypes.h>
 
+#ifdef APLOG_USE_MODULE
+APLOG_USE_MODULE(maxminddb);
+#endif
+
 #if defined (MAXMINDDB_DEBUG)
 #define INFO(server_rec, ...)                                            \
     ap_log_error(APLOG_MARK, APLOG_DEBUG | APLOG_NOERRNO, 0, server_rec, \
