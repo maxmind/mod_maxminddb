@@ -101,11 +101,11 @@ static const command_rec maxminddb_directives[] = {
                   NULL,
                   OR_ALL,
                   "Path to the Database File"),
-    AP_INIT_ITERATE2("MaxMindDBEnv",
-                     set_maxminddb_env,
-                     NULL,
-                     OR_ALL,
-                     "Set desired env var"),
+    AP_INIT_TAKE2("MaxMindDBEnv",
+                  set_maxminddb_env,
+                  NULL,
+                  OR_ALL,
+                  "Set desired env var"),
     { NULL }
 };
 
