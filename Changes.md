@@ -1,6 +1,10 @@
+## 1.1.0
+
 * Fail loudly if any configured `MaxMindDBFile`s don't exist.
   Previously we would accept the configuration and silently do nothing.
 * Support lookups in the root of VHost sections.
+* `MaxMindDBEnv` now takes exactly two arguments. Previously, it allowed more
+  arguments but ignored all but one set of arguments.
 
 ## 1.0.1 - 2015-03-16
 
