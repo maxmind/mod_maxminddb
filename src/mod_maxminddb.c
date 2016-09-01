@@ -85,6 +85,8 @@ static void export_env_for_lookups(request_rec *r, const char *ip_address,
                                    MMDB_lookup_result_s *lookup_result,
                                    apr_hash_t *lookups_for_db);
 static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg);
+static const char *set_maxminddb_addr_env(cmd_parms *cmd, void *dir_config,
+                                     const char *env);
 static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
                                      const char *env, const char *path);
 static const char *set_maxminddb_filename(cmd_parms *cmd, void *config,
