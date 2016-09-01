@@ -173,6 +173,10 @@ static void *merge_config(apr_pool_t *pool, void *parent, void *child)
     conf->enabled = child_conf->enabled == -1 ?
                     parent_conf->enabled : child_conf->enabled;
 
+    conf->mmdb_addr_env_var = (NULL == child_conf->mmdb_addr_env_var)
+                    ? parent_conf->mmdb_addr_env_var
+                    : child_conf->mmdb_addr_env_var;
+
     conf->databases = apr_hash_overlay(pool, child_conf->databases,
                                        parent_conf->databases);
     conf->lookups = apr_hash_merge(pool, child_conf->lookups,
