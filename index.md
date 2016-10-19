@@ -1,7 +1,7 @@
 ---
 layout: default
 title: mod_maxminddb - an Apache module that allows you to query MaxMind DB files
-version: 1.0.1
+version: 1.1.0
 ---
 # MaxMind DB Apache Module #
 
@@ -59,6 +59,11 @@ also apply to sub-locations and subdirectories. The configuration will be
 merged with the most specific taking precedence. For instance, a conflicting
 directive set for a subdirectory will be used for the subdirectory rather
 than the directive set for the parent location.
+
+Similarly, the main server configuration may set defaults that will be merged
+into the configuration provided by individual virtual hosts. However, please
+note that currently no configuration merging is performed between server/vhost
+and directory configurations.
 
 ### `MaxMindDBEnable` ###
 
