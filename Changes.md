@@ -1,4 +1,4 @@
-## 1.1.0
+## 1.1.0 - 2016-10-19
 
 * Fail loudly if any configured `MaxMindDBFile`s don't exist.
   Previously we would accept the configuration and silently do nothing.
