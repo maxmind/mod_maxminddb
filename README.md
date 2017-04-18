@@ -96,6 +96,19 @@ the module. This is primarily intended for debugging purposes.
 
 ## Examples ##
 
+These examples show how to export data from the database into environment
+variables.
+
+### ASN Database ###
+
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable On
+        MaxMindDBFile ASN_DB /usr/local/share/GeoIP/GeoLite2-ASN.mmdb
+
+        MaxMindDBEnv MM_ASN ASN_DB/autonomous_system_number
+        MaxMindDBEnv MM_ASORG ASN_DB/autonomous_system_organization
+    </IfModule>
+
 ### City Database ###
 
     <IfModule mod_maxminddb.c>
