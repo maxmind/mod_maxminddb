@@ -1,4 +1,5 @@
 ---
+dist: trusty
 addons:
   coverity_scan:
     project:
