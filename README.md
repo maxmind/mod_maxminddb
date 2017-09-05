@@ -163,6 +163,9 @@ This example shows how to block users based on their country:
     SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
     Deny from env=BlockCountry
 
+Note that at least the "Deny" (or "Allow") action must be applied within a
+<Directory>, <Location> or <Files> container.
+
 ## Data Output Format ##
 
 All data is provided as a string bound to the specified Apache environment
