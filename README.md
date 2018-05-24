@@ -46,7 +46,7 @@ your proxy frontend),
 [mod_remoteip](http://httpd.apache.org/docs/current/mod/mod_remoteip.html) may
 be used to set the client IP address.
 Manually setting the client IP address is also possible - see
-[Client IP address lookup control](client-ip-address-lookup-control).
+[Client IP address lookup control][ip-lookup-control].
 
 ## Directives ##
 
@@ -96,7 +96,7 @@ In addition to the environment variable specified by `MaxMindDBEnv`, this
 module exports `MMDB_ADDR`, which contains the IP address used for lookups by
 the module. This is primarily intended for debugging purposes.
 
-## Client IP address lookup control ##
+[ip-lookup-control]:## Client IP address lookup control ##
 
 In case you want supply your own value for the IP address to lookup, it may be
 done by setting the environment variable `MMDB_ADDR`.
