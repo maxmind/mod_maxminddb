@@ -102,8 +102,8 @@ In case you want supply your own value for the IP address to lookup, it may be
 done by setting the environment variable `MMDB_ADDR`.
 This can be done, for instance, with
 [ModSecurity](https://github.com/SpiderLabs/ModSecurity/) in (real) phase 1.
-Note that mod_setenvif and mod_rewrite cannot be used for this as they are
-running after this module. For most usages,
+Note that mod_env, mod_setenvif and mod_rewrite cannot be used for this as they
+are running after this module. For most usages,
 [mod_remoteip](http://httpd.apache.org/docs/current/mod/mod_remoteip.html)
 is an easier alternative.
 
