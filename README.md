@@ -96,7 +96,7 @@ In addition to the environment variable specified by `MaxMindDBEnv`, this
 module exports `MMDB_ADDR`, which contains the IP address used for lookups by
 the module. This is primarily intended for debugging purposes.
 
-[ip-lookup-control]:## Client IP address lookup control ##
+[ip-lookup-control]: ## Client IP address lookup control ##
 
 In case you want supply your own value for the IP address to lookup, it may be
 done by setting the environment variable `MMDB_ADDR`.
