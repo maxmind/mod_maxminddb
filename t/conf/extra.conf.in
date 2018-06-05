@@ -202,6 +202,15 @@ LogLevel        debug
 
 </Directory>
 
+<Directory "@ServerRoot@/cgi-bin/ip-in-MMDB_ADDR">
+    AllowOverride None
+    Options +ExecCGI
+
+    MaxMindDBEnable On
+    MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+    MaxMindDBEnv MM_COUNTRY_CODE    CITY_DB/country/iso_code
+</Directory>
+
 RemoteIPHeader          X-Forwarded-For
 RemoteIPProxiesHeader   X-Forwarded-By
 

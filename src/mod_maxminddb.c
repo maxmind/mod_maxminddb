@@ -285,7 +285,8 @@ static int export_env_for_dir(request_rec *r)
 {
     INFO(r->server, "maxminddb_per_dir ( enabled )");
     return export_env(r,
-                      ap_get_module_config(r->per_dir_config, &maxminddb_module));
+                      ap_get_module_config(r->per_dir_config,
+                                           &maxminddb_module));
 }
 
 static int export_env(request_rec *r, maxminddb_config *conf)
@@ -315,6 +316,10 @@ static int export_env(request_rec *r, maxminddb_config *conf)
 
 static char *get_client_ip(request_rec *r)
 {
+    const char *addr = apr_table_get(r->subprocess_env, "MMDB_ADDR");
+    if (addr) {
+        return (char *)addr;
+    }
 # if AP_SERVER_MAJORVERSION_NUMBER == 2 && AP_SERVER_MINORVERSION_NUMBER == 4
     return r->useragent_ip;
 # else
