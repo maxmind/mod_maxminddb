@@ -8,6 +8,8 @@ use Apache::TestRun ();
 
 package MyTest;
 
+local $ENV{MMDB_ADDR} = '175.16.199.0';
+
 use vars qw(@ISA);
 @ISA = qw(Apache::TestRun);
 
