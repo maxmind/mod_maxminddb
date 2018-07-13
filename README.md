@@ -45,6 +45,8 @@ you want. If you need to use an IP address specified in a header (e.g., by
 your proxy frontend),
 [mod_remoteip](http://httpd.apache.org/docs/current/mod/mod_remoteip.html) may
 be used to set the client IP address.
+Manually setting the client IP address is also possible - see
+[Client IP address lookup control](#client-ip-address-lookup-control).
 
 ## Directives ##
 
@@ -102,6 +104,17 @@ using map keys or 0-based array indexes separated by `/`.
 
 This module exports only those environment variables specified by the
 `MaxMindDBEnv` and  `MaxMindDBAddrEnv` directives.
+
+## Client IP address lookup control ##
+
+In case you want supply your own value for the IP address to lookup, it may be
+done by setting the environment variable `MMDB_ADDR`.
+This can be done, for instance, with
+[ModSecurity](https://github.com/SpiderLabs/ModSecurity/) in (real) phase 1.
+Note that mod_env, mod_setenvif and mod_rewrite cannot be used for this as they
+are running after this module. For most usages,
+[mod_remoteip](http://httpd.apache.org/docs/current/mod/mod_remoteip.html)
+is an easier alternative.
 
 ## Examples ##
 
