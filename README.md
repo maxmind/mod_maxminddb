@@ -67,6 +67,16 @@ This directive enables or disables the MaxMind DB lookup. Valid settings are
 
     MaxMindDBEnable On
 
+### `MaxMindDBAddrEnv` ###
+
+While this environment variable is primarily intended for debugging purposes, 
+this directive allows you to set the name of the environment variable which
+contains the IP address used for lookups. By default, this is set to
+`MMDB_ADDR`, but can be overridden in the event you need to support older
+codebases which used the deprecated `GEOIP_ADDR`. 
+
+    MaxMindDBAddrEnv MMDB_ADDR
+
 ### `MaxMindDBFile` ###
 
 This directive associates a name placeholder with a MaxMind DB file on the
@@ -90,9 +100,8 @@ using map keys or 0-based array indexes separated by `/`.
 
 ## Exported Environment Variables ##
 
-In addition to the environment variable specified by `MaxMindDBEnv`, this
-module exports `MMDB_ADDR`, which contains the IP address used for lookups by
-the module. This is primarily intended for debugging purposes.
+This module exports only those environment variables specified by the
+`MaxMindDBEnv` and  `MaxMindDBAddrEnv` directives.
 
 ## Examples ##
 
