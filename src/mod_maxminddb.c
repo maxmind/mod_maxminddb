@@ -55,6 +55,7 @@ APLOG_USE_MODULE(maxminddb);
 typedef struct maxminddb_config {
     apr_hash_t *databases;
     apr_hash_t *lookups;
+    char *mmdb_addr_env_var;
     int enabled;
 } maxminddb_config;
 
@@ -84,6 +85,8 @@ static void export_env_for_lookups(request_rec *r, const char *ip_address,
                                    MMDB_lookup_result_s *lookup_result,
                                    apr_hash_t *lookups_for_db);
 static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg);
+static const char *set_maxminddb_addr_env(cmd_parms *cmd, void *dir_config,
+                                     const char *env);
 static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
                                      const char *env, const char *path);
 static const char *set_maxminddb_filename(cmd_parms *cmd, void *config,
@@ -96,6 +99,11 @@ static const command_rec maxminddb_directives[] = {
                  NULL,
                  OR_ALL,
                  "Turn on mod_maxminddb"),
+    AP_INIT_TAKE1("MaxMindDBAddrEnv",
+                  set_maxminddb_addr_env,
+                  NULL,
+                  OR_ALL,
+                  "Set the queried IP address env var (default MMDB_ADDR)"),
     AP_INIT_TAKE2("MaxMindDBFile",
                   set_maxminddb_filename,
                   NULL,
@@ -147,6 +155,7 @@ static void *create_config(apr_pool_t *pool)
 
     conf->databases = apr_hash_make(pool);
     conf->lookups = apr_hash_make(pool);
+    conf->mmdb_addr_env_var = apr_pstrdup(pool, "MMDB_ADDR");
 
     /* We use -1 for off but not set */
     conf->enabled = -1;
@@ -163,6 +172,10 @@ static void *merge_config(apr_pool_t *pool, void *parent, void *child)
 
     conf->enabled = child_conf->enabled == -1 ?
                     parent_conf->enabled : child_conf->enabled;
+
+    conf->mmdb_addr_env_var = (NULL == child_conf->mmdb_addr_env_var)
+                    ? parent_conf->mmdb_addr_env_var
+                    : child_conf->mmdb_addr_env_var;
 
     conf->databases = apr_hash_overlay(pool, child_conf->databases,
                                        parent_conf->databases);
@@ -273,6 +286,18 @@ static const char *set_maxminddb_env(cmd_parms *cmd, void *dir_config,
     return NULL;
 }
 
+static const char *set_maxminddb_addr_env(cmd_parms *cmd, void *dir_config,
+                                     const char *env)
+{
+    maxminddb_config *conf = get_config(cmd, dir_config);
+
+    INFO(cmd->server, "set_maxminddb_addr_env (server) %s", env);
+
+    conf->mmdb_addr_env_var = apr_pstrdup(cmd->pool, env);
+
+    return NULL;
+}
+
 static int export_env_for_server(request_rec *r)
 {
     INFO(r->server, "maxminddb_per_server ( enabled )");
@@ -298,7 +323,7 @@ static int export_env(request_rec *r, maxminddb_config *conf)
     if (NULL == ip_address) {
         return DECLINED;
     }
-    apr_table_set(r->subprocess_env, "MMDB_ADDR", ip_address);
+    apr_table_set(r->subprocess_env, conf->mmdb_addr_env_var, ip_address);
 
     for (apr_hash_index_t *db_index = apr_hash_first(r->pool, conf->databases);
          db_index; db_index = apr_hash_next(db_index)) {
@@ -315,6 +340,8 @@ static int export_env(request_rec *r, maxminddb_config *conf)
 
 static char *get_client_ip(request_rec *r)
 {
+    const char *addr = apr_table_get(r->subprocess_env, "MMDB_ADDR");
+    if (addr) return (char*)addr;
 # if AP_SERVER_MAJORVERSION_NUMBER == 2 && AP_SERVER_MINORVERSION_NUMBER == 4
     return r->useragent_ip;
 # else

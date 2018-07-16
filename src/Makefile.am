@@ -1,5 +1,5 @@
 AUTOMAKE_OPTIONS = foreign
-WC=-Wc,"$(CFLAGS)"
+WC=-Wc,"-std=gnu99 $(CFLAGS)"
 
 #   the default target
 all: module
