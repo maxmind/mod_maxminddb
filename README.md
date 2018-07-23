@@ -16,7 +16,9 @@ C library.
 
 ### From a Named Release Tarball (Recommended) ###
 
-**NOTE:** These instructions are for installation from the _named_ `.tar.gz` tarballs on the [Releases](releases) page (e.g. `mod_maxminddb-*.tar.gz`).
+**NOTE:** These instructions are for installation from the _named_ `.tar.gz`
+tarballs on the [Releases](https://github.com/maxmind/mod_maxminddb/releases)
+page (e.g. `mod_maxminddb-*.tar.gz`).
 
 To install the module from a tarball, run the following commands from the
 directory with the extracted source:
@@ -30,12 +32,20 @@ To use another Apache installation, specify a path to the right apxs binary:
 
 ### From a GitHub "Source Code" Archive / Git Repo Clone (Achtung!) ###
 
-**NOTE:** These instructions are for installation from the GitHub "Source Code" archives also available on the [Releases](releases) page (e.g. `X.Y.Z.zip` or `X.Y.Z.tar.gz`), as well as installation directly from a clone of the Git repo. Installation from these sources are possible, but will present challenges to users not comfortable with manual dependency resolution.
+**NOTE:** These instructions are for installation from the GitHub "Source
+Code" archives also available on the
+[Releases](https://github.com/maxmind/mod_maxminddb/releases) page (e.g.
+`X.Y.Z.zip` or `X.Y.Z.tar.gz`), as well as installation directly from a clone
+of the Git repo. Installation from these sources are possible but will
+present challenges to users not comfortable with manual dependency resolution.
 
 1. Ensure the build tools `automake`, `autoconf` and `libtool` are installed.
-1. Extract the archive and switch into the directory containing the extracted source.
-1. Run `./bootstrap`. Many users will experience challenges here as there are several dependencies that need to be present before this can complete successfully.
-1. Run:
+2. Extract the archive and switch into the directory containing the extracted
+   source.
+3. Run `./bootstrap`. Many users will experience challenges here as there are
+   several dependencies that need to be present before this can complete
+   successfully.
+4. Run:
 
     ./configure
     make install
