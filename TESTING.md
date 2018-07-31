@@ -44,6 +44,7 @@
     git clone git://github.com/SpiderLabs/ModSecurity
     cd ModSecurity
     sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev
+    ./autogen.sh
     ./configure --enable-request-early --disable-rule-id-validation
     make
     sudo make install
