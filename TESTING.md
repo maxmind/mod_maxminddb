@@ -43,7 +43,7 @@
 #### mod_security2
     git clone git://github.com/SpiderLabs/ModSecurity
     cd ModSecurity
-    sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev mod_unique_id
+    sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev mod_security2
     ./autogen.sh
     ./configure --enable-request-early --disable-rule-id-validation
     make
