@@ -40,6 +40,14 @@
     sudo apxs2 -i -c -n mod_remoteip.so mod_remoteip.c
     cd ..
 
+#### mod_security2 (Apache 2.2 only)
+    git clone git://github.com/SpiderLabs/ModSecurity
+    cd ModSecurity
+    ./configure --enable-request-early --disable-rule-id-validation
+    make
+    sudo make install
+    cd ..
+
 ### mod_maxminddb install
     sudo apxs2 -i -a -lmaxminddb -Wc,-std=gnu99 -c src/mod_maxminddb.c
 
