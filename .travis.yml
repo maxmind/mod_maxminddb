@@ -30,7 +30,7 @@ before_install:
   - sudo apt-get install --assume-yes apache2-mpm-prefork apache2-bin apache2 apache2-prefork-dev apache2-utils
   - git clone --recursive git://github.com/SpiderLabs/ModSecurity
   - cd ModSecurity
-  - sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev mod_security2
+  - sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev libapache2-modsecurity
   - ./autogen.sh
   - ./configure --enable-request-early --disable-rule-id-validation
   - make
