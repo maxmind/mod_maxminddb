@@ -26,6 +26,8 @@
 
 ### Apache 2 (assumes Debian/Ubuntu)
 
+    sudo mkdir /etc/apache2/logs
+
 #### 2.2
 
     sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2.2-common apache2-prefork-dev apache2-utils libapache2-mod-perl2
