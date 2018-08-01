@@ -28,11 +28,11 @@
 
 #### 2.2
 
-    sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2.2-common apache2-prefork-dev apache2-utils
+    sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2.2-common apache2-prefork-dev apache2-utils libapache2-mod-perl2
 
 #### 2.4
 
-    sudo apt-get install --assume-yes apache2-mpm-prefork apache2-utils apache2-dev
+    sudo apt-get install --assume-yes apache2-mpm-prefork apache2-utils apache2-dev libapache2-mod-perl2
 
 #### mod_remoteip (Apache 2.2 only)
     git clone git://github.com/ttkzw/mod_remoteip-httpd22
