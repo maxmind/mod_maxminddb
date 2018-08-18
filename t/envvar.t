@@ -18,7 +18,7 @@ binmode $builder->todo_output,    ":encoding(utf8)";
 my @private   = '127.0.0.1';
 my $public_us = '216.160.83.56';
 
-my $url = '/cgi-bin/valid-db/json-env?MMDB_ADDR=$public_us';
+my $url = '/cgi-bin/envvar/json-env?MMDB_ADDR=$public_us';
 
 my $get_with_xff_c = sub {
 
