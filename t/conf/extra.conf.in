@@ -3,10 +3,12 @@ ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
 LogLevel        debug
 
-# Force IP lookup to a specific address
-SecRuleEngine      On
-SecRuleInheritance On
-SecAction "phase:1,nolog,t:none,id:32768,setenv:MMDB_ADDR=%{MATCHED_VAR}"
+<Directory "@ServerRoot/cgi-bin/envvar">
+    # Force IP lookup to a specific address
+    SecRuleEngine      On
+    SecRuleInheritance On
+    SecAction "phase:1,nolog,t:none,id:32768,setenv:MMDB_ADDR=%{MATCHED_VAR}"
+</Directory>
 
 <Directory "@ServerRoot@/cgi-bin/valid-db">
     AllowOverride None
