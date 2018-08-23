@@ -15,7 +15,7 @@ binmode $builder->output,         ":encoding(utf8)";
 binmode $builder->failure_output, ":encoding(utf8)";
 binmode $builder->todo_output,    ":encoding(utf8)";
 
-my @private   = '127.0.0.1';
+my $private   = '127.0.0.1';
 my $public_us = '216.160.83.56';
 
 my $url = '/cgi-bin/envvar/json-env?MMDB_ADDR=$public_us';
@@ -43,7 +43,7 @@ $get_with_xff_c->(
         ok( defined( $srv_env->{MMDB_ADDR} ), 'MMDB_ADDR is defined' );
         is( $srv_env->{MMDB_ADDR},   $xff_ip, "MMDB_ADDR is $xff_ip" );
     },
-    @private,
+    $private,
     $public_us
 );
 
