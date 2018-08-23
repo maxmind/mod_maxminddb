@@ -3,6 +3,23 @@ ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
 LogLevel        debug
 
+<Directory "@ServerRoot@/cgi-bin/envvar">
+    # Force IP lookup to a specific address
+    SecRuleEngine      On
+    SecRuleInheritance On
+    SecAction "phase:1,nolog,t:none,id:32768,setenv:MMDB_ADDR=%{MATCHED_VAR}"
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+
+        MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+
+        MaxMindDBEnv MM_COUNTRY_CODE                    CITY_DB/country/iso_code
+
+    </IfModule>
+</Directory>
+
 <Directory "@ServerRoot@/cgi-bin/valid-db">
     AllowOverride None
     Options +ExecCGI
