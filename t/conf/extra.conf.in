@@ -7,7 +7,7 @@ LogLevel        debug
     # Force IP lookup to a specific address
     SecRuleEngine      On
     SecRuleInheritance On
-    SecAction "phase:1,nolog,t:none,id:32768,setenv:MMDB_ADDR=args.mmdb_addr"
+    SecAction "phase:1,nolog,t:none,id:32768,setenv:MMDB_ADDR=2001:218::"
 
     <IfModule mod_maxminddb.c>
 
