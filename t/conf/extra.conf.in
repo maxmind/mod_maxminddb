@@ -1,3 +1,4 @@
+ServerRoot "@ServerRoot@"
 ScriptSock /tmp/cgisock
 ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
