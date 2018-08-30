@@ -27,7 +27,8 @@ before_install:
   - sudo ldconfig
   - cd ..
   - sudo apt-get update
-  - sudo apt-get install --assume-yes apache2-mpm-prefork apache2-bin apache2 apache2-prefork-dev apache2-utils libapache2-mod-perl2
+  - #2.4: sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2 apache2-prefork-dev apache2-utils libapache2-mod-perl2
+  - sudo apt-get install --assume-yes sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2.2-common apache2-prefork-dev apache2-utils libapache2-mod-perl2
   - sudo mkdir /etc/apache2/logs
   - git clone --recursive git://github.com/SpiderLabs/ModSecurity
   - cd ModSecurity
@@ -49,7 +50,7 @@ script:
   - sudo mkdir t/logs
   - ./t/TEST -v
 after_failure:
-  - sudo apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/setup/apache2.conf -M -S
+  - sudo apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/setup/apache2.conf -D APACHE2 -D APACHE2_4 -M -S
   - cat t/logs/error_log
   - sudo cat /var/log/apache2/error.log
 notifications:
