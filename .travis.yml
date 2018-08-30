@@ -27,8 +27,7 @@ before_install:
   - sudo ldconfig
   - cd ..
   - sudo apt-get update
-  - #2.4: sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2 apache2-prefork-dev apache2-utils libapache2-mod-perl2
-  - sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2.2-common apache2-prefork-dev apache2-utils libapache2-mod-perl2
+  - sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2 apache2-prefork-dev apache2-utils libapache2-mod-perl2
   - sudo mkdir /etc/apache2/logs
   - git clone --recursive git://github.com/SpiderLabs/ModSecurity
   - cd ModSecurity
