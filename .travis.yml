@@ -49,11 +49,11 @@ script:
   - mkdir t/logs
   - ./t/TEST -v
 after_failure:
-  - #cat t/conf/httpd.conf
-  - #apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/conf/httpd.conf -D APACHE2 -D APACHE2_4 -M -S
-  - ls -al t/logs
+  - cat t/conf/httpd.conf
+  - apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/conf/httpd.conf -D APACHE2 -D APACHE2_4 -M -S
+  - ls -alR t
   - cat t/logs/error_log
-  - sudo cat /var/log/apache2/error.log
+  - #cat /var/log/apache2/error.log
 notifications:
   email:
     on_failure: always
