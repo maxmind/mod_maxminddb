@@ -50,7 +50,7 @@ script:
   - ./t/TEST -v
 after_failure:
   - cat t/conf/httpd.conf
-  - apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/conf/apache2.conf -D APACHE2 -D APACHE2_4 -M -S
+  - apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/conf/httpd.conf -D APACHE2 -D APACHE2_4 -M -S
   - cat t/logs/error_log
   - sudo cat /var/log/apache2/error.log
 notifications:
