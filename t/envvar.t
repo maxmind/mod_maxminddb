@@ -7,6 +7,7 @@ use lib 't/lib';
 use Apache::Test qw(-withtestmore);
 use Test::ModMaxMindDB;
 use Apache::TestRequest;
+use JSON::XS;
 
 my $url = '/cgi-bin/envvar/json-env?mmdb_addr=2001:218::';
 ok my $res = GET $url;
