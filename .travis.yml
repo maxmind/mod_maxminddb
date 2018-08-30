@@ -51,6 +51,9 @@ script:
 after_failure:
   - sudo apache2ctl -M -S
   - cat t/logs/error_log
+  - sudo cat /var/log/apache2/error.log
+  - sudo cat /etc/apache2/logs/error.log
+  - sudo cat /etc/apache2/logs/error_log
 notifications:
   email:
     on_failure: always
