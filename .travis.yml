@@ -49,7 +49,7 @@ script:
   - sudo mkdir t/logs
   - ./t/TEST -v
 after_failure:
-  - sudo apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -M -S
+  - sudo apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/setup/apache2.conf -M -S
   - cat t/logs/error_log
   - sudo cat /var/log/apache2/error.log
 notifications:
