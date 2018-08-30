@@ -29,7 +29,6 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install --assume-yes apache2-mpm-prefork apache2-bin apache2 apache2-prefork-dev apache2-utils libapache2-mod-perl2
   - sudo mkdir /etc/apache2/logs
-  - sudo mkdir t/logs
   - git clone --recursive git://github.com/SpiderLabs/ModSecurity
   - cd ModSecurity
   - sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev libapache2-modsecurity
@@ -47,6 +46,7 @@ install:
 script:
   - perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - source /etc/apache2/envvars
+  - sudo mkdir t/logs
   - ./t/TEST -v
 after_failure:
   - sudo apache2ctl -M
