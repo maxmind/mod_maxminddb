@@ -46,11 +46,12 @@ install:
 script:
   - perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - source /etc/apache2/envvars
-  - sudo mkdir t/logs
+  - mkdir t/logs
   - ./t/TEST -v
 after_failure:
-  - cat t/conf/httpd.conf
-  - apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/conf/httpd.conf -D APACHE2 -D APACHE2_4 -M -S
+  - #cat t/conf/httpd.conf
+  - #apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/conf/httpd.conf -D APACHE2 -D APACHE2_4 -M -S
+  - ls -al t/logs
   - cat t/logs/error_log
   - sudo cat /var/log/apache2/error.log
 notifications:
