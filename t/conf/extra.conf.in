@@ -7,24 +7,27 @@ LoadModule dir_module           /usr/lib/apache2/modules/mod_dir.so
 LoadModule env_module           /usr/lib/apache2/modules/mod_env.so
 LoadModule cgid_module          /usr/lib/apache2/modules/mod_cgid.so
 LoadModule perl_module          /usr/lib/apache2/modules/mod_perl.so
-LoadModule maxminddb_module     /usr/lib/apache2/modules/mod_maxminddb.so
-
 LoadModule remoteip_module      /usr/lib/apache2/modules/mod_remoteip.so
 LoadModule rewrite_module       /usr/lib/apache2/modules/mod_rewrite.so
+LoadModule maxminddb_module     /usr/lib/apache2/modules/mod_maxminddb.so
+
 LoadModule unique_id_module     /usr/lib/apache2/modules/mod_unique_id.so
 LoadModule security2_module     /usr/lib/apache2/modules/mod_security2.so
 
 ScriptSock /tmp/cgisock
 ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
-LogLevel        debug
+#LogLevel        debug
+
+# Force IP lookup to a specific address
+SecRuleEngine      On
+SecRule REQUEST_FILENAME "^/cgi-bin/envvar" "phase:1,chain,log,t:none,id:32768"
+ SecRule ARGS:mmdb_addr "t:none,setenv:'MMDB_ADDR=%{MATCHED_VAR}'"
 
 <Directory "@ServerRoot@/cgi-bin/envvar">
-    # Force IP lookup to a specific address
-    SecRuleEngine      On
-    SecRuleInheritance On
-    SecAction "phase:1,log,t:none,id:32768,setenv:'MMDB_ADDR=2001:218::'"
-
+    AllowOverride None
+    Options +ExecCGI
+    
     MaxMindDBEnable On
     MaxMindDBFile   CITY_DB            @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
     MaxMindDBEnv    MM_COUNTRY_CODE    CITY_DB/country/iso_code
