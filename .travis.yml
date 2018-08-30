@@ -27,11 +27,11 @@ before_install:
   - sudo ldconfig
   - cd ..
   - sudo apt-get update
-  - sudo apt-get install --assume-yes apache2-mpm-prefork apache2.2-bin apache2 apache2-prefork-dev apache2-utils libapache2-mod-perl2
-  - sudo mkdir /etc/apache2/logs
+  - sudo apt-get install --assume-yes apache2-mpm-prefork apache2-bin apache2 apache2-prefork-dev apache2-utils libapache2-mod-perl2
+  - sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev libapache2-modsecurity
   - git clone --recursive git://github.com/SpiderLabs/ModSecurity
   - cd ModSecurity
-  - sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev libapache2-modsecurity
+  - sudo mkdir /etc/apache2/logs
   - ./autogen.sh
   - ./configure --enable-request-early --disable-rule-id-validation
   - make
@@ -47,7 +47,7 @@ script:
   - perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - source /etc/apache2/envvars
   - sudo mkdir t/logs
-  - sudo ./t/TEST -v
+  - ./t/TEST -v
 after_failure:
   - sudo apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/setup/apache2.conf -D APACHE2 -D APACHE2_4 -M -S
   - cat t/logs/error_log
