@@ -26,15 +26,9 @@ SecRuleEngine      On
 SecRule REQUEST_FILENAME "^/cgi-bin/envvar" "phase:1,chain,t:none,id:32768,log"
  SecRule ARGS:mmdb_addr . "t:none,setenv:'MMDB_ADDR=%{MATCHED_VAR}'"
 
+# point to "normal" script
+RewriteEngine on
 RewriteRule "^/cgi-bin/envvar/(.*)" "/cgi-bin/valid-db/$1"
-<Location "/cgi-bin/envvar">
-    AllowOverride None
-    Options +ExecCGI
-    
-    MaxMindDBEnable On
-    MaxMindDBFile   CITY_DB            @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
-    MaxMindDBEnv    MM_COUNTRY_CODE    CITY_DB/country/iso_code
-</Location>
 
 <Location "/cgi-bin/valid-db">
     AllowOverride None
