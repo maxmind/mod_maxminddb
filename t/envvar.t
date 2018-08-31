@@ -13,17 +13,19 @@ use Test::ModMaxMindDB;
 my $url = '/cgi-bin/envvar/json-env';
 
 my $res = GET $url;
-my $srv_env = decode_json $res->content;
+my $srv_env = JSON::XS->new->decode( $res->content );
 diag "ENVVAR: real IP -------------------"
 diag $srv_env->{MM_COUNTRY_CODE}
 
-my $res = GET $url . '?mmdb_addr=2001:218::';
-my $srv_env = decode_json $res->content;
+$res = GET $url . '?mmdb_addr=2001:218::';
+$srv_env = JSON::XS->new->decode( $res->content );
 is( $srv_env->{MM_COUNTRY_CODE}, 'JP', 'IP overwritten: MM_COUNTRY_CODE is JP' );
 diag "ENVVAR: real IP -------------------"
 diag $srv_env->{MM_COUNTRY_CODE}
 
 done_testing();
+
+
 
 use Apache::Test qw(-withtestmore);
 use Test::ModMaxMindDB qw( get_env );
