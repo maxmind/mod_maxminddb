@@ -8,7 +8,6 @@ use Apache::Test qw(-withtestmore);
 use Apache::TestRequest;
 use Encode qw( decode_utf8 );
 use JSON::XS;
-use Test::More;
 use Test::ModMaxMindDB;
 
 my $url = '/cgi-bin/envvar/json-env';
