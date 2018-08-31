@@ -22,20 +22,20 @@ LogLevel maxminddb:info
 
 # Force IP lookup to a specific address
 SecRuleEngine      On
-RewriteRule "^/cgi-bin/envvar/(.*)" "/cgi-bin/valid-db/$1"
-SecRule REQUEST_FILENAME "^/cgi-bin/envvar" "phase:1,chain,log,t:none,id:32768"
+SecRule REQUEST_FILENAME "^/cgi-bin/envvar" "phase:1,chain,t:none,id:32768,log"
  SecRule ARGS:mmdb_addr "t:none,setenv:'MMDB_ADDR=%{MATCHED_VAR}'"
 
-<Directory "@ServerRoot@/cgi-bin/envvarXXXX">
+RewriteRule "^/cgi-bin/envvar/(.*)" "/cgi-bin/valid-db/$1"
+<Location "/cgi-bin/envvar">
     AllowOverride None
     Options +ExecCGI
     
     MaxMindDBEnable On
     MaxMindDBFile   CITY_DB            @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
     MaxMindDBEnv    MM_COUNTRY_CODE    CITY_DB/country/iso_code
-</Directory>
+</Location>
 
-<Directory "@ServerRoot@/cgi-bin/valid-db">
+<Location "/cgi-bin/valid-db">
     AllowOverride None
     Options +ExecCGI
 
@@ -84,7 +84,7 @@ SecRule REQUEST_FILENAME "^/cgi-bin/envvar" "phase:1,chain,log,t:none,id:32768"
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_RU          CITY_DB/subdivisions/0/names/ru
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_ZH_CN       CITY_DB/subdivisions/0/names/zh-CN
     </IfModule>
-</Directory>
+</Location>
 
 <Directory "@ServerRoot@/cgi-bin/ipv4-only">
     AllowOverride None
