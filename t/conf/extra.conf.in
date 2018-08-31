@@ -18,6 +18,7 @@ ScriptSock /tmp/cgisock
 ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
 #LogLevel        debug
+LogLevel maxminddb:info
 
 # Force IP lookup to a specific address
 SecRuleEngine      On
