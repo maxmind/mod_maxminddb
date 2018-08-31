@@ -10,7 +10,7 @@ use Encode qw( decode_utf8 );
 use JSON::XS;
 use Test::ModMaxMindDB;
 
-my $url = '/cgi-bin/envvar/json-env';
+my $url = '/cgi-bin/valid-db/json-env';
 
 my $res = GET $url;
 my $srv_env = JSON::XS->new->decode( $res->content );
