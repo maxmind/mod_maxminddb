@@ -18,12 +18,13 @@ ScriptSock /tmp/cgisock
 ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
 #LogLevel        debug
+#LogLevel        trace
 LogLevel maxminddb:info
 
 # Force IP lookup to a specific address
 SecRuleEngine      On
 SecRule REQUEST_FILENAME "^/cgi-bin/envvar" "phase:1,chain,t:none,id:32768,log"
- SecRule ARGS:mmdb_addr "t:none,setenv:'MMDB_ADDR=%{MATCHED_VAR}'"
+ SecRule ARGS:mmdb_addr . "t:none,setenv:'MMDB_ADDR=%{MATCHED_VAR}'"
 
 RewriteRule "^/cgi-bin/envvar/(.*)" "/cgi-bin/valid-db/$1"
 <Location "/cgi-bin/envvar">
