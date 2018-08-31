@@ -47,7 +47,7 @@ script:
   - #source /etc/apache2/envvars
   - #set|grep -i ^apache
   - #perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
-  - perl Makefile.PL
+  - perl Makefile.PL -configure
   - mkdir t/logs
   - ls -alR t/conf
   - cat t/conf/httpd.conf
