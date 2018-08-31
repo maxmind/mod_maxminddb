@@ -45,7 +45,7 @@ install:
   - cpanm --installdeps --notest .
 script:
   - #source /etc/apache2/envvars
-  - perl Makefile.PL -configure -httpd_conf conf/apache2.conf -src_dir /usr/lib/apache2/modules
+  - perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - mkdir t/logs
   - ./t/TEST -config -v
 after_failure:
