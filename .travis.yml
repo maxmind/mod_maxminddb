@@ -47,7 +47,9 @@ script:
   - perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - mkdir t/logs
   - source /etc/apache2/envvars
-  - ./t/TEST -v -conf -httpd_conf t/conf/httpd.conf
+  - cat t/conf/httpd.conf
+  - cat t/conf/extra.conf
+  - ./t/TEST -v envvar
   - ./t/TEST -v -conf -httpd_conf conf/httpd.conf
   - ./t/TEST -v -conf -httpd_conf /home/travis/build/maxmind/mod_maxminddb/t/conf/httpd.conf
 after_failure:
