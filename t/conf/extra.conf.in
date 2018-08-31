@@ -19,16 +19,10 @@ ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
 #LogLevel        debug
 LogLevel        info
-LogLevel maxminddb:info rewrite:debug
 
 # Force IP lookup to a specific address
 SecRuleEngine      On
-SecRule REQUEST_FILENAME "^/cgi-bin/envvar" "phase:1,chain,t:none,id:32768,log"
- SecRule ARGS:mmdb_addr . "t:none,setenv:'MMDB_ADDR=%{MATCHED_VAR}'"
-
-# point to "normal" script
-RewriteEngine on
-RewriteRule "^/cgi-bin/envvar/(.*)" "/cgi-bin/valid-db/$1"
+SecRule ARGS:mmdb_addr . "phase:1,chain,t:none,id:32768,log,setenv:'MMDB_ADDR=%{MATCHED_VAR}'"
 
 <Directory "@ServerRoot@/cgi-bin/valid-db">
     AllowOverride None
