@@ -30,7 +30,7 @@ SecRule REQUEST_FILENAME "^/cgi-bin/envvar" "phase:1,chain,t:none,id:32768,log"
 RewriteEngine on
 RewriteRule "^/cgi-bin/envvar/(.*)" "/cgi-bin/valid-db/$1"
 
-<Location "/cgi-bin/valid-db">
+<Directory "@ServerRoot@/cgi-bin/valid-db">
     AllowOverride None
     Options +ExecCGI
 
@@ -79,7 +79,7 @@ RewriteRule "^/cgi-bin/envvar/(.*)" "/cgi-bin/valid-db/$1"
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_RU          CITY_DB/subdivisions/0/names/ru
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_ZH_CN       CITY_DB/subdivisions/0/names/zh-CN
     </IfModule>
-</Location>
+</Directory>
 
 <Directory "@ServerRoot@/cgi-bin/ipv4-only">
     AllowOverride None
