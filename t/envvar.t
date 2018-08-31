@@ -14,14 +14,14 @@ my $url = '/cgi-bin/envvar/json-env';
 
 my $res = GET $url;
 my $srv_env = JSON::XS->new->decode( $res->content );
-diag "ENVVAR: real IP -------------------"
-diag $srv_env->{MM_COUNTRY_CODE}
+diag "ENVVAR: real IP -------------------";
+diag $srv_env->{MM_COUNTRY_CODE};
 
 $res = GET $url . '?mmdb_addr=2001:218::';
 $srv_env = JSON::XS->new->decode( $res->content );
 is( $srv_env->{MM_COUNTRY_CODE}, 'JP', 'IP overwritten: MM_COUNTRY_CODE is JP' );
-diag "ENVVAR: real IP -------------------"
-diag $srv_env->{MM_COUNTRY_CODE}
+diag "ENVVAR: real IP -------------------";
+diag $srv_env->{MM_COUNTRY_CODE};
 
 done_testing();
 
