@@ -19,7 +19,7 @@ ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
 #LogLevel        debug
 #LogLevel        trace
-LogLevel maxminddb:info
+LogLevel maxminddb:info rewrite:debug
 
 # Force IP lookup to a specific address
 SecRuleEngine      On
