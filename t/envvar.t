@@ -13,16 +13,17 @@ use Test::ModMaxMindDB;
 my $url = '/cgi-bin/valid-db/json-env';
 
 my $res = GET $url;
-my $srv_env = JSON::XS->new->decode( $res->content );
 diag "ENVVAR: real IP -------------------";
+diag "Result: " . $res
 diag "Result: " . $res->content
+my $srv_env = JSON::XS->new->decode( $res->content );
 diag "Country: " . $srv_env->{MM_COUNTRY_CODE};
 
 $res = GET $url . '?mmdb_addr=160.13.90.206';
-$srv_env = JSON::XS->new->decode( $res->content );
-is( $srv_env->{MM_COUNTRY_CODE}, 'JP', 'IP overwritten: MM_COUNTRY_CODE is JP' );
 diag "ENVVAR: forced IP -------------------";
 diag "Result: " . $res->content
+$srv_env = JSON::XS->new->decode( $res->content );
+is( $srv_env->{MM_COUNTRY_CODE}, 'JP', 'IP overwritten: MM_COUNTRY_CODE is JP' );
 diag "Country: " . $srv_env->{MM_COUNTRY_CODE};
 
 done_testing();
