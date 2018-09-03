@@ -22,7 +22,7 @@ LogLevel        info
 
 # Force IP lookup to a specific address
 SecRuleEngine      On
-SecRule ARGS:mmdb_addr . "phase:1,chain,t:none,id:32768,log,setenv:'MMDB_ADDR=%{MATCHED_VAR}'"
+SecRule ARGS:mmdb_addr . "phase:1,t:none,id:32768,log,setenv:'MMDB_ADDR=%{MATCHED_VAR}'"
 
 <Directory "@ServerRoot@/cgi-bin/valid-db">
     AllowOverride None
