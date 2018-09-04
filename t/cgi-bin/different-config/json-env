@@ -1,1 +1,13 @@
-../valid-db/json-env
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Encode qw( decode );
+use JSON::XS;
+
+my %env = map { $_ => decode( 'UTF-8', $ENV{$_} ) } keys %ENV;
+
+print "Content-type: application/json; charset=UTF-8\n\n";
+print JSON::XS->new->utf8->ascii->pretty->encode( \%env );
+
