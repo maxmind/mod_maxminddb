@@ -46,7 +46,7 @@ install:
 script:
   - perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - mkdir t/logs
-  - ./t/TEST -v t/envvar.t
+  - ./t/TEST -v
 after_failure:
   - sudo apache2ctl -M
   - cat t/logs/error_log

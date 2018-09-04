@@ -14,13 +14,13 @@ my $ip = '160.13.90.206';
 
 my $res = GET $url;
 diag "ENVVAR: real IP -------------------";
-diag "Result body: " . $res->content;
+#diag "Result body: " . $res->content;
 my $srv_env = decode_json $res->content;
 diag "IP: " . $srv_env->{MMDB_ADDR};
 
 $res = GET $url . '?mmdb_addr='.$ip;
 diag "ENVVAR: forced IP -------------------";
-my $srv_env = decode_json $res->content;
+#my $srv_env = decode_json $res->content;
 diag "IP: " . $srv_env->{MMDB_ADDR};
 is( $srv_env->{MMDB_ADDR}, $ip, 'IP overwritten: MMDB_ADDR is ' . $srv_env->{MMDB_ADDR} );
 
