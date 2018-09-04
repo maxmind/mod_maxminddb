@@ -44,19 +44,12 @@ before_install:
 install:
   - cpanm --installdeps --notest .
 script:
-  - #source /etc/apache2/envvars
-  - #set|grep -i ^apache
   - perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
   - mkdir t/logs
   - ./t/TEST -v t/envvar.t
-  - #ls -alR t/conf
-  - #cat t/conf/httpd.conf
-  - #cat t/conf/extra.conf
-  - #cat t/conf/apache_test_config.pm
 after_failure:
+  - sudo apache2ctl -M
   - cat t/logs/error_log
-  - #apache2 -d /home/travis/build/maxmind/mod_maxminddb/t -f /home/travis/build/maxmind/mod_maxminddb/t/conf/httpd.conf -D APACHE2 -D APACHE2_4 -M -S
-  - #cat /var/log/apache2/error.log
 notifications:
   email:
     on_failure: always
