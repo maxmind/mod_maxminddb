@@ -6,21 +6,22 @@ use lib 't/lib';
 
 use Apache::Test qw(-withtestmore);
 use Apache::TestRequest;
-use Encode qw( decode_utf8 );
-use JSON::XS;
+use JSON::XS qw( decode_json );
 use Test::ModMaxMindDB;
 
 my $url = '/cgi-bin/valid-db/json-env';
+my $ip = '160.13.90.206';
 
 my $res = GET $url;
 diag "ENVVAR: real IP -------------------";
 diag "Result body: " . $res->content;
-diag "IP: " . $res->{MMDB_ADDR};
+my $srv_env = decode_json $res->content;
+diag "IP: " . $srv_env->{MMDB_ADDR};
 
-$res = GET $url . '?mmdb_addr=160.13.90.206';
+$res = GET $url . '?mmdb_addr='.$ip;
 diag "ENVVAR: forced IP -------------------";
-diag "Result body: " . $res->content;
-diag "IP: " . $res->{MMDB_ADDR};
-is( $res->{MMDB_ADDR}, '160.13.90.206', 'IP overwritten: MMDB_ADDR is ' . $res->{MMDB_ADDR} );
+my $srv_env = decode_json $res->content;
+diag "IP: " . $srv_env->{MMDB_ADDR};
+is( $srv_env->{MMDB_ADDR}, $ip, 'IP overwritten: MMDB_ADDR is ' . $srv_env->{MMDB_ADDR} );
 
 done_testing();
