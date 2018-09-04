@@ -27,7 +27,16 @@ before_install:
   - sudo ldconfig
   - cd ..
   - sudo apt-get update
-  - sudo apt-get install --assume-yes apache2-mpm-prefork apache2-bin apache2 apache2-prefork-dev apache2-utils
+  - sudo apt-get install --assume-yes apache2-mpm-prefork apache2-bin apache2 apache2-prefork-dev apache2-utils libapache2-mod-perl2
+  - sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev libapache2-modsecurity
+  - git clone --recursive git://github.com/SpiderLabs/ModSecurity
+  - cd ModSecurity
+  - sudo mkdir /etc/apache2/logs
+  - ./autogen.sh
+  - ./configure --enable-request-early --disable-rule-id-validation
+  - make
+  - sudo make install
+  - cd ..
   - ./bootstrap
   - CFLAGS="-DMAXMINDDB_DEBUG=1 -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers" ./configure
   - make
@@ -35,7 +44,8 @@ before_install:
 install:
   - cpanm --installdeps --notest .
 script:
-  - perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
+  - perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
+  - mkdir t/logs
   - ./t/TEST -v
 after_failure:
   - sudo apache2ctl -M
