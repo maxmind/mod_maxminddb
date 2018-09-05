@@ -73,7 +73,7 @@ your proxy frontend),
 be used to set the client IP address.
 
 Manually setting the client IP address is also possible. See
-[Client IP address lookup control](client-ip-address-lookup-control).
+[Client IP address lookup control](#client-ip-address-lookup-control).
 
 ## Directives ##
 
