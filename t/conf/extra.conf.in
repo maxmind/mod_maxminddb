@@ -17,8 +17,7 @@ LoadModule security2_module     /usr/lib/apache2/modules/mod_security2.so
 ScriptSock /tmp/cgisock
 ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
-#LogLevel        debug
-LogLevel        info
+LogLevel        debug
 
 # Force IP lookup to a specific address
 SecRuleEngine      On
