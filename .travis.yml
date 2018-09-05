@@ -28,15 +28,15 @@ before_install:
   - cd ..
   - sudo apt-get update
   - sudo apt-get install --assume-yes apache2-mpm-prefork apache2-bin apache2 apache2-prefork-dev apache2-utils libapache2-mod-perl2
-  - sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev libapache2-modsecurity
-  - git clone --recursive git://github.com/SpiderLabs/ModSecurity --branch v2.9.2
-  - cd ModSecurity
+  - sudo apt-get install --assume-yes libtool libpcre3-dev libexpat1-dev libapache2-mod-security2
+#  - git clone --recursive git://github.com/SpiderLabs/ModSecurity --branch v2.9.2
+#  - cd ModSecurity
   - sudo mkdir /etc/apache2/logs
-  - ./autogen.sh
-  - ./configure --enable-request-early --disable-rule-id-validation
-  - make
-  - sudo make install
-  - cd ..
+#  - ./autogen.sh
+#  - ./configure --enable-request-early --disable-rule-id-validation
+#  - make
+#  - sudo make install
+#  - cd ..
   - ./bootstrap
   - CFLAGS="-DMAXMINDDB_DEBUG=1 -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers" ./configure
   - make
