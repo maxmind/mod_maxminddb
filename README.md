@@ -72,7 +72,7 @@ your proxy frontend),
 [mod_remoteip](http://httpd.apache.org/docs/current/mod/mod_remoteip.html) may
 be used to set the client IP address.
 
-Manually setting the client IP address is also possible - see
+Manually setting the client IP address is also possible. See
 [Client IP address lookup control](client-ip-address-lookup-control).
 
 ## Directives ##
