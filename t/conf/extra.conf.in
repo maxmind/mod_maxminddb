@@ -1,7 +1,28 @@
+LoadModule mpm_worker_module    /usr/lib/apache2/modules/mod_mpm_worker.so
+
+LoadModule alias_module         /usr/lib/apache2/modules/mod_alias.so
+LoadModule authn_core_module    /usr/lib/apache2/modules/mod_authn_core.so
+LoadModule authz_core_module    /usr/lib/apache2/modules/mod_authz_core.so
+LoadModule dir_module           /usr/lib/apache2/modules/mod_dir.so
+LoadModule env_module           /usr/lib/apache2/modules/mod_env.so
+LoadModule cgid_module          /usr/lib/apache2/modules/mod_cgid.so
+LoadModule perl_module          /usr/lib/apache2/modules/mod_perl.so
+LoadModule remoteip_module      /usr/lib/apache2/modules/mod_remoteip.so
+LoadModule rewrite_module       /usr/lib/apache2/modules/mod_rewrite.so
+LoadModule maxminddb_module     /usr/lib/apache2/modules/mod_maxminddb.so
+
+LoadModule unique_id_module     /usr/lib/apache2/modules/mod_unique_id.so
+LoadModule security2_module     /usr/lib/apache2/modules/mod_security2.so
+
 ScriptSock /tmp/cgisock
 ScriptAlias /cgi-bin/ "@ServerRoot@/cgi-bin/"
 
-LogLevel        debug
+#LogLevel        debug
+LogLevel        info
+
+# Force IP lookup to a specific address
+SecRuleEngine      On
+SecRule ARGS:mmdb_addr . "phase:1,t:none,id:32768,log,setenv:'MMDB_ADDR=%{MATCHED_VAR}',msg:'MMDB_ADDR=%{MATCHED_VAR}'"
 
 <Directory "@ServerRoot@/cgi-bin/valid-db">
     AllowOverride None
