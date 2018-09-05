@@ -20,7 +20,7 @@ diag "IP: " . $srv_env->{MMDB_ADDR};
 
 $res = GET $url . '?mmdb_addr='.$ip;
 diag "ENVVAR: forced IP -------------------";
-#my $srv_env = decode_json $res->content;
+my $srv_env = decode_json $res->content;
 diag "IP: " . $srv_env->{MMDB_ADDR};
 is( $srv_env->{MMDB_ADDR}, $ip, 'MMDB_ADDR is ' . $srv_env->{MMDB_ADDR} );
 
