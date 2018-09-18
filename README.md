@@ -47,8 +47,8 @@ present challenges to users not comfortable with manual dependency resolution.
    successfully.
 4. Run:
 
-    ./configure
-    make install
+        ./configure
+        make install
 
 To use another Apache installation, specify a path to the right apxs binary:
 
