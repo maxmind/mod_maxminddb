@@ -56,6 +56,7 @@ typedef struct maxminddb_config {
     apr_hash_t *databases;
     apr_hash_t *lookups;
     int enabled;
+    int set_notes;
 } maxminddb_config;
 
 module AP_MODULE_DECLARE_DATA maxminddb_module;
@@ -82,8 +83,11 @@ static void export_env_for_database(request_rec *r, maxminddb_config *conf,
                                     MMDB_s *mmdb);
 static void export_env_for_lookups(request_rec *r, const char *ip_address,
                                    MMDB_lookup_result_s *lookup_result,
-                                   apr_hash_t *lookups_for_db);
+                                   apr_hash_t *lookups_for_db,
+                                   maxminddb_config *conf);
 static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg);
+static const char *set_maxminddb_set_notes(cmd_parms *cmd, void *config,
+                                           int arg);
 static const char *set_maxminddb_env(cmd_parms *cmd, void *config,
                                      const char *env, const char *path);
 static const char *set_maxminddb_filename(cmd_parms *cmd, void *config,
@@ -96,6 +100,11 @@ static const command_rec maxminddb_directives[] = {
                  NULL,
                  OR_ALL,
                  "Turn on mod_maxminddb"),
+    AP_INIT_FLAG("MaxMindDBSetNotes",
+                 set_maxminddb_set_notes,
+                 NULL,
+                 OR_ALL,
+                 "Set Notes alongside env vars"),
     AP_INIT_TAKE2("MaxMindDBFile",
                   set_maxminddb_filename,
                   NULL,
@@ -151,6 +160,8 @@ static void *create_config(apr_pool_t *pool)
     /* We use -1 for off but not set */
     conf->enabled = -1;
 
+    conf->set_notes = 0; /* by default, don't set notes */
+
     return conf;
 }
 
@@ -163,6 +174,8 @@ static void *merge_config(apr_pool_t *pool, void *parent, void *child)
 
     conf->enabled = child_conf->enabled == -1 ?
                     parent_conf->enabled : child_conf->enabled;
+
+    conf->set_notes = child_conf->set_notes;
 
     conf->databases = apr_hash_overlay(pool, child_conf->databases,
                                        parent_conf->databases);
@@ -199,6 +212,20 @@ static const char *set_maxminddb_enable(cmd_parms *cmd, void *dir_config,
     }
     conf->enabled = arg;
     INFO(cmd->server, "set_maxminddb_enable: (server) %d", arg);
+
+    return NULL;
+}
+
+static const char *set_maxminddb_set_notes(cmd_parms *cmd, void *dir_config,
+                                           int arg)
+{
+    maxminddb_config *conf = get_config(cmd, dir_config);
+
+    if (!conf) {
+        return "mod_maxminddb: server structure not allocated";
+    }
+    conf->set_notes = arg;
+    INFO(cmd->server, "set_maxminddb_set_notes: (server) %d", arg);
 
     return NULL;
 }
@@ -300,6 +327,9 @@ static int export_env(request_rec *r, maxminddb_config *conf)
         return DECLINED;
     }
     apr_table_set(r->subprocess_env, "MMDB_ADDR", ip_address);
+    if (conf->set_notes) {
+        apr_table_set(r->notes, "MMDB_ADDR", ip_address);
+    }
 
     for (apr_hash_index_t *db_index = apr_hash_first(r->pool, conf->databases);
          db_index; db_index = apr_hash_next(db_index)) {
@@ -350,17 +380,22 @@ static void export_env_for_database(request_rec *r, maxminddb_config *conf,
     }
 
     apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup success");
+    if (conf->set_notes) {
+        apr_table_set(r->notes, "MMDB_INFO", "lookup success");
+    }
 
     INFO(r->server, "MMDB_lookup_string %s works", ip_address);
 
     if (lookup_result.found_entry) {
-        export_env_for_lookups(r, ip_address, &lookup_result, lookups_for_db);
+        export_env_for_lookups(r, ip_address, &lookup_result, lookups_for_db,
+                               conf);
     }
 }
 
 static void export_env_for_lookups(request_rec *r, const char *ip_address,
                                    MMDB_lookup_result_s *lookup_result,
-                                   apr_hash_t *  lookups_for_db)
+                                   apr_hash_t *  lookups_for_db,
+                                   maxminddb_config *conf)
 {
     for (apr_hash_index_t *lp_index =
              apr_hash_first(r->pool, lookups_for_db);
@@ -373,6 +408,9 @@ static void export_env_for_lookups(request_rec *r, const char *ip_address,
                       (void **)&lookup_path);
 
         apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
+        if (conf->set_notes) {
+            apr_table_set(r->notes, "MMDB_INFO", "result found");
+        }
 
         MMDB_entry_data_s result;
         int mmdb_error = MMDB_aget_value(
@@ -435,6 +473,9 @@ static void export_env_for_lookups(request_rec *r, const char *ip_address,
 
             if (NULL != value) {
                 apr_table_set(r->subprocess_env, env_key, value);
+                if (conf->set_notes) {
+                    apr_table_set(r->notes, env_key, value);
+                }
             }
         }
     }

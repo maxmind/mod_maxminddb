@@ -65,6 +65,8 @@ module in your Apache configuration file (e.g., `/etc/apache2/apache2.conf`)
 or in an `.htaccess` file. You must set `MaxMindDBEnable` to enable the
 module, `MaxMindDBFile` to specify the database to use, and `MaxMindDBEnv` to
 bind the desired lookup result to an environment variable.
+You can also enable `MaxMindDBSetNotes` if you wish the environment variables
+to also be set as Apache notes.
 
 This module uses the client IP address for the lookup. This is not always what
 you want. If you need to use an IP address specified in a header (e.g., by
@@ -117,11 +119,21 @@ using map keys or 0-based array indexes separated by `/`.
     MaxMindDBEnv COUNTRY_CODE COUNTRY_DB/country/iso_code
     MaxMindDBEnv REGION_CODE  CITY_DB/subdivisions/0/iso_code
 
+### `MaxMindDBSetNotes` ###
+
+This directive enables or disables the setting of Apache notes alongside the
+environment variables set via `MaxMindDBEnv`. Valid settings are `On` and `Off`.
+It defaults to `Off`.
+
+    MaxMindDBSetNotes On
+
 ## Exported Environment Variables ##
 
 In addition to the environment variable specified by `MaxMindDBEnv`, this
 module exports `MMDB_ADDR`, which contains the IP address used for lookups by
 the module. This is primarily intended for debugging purposes.
+If `MaxMindDBSetNotes` is `On`, all environment variables are also exported as
+Apache notes.
 
 ## Client IP address lookup control ##
 
