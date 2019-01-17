@@ -74,6 +74,8 @@ void *merge_lookups(apr_pool_t *pool, const void *UNUSED(key),
                     apr_ssize_t UNUSED(klen), const void *h1_val,
                     const void *h2_val, const void *UNUSED(data));
 static maxminddb_config *get_config(cmd_parms *cmd, void *dir_config);
+static void maxminddb_kv_set(maxminddb_config *conf, request_rec *r,
+                             const char *key, const char *val);
 static int export_env(request_rec *r, maxminddb_config *conf);
 static int export_env_for_dir(request_rec *r);
 static int export_env_for_server(request_rec *r);
@@ -128,6 +130,15 @@ module AP_MODULE_DECLARE_DATA maxminddb_module = {
     maxminddb_directives,    /* table of config file commands       */
     maxminddb_register_hooks /* register hooks                      */
 };
+
+static void maxminddb_kv_set(maxminddb_config *conf, request_rec *r,
+                             const char *key, const char *val)
+{
+    apr_table_set(r->subprocess_env, key, val);
+    if (conf->set_notes) {
+        apr_table_set(r->notes, key, val);
+    }
+}
 
 static void maxminddb_register_hooks(apr_pool_t *UNUSED(p))
 {
@@ -326,10 +337,7 @@ static int export_env(request_rec *r, maxminddb_config *conf)
     if (NULL == ip_address) {
         return DECLINED;
     }
-    apr_table_set(r->subprocess_env, "MMDB_ADDR", ip_address);
-    if (conf->set_notes) {
-        apr_table_set(r->notes, "MMDB_ADDR", ip_address);
-    }
+    maxminddb_kv_set(conf, r, "MMDB_ADDR", ip_address);
 
     for (apr_hash_index_t *db_index = apr_hash_first(r->pool, conf->databases);
          db_index; db_index = apr_hash_next(db_index)) {
@@ -379,10 +387,7 @@ static void export_env_for_database(request_rec *r, maxminddb_config *conf,
         return;
     }
 
-    apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup success");
-    if (conf->set_notes) {
-        apr_table_set(r->notes, "MMDB_INFO", "lookup success");
-    }
+    maxminddb_kv_set(conf, r, "MMDB_INFO", "lookup success");
 
     INFO(r->server, "MMDB_lookup_string %s works", ip_address);
 
@@ -407,10 +412,7 @@ static void export_env_for_lookups(request_rec *r, const char *ip_address,
         apr_hash_this(lp_index, (const void **)&env_key, NULL,
                       (void **)&lookup_path);
 
-        apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
-        if (conf->set_notes) {
-            apr_table_set(r->notes, "MMDB_INFO", "result found");
-        }
+        maxminddb_kv_set(conf, r, "MMDB_INFO", "result found");
 
         MMDB_entry_data_s result;
         int mmdb_error = MMDB_aget_value(
@@ -472,10 +474,7 @@ static void export_env_for_lookups(request_rec *r, const char *ip_address,
             }
 
             if (NULL != value) {
-                apr_table_set(r->subprocess_env, env_key, value);
-                if (conf->set_notes) {
-                    apr_table_set(r->notes, env_key, value);
-                }
+                maxminddb_kv_set(conf, r, env_key, value);
             }
         }
     }
