@@ -241,7 +241,7 @@ static const char *set_maxminddb_env(cmd_parms *cmd, void *dir_config,
     INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, path);
 
     const int max_path_segments = 80;
-    char *path_segments[max_path_segments];
+    char *path_segments[max_path_segments + 1];
 
     char *tokenized_path = apr_pstrdup(cmd->pool, path);
     int i;
@@ -254,6 +254,7 @@ static const char *set_maxminddb_env(cmd_parms *cmd, void *dir_config,
         token = apr_strtok(NULL, "/", &strtok_last);
         path_segments[i] = token;
     }
+    path_segments[i] = NULL;
 
     if (!i) {
         return NULL;
