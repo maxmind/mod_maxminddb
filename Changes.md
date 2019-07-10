@@ -1,3 +1,8 @@
+## 1.1.1
+
+* Fix a bug where uninitialized memory could be accessed when looking up
+  a path in a database. Pull Request by ylavic. GitHub #78.
+
 ## 1.1.0 - 2016-10-19
 
 * Fail loudly if any configured `MaxMindDBFile`s don't exist.
