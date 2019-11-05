@@ -223,8 +223,8 @@ APIs](https://dev.maxmind.com/geoip/geoip2/downloadable/#MaxMind_APIs) instead.
 
 ## Support ##
 
-Please report all issues with this code using the [GitHub issue tracker]
-(https://github.com/maxmind/mod_maxminddb/issues).
+Please report all issues with this code using the [GitHub issue
+tracker](https://github.com/maxmind/mod_maxminddb/issues).
 
 If you are having an issue with a commercial MaxMind database that is not
 specific to this module, please see [our support
