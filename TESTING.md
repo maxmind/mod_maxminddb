@@ -4,7 +4,7 @@
 
 ### cpanminus
 
-    curl -L http://cpanmin.us | perl - App::cpanminus
+    curl -L https://cpanmin.us | perl - App::cpanminus
 
 ### This repository
 
