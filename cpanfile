@@ -1,5 +1,6 @@
 requires 'Apache::Test';
 requires 'Apache::TestRequest';
+requires 'CGI';
 requires 'Data::Printer';
 requires 'Data::Validate::IP';
 requires 'Encode';

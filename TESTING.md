@@ -32,7 +32,7 @@
 
 #### 2.4
 
-    sudo apt-get install --assume-yes apache2-mpm-prefork apache2-utils apache2-dev
+    sudo apt-get install --assume-yes apache2-mpm-prefork apache2-utils apache2-dev libapache2-mod-perl2 libapache2-mod-security2
 
 #### mod_remoteip (Apache 2.2 only)
     git clone git://github.com/ttkzw/mod_remoteip-httpd22
@@ -49,7 +49,7 @@
 
 ### Test scaffolding
 
-    perl Makefile.PL -configure -httpd_conf t/setup/apache2.conf -src_dir /usr/lib/apache2/modules
+    perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
 
 ### Run tests
 
