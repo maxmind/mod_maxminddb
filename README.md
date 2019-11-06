@@ -117,6 +117,14 @@ using map keys or 0-based array indexes separated by `/`.
     MaxMindDBEnv COUNTRY_CODE COUNTRY_DB/country/iso_code
     MaxMindDBEnv REGION_CODE  CITY_DB/subdivisions/0/iso_code
 
+### `MaxMindDBNetworkEnv` ###
+
+This directive assigns the network associated with the IP address to an
+environment variable. The network will be in CIDR format.
+
+    MaxMindDBNetworkEnv COUNTRY_DB COUNTRY_NETWORK
+    MaxMindDBNetworkEnv CITY_DB    CITY_NETWORK
+
 ## Exported Environment Variables ##
 
 In addition to the environment variable specified by `MaxMindDBEnv`, this
@@ -147,6 +155,8 @@ variables.
 
         MaxMindDBEnv MM_ASN ASN_DB/autonomous_system_number
         MaxMindDBEnv MM_ASORG ASN_DB/autonomous_system_organization
+
+        MaxMindDBNetworkEnv ASN_DB ASN_DB_NETWORK
     </IfModule>
 
 ### City Database ###
@@ -160,6 +170,8 @@ variables.
         MaxMindDBEnv MM_CITY_NAME CITY_DB/city/names/en
         MaxMindDBEnv MM_LONGITUDE CITY_DB/location/longitude
         MaxMindDBEnv MM_LATITUDE CITY_DB/location/latitude
+
+        MaxMindDBNetworkEnv CITY_DB CITY_DB_NETWORK
     </IfModule>
 
 ### Connection-Type Database ###
@@ -169,6 +181,8 @@ variables.
         MaxMindDBFile CONNECTION_TYPE_DB /usr/local/share/GeoIP/GeoIP2-Connection-Type.mmdb
 
         MaxMindDBEnv MM_CONNECTION_TYPE CONNECTION_TYPE_DB/connection_type
+
+        MaxMindDBNetworkEnv CONNECTION_TYPE_DB CONNECTION_TYPE_DB_NETWORK
     </IfModule>
 
 ### Domain Database ###
@@ -178,6 +192,8 @@ variables.
         MaxMindDBFile DOMAIN_DB /usr/local/share/GeoIP/GeoIP2-Domain.mmdb
 
         MaxMindDBEnv MM_DOMAIN DOMAIN_DB/domain
+
+        MaxMindDBNetworkEnv DOMAIN_DB DOMAIN_DB_NETWORK
     </IfModule>
 
 ### ISP Database ###
@@ -190,6 +206,8 @@ variables.
         MaxMindDBEnv MM_ASORG ISP_DB/autonomous_system_organization
         MaxMindDBEnv MM_ISP ISP_DB/isp
         MaxMindDBEnv MM_ORG ISP_DB/organization
+
+        MaxMindDBNetworkEnv ISP_DB ISP_DB_NETWORK
     </IfModule>
 
 ### Blocking by Country ###

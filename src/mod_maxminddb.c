@@ -22,6 +22,7 @@
 #include <ap_config.h>
 #include <apr_hash.h>
 #include <apr_strings.h>
+#include <arpa/inet.h>
 #include <httpd.h>
 // Must come after httpd.h.
 #include <http_config.h>
@@ -29,6 +30,8 @@
 #include <http_protocol.h>
 #include <inttypes.h>
 #include <maxminddb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #ifdef APLOG_USE_MODULE
 APLOG_USE_MODULE(maxminddb);
@@ -59,6 +62,7 @@ APLOG_USE_MODULE(maxminddb);
 typedef struct maxminddb_config {
     apr_hash_t *databases;
     apr_hash_t *lookups;
+    apr_hash_t *database_to_network_variable;
     int enabled;
 } maxminddb_config;
 
@@ -100,6 +104,23 @@ static const char *set_maxminddb_filename(cmd_parms *cmd,
                                           void *config,
                                           const char *database_name,
                                           const char *filename);
+static char const *set_maxminddb_network_env(cmd_parms *const cmd,
+                                             void *const dir_config,
+                                             char const *const database_name,
+                                             char const *const env_variable);
+static void
+maybe_set_network_environment_variable(request_rec *const r,
+                                       maxminddb_config *const conf,
+                                       char const *const database_name,
+                                       MMDB_s const *const mmdb,
+                                       struct addrinfo const *const address,
+                                       uint16_t const netmask);
+static void set_network_environment_variable(request_rec *const r,
+                                             char const *const env_var,
+                                             uint8_t const *const ip,
+                                             int const prefix,
+                                             int const family,
+                                             uint8_t *const network_ip);
 
 static const command_rec maxminddb_directives[] = {
     AP_INIT_FLAG("MaxMindDBEnable",
@@ -114,6 +135,11 @@ static const command_rec maxminddb_directives[] = {
                   "Path to the Database File"),
     AP_INIT_TAKE2(
         "MaxMindDBEnv", set_maxminddb_env, NULL, OR_ALL, "Set desired env var"),
+    AP_INIT_TAKE2("MaxMindDBNetworkEnv",
+                  set_maxminddb_network_env,
+                  NULL,
+                  OR_ALL,
+                  "Set desired env var for network"),
     {NULL}};
 
 /* Dispatch list for API hooks */
@@ -150,6 +176,7 @@ static void *create_config(apr_pool_t *pool) {
 
     conf->databases = apr_hash_make(pool);
     conf->lookups = apr_hash_make(pool);
+    conf->database_to_network_variable = apr_hash_make(pool);
 
     /* We use -1 for off but not set */
     conf->enabled = -1;
@@ -170,6 +197,10 @@ static void *merge_config(apr_pool_t *pool, void *parent, void *child) {
         apr_hash_overlay(pool, child_conf->databases, parent_conf->databases);
     conf->lookups = apr_hash_merge(
         pool, child_conf->lookups, parent_conf->lookups, merge_lookups, NULL);
+    conf->database_to_network_variable =
+        apr_hash_overlay(pool,
+                         child_conf->database_to_network_variable,
+                         parent_conf->database_to_network_variable);
 
     return conf;
 }
@@ -273,6 +304,29 @@ static const char *set_maxminddb_env(cmd_parms *cmd,
     return NULL;
 }
 
+static char const *set_maxminddb_network_env(cmd_parms *const cmd,
+                                             void *const dir_config,
+                                             char const *const database_name,
+                                             char const *const env_variable) {
+    maxminddb_config *const conf = get_config(cmd, dir_config);
+
+    INFO(cmd->server,
+         "set_maxminddb_network_env (server) %s %s",
+         database_name,
+         env_variable);
+
+    apr_hash_set(conf->database_to_network_variable,
+                 database_name,
+                 APR_HASH_KEY_STRING,
+                 env_variable);
+    INFO(cmd->server,
+         "Insert network environment variable (%s)%s",
+         database_name,
+         env_variable);
+
+    return NULL;
+}
+
 static int export_env_for_server(request_rec *r) {
     INFO(r->server, "maxminddb_per_server ( enabled )");
     return export_env(
@@ -332,14 +386,39 @@ static void export_env_for_database(request_rec *r,
     if (NULL == lookups_for_db) {
         return;
     }
-    int gai_error, mmdb_error;
-    MMDB_lookup_result_s lookup_result =
-        MMDB_lookup_string(mmdb, ip_address, &gai_error, &mmdb_error);
 
-    if (0 != gai_error || MMDB_SUCCESS != mmdb_error) {
-        const char *msg = 0 != gai_error ? "failed to resolve IP address"
-                                         : MMDB_strerror(mmdb_error);
-        ERROR(r->server, "Error looking up '%s': %s", ip_address, msg);
+    struct addrinfo const hints = {
+        .ai_family = AF_UNSPEC,
+        .ai_flags = AI_NUMERICHOST,
+        // We set ai_socktype so that we only get one result back
+        .ai_socktype = SOCK_STREAM,
+    };
+    struct addrinfo *addresses = NULL;
+    int const gai_status = getaddrinfo(ip_address, NULL, &hints, &addresses);
+    if (gai_status != 0) {
+        ERROR(r->server,
+              "Error resolving IP address: %s",
+              gai_strerror(gai_status));
+        return;
+    }
+    if (!addresses || !addresses->ai_addr) {
+        ERROR(r->server,
+              "Error resolving IP address: Address unexpectedly not populated");
+        if (addresses) {
+            freeaddrinfo(addresses);
+        }
+        return;
+    }
+
+    int mmdb_error = 0;
+    MMDB_lookup_result_s lookup_result =
+        MMDB_lookup_sockaddr(mmdb, addresses->ai_addr, &mmdb_error);
+    if (mmdb_error != MMDB_SUCCESS) {
+        ERROR(r->server,
+              "Error looking up '%s': %s",
+              ip_address,
+              MMDB_strerror(mmdb_error));
+        freeaddrinfo(addresses);
         return;
     }
 
@@ -350,6 +429,11 @@ static void export_env_for_database(request_rec *r,
     if (lookup_result.found_entry) {
         export_env_for_lookups(r, ip_address, &lookup_result, lookups_for_db);
     }
+
+    maybe_set_network_environment_variable(
+        r, conf, database_name, mmdb, addresses, lookup_result.netmask);
+
+    freeaddrinfo(addresses);
 }
 
 static void export_env_for_lookups(request_rec *r,
@@ -461,4 +545,77 @@ static char *from_uint128(apr_pool_t *pool, const MMDB_entry_data_s *result) {
     return apr_psprintf(
         pool, "0x%016" PRIx64 "%016" PRIx64, (uint64_t)(v >> 64), (uint64_t)v);
 #endif
+}
+
+static void
+maybe_set_network_environment_variable(request_rec *const r,
+                                       maxminddb_config *const conf,
+                                       char const *const database_name,
+                                       MMDB_s const *const mmdb,
+                                       struct addrinfo const *const address,
+                                       uint16_t prefix) {
+    char const *const env_var = apr_hash_get(
+        conf->database_to_network_variable, database_name, APR_HASH_KEY_STRING);
+    if (!env_var) {
+        return;
+    }
+
+    if (address->ai_family == AF_INET && mmdb->metadata.ip_version == 6) {
+        // The prefix length given the IPv4 address. If there is no IPv4
+        // subtree, we use a prefix length of 0.
+        prefix = prefix >= 96 ? prefix - 96 : 0;
+    }
+
+    if (address->ai_family == AF_INET) {
+        struct sockaddr_in const *const sin =
+            (struct sockaddr_in *)address->ai_addr;
+        uint8_t const *const ip = (uint8_t *)&sin->sin_addr.s_addr;
+
+        uint8_t network_ip[4] = {0};
+
+        set_network_environment_variable(
+            r, env_var, ip, prefix, address->ai_family, network_ip);
+        return;
+    }
+
+    if (address->ai_family == AF_INET6) {
+        struct sockaddr_in6 const *const sin =
+            (struct sockaddr_in6 *)address->ai_addr;
+        uint8_t const *const ip = sin->sin6_addr.s6_addr;
+
+        uint8_t network_ip[16] = {0};
+
+        set_network_environment_variable(
+            r, env_var, ip, prefix, address->ai_family, network_ip);
+        return;
+    }
+}
+
+static void set_network_environment_variable(request_rec *const r,
+                                             char const *const env_var,
+                                             uint8_t const *const ip,
+                                             int const prefix,
+                                             int const family,
+                                             uint8_t *const network_ip) {
+    size_t const n_bytes = family == AF_INET ? 4 : 16;
+    int prefix2 = prefix;
+    for (size_t i = 0; i < n_bytes && prefix2 > 0; i++) {
+        uint8_t b = ip[i];
+        if (prefix2 < 8) {
+            int const shift_n = 8 - prefix2;
+            b = 0xff & (b >> shift_n) << shift_n;
+        }
+        network_ip[i] = b;
+        prefix2 -= 8;
+    }
+
+    char ip_str[INET6_ADDRSTRLEN] = {0};
+    if (inet_ntop(family, network_ip, ip_str, INET6_ADDRSTRLEN) == NULL) {
+        return;
+    }
+
+    char network_str[256] = {0};
+    snprintf(network_str, 256, "%s/%d", ip_str, prefix);
+
+    apr_table_set(r->subprocess_env, env_var, network_str);
 }

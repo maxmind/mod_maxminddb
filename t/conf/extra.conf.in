@@ -71,6 +71,8 @@ SecRule ARGS:mmdb_addr . "phase:1,t:none,id:32768,log,setenv:'MMDB_ADDR=%{MATCHE
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_PT_BR       CITY_DB/subdivisions/0/names/pt_br
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_RU          CITY_DB/subdivisions/0/names/ru
         MaxMindDBEnv MM_SUBDIVISION_1_NAMES_ZH_CN       CITY_DB/subdivisions/0/names/zh-CN
+
+        MaxMindDBNetworkEnv CITY_DB CITY_NETWORK
     </IfModule>
 </Directory>
 
@@ -85,6 +87,54 @@ SecRule ARGS:mmdb_addr . "phase:1,t:none,id:32768,log,setenv:'MMDB_ADDR=%{MATCHE
         MaxMindDBFile IPV4_DB           @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-ipv4-24.mmdb
 
         MaxMindDBEnv IPV4_BASE               IPV4_DB
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/ipv6-32">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable On
+        MaxMindDBFile DB @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-ipv6-32.mmdb
+        MaxMindDBEnv DB_BASE DB
+        MaxMindDBNetworkEnv DB DB_NETWORK
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/ipv6-24">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable On
+        MaxMindDBFile DB @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-ipv6-24.mmdb
+        MaxMindDBEnv DB_BASE DB
+        MaxMindDBNetworkEnv DB DB_NETWORK
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/ipv4-24">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable On
+        MaxMindDBFile DB @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-test-ipv4-24.mmdb
+        MaxMindDBEnv DB_BASE DB
+        MaxMindDBNetworkEnv DB DB_NETWORK
+    </IfModule>
+</Directory>
+
+<Directory "@ServerRoot@/cgi-bin/no-ipv4-search-tree">
+    AllowOverride None
+    Options +ExecCGI
+
+    <IfModule mod_maxminddb.c>
+        MaxMindDBEnable On
+        MaxMindDBFile DB @ServerRoot@/../maxmind-db/test-data/MaxMind-DB-no-ipv4-search-tree.mmdb
+        MaxMindDBEnv DB_BASE DB
+        MaxMindDBNetworkEnv DB DB_NETWORK
     </IfModule>
 </Directory>
 
@@ -156,6 +206,7 @@ SecRule ARGS:mmdb_addr . "phase:1,t:none,id:32768,log,setenv:'MMDB_ADDR=%{MATCHE
         MaxMindDBEnv MM_UINT64          DECODER_DB/uint64
         MaxMindDBEnv MM_UTF8_STRING     DECODER_DB/utf8_string
 
+        MaxMindDBNetworkEnv DECODER_DB DECODER_DB_NETWORK
     </IfModule>
 </Directory>
 
