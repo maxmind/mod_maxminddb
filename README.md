@@ -120,7 +120,8 @@ using map keys or 0-based array indexes separated by `/`.
 ### `MaxMindDBNetworkEnv` ###
 
 This directive assigns the network associated with the IP address to an
-environment variable. The network will be in CIDR format.
+environment variable. The network will be in CIDR format. This directive
+may only be used once per database.
 
     MaxMindDBNetworkEnv COUNTRY_DB COUNTRY_NETWORK
     MaxMindDBNetworkEnv CITY_DB    CITY_NETWORK
