@@ -57,7 +57,7 @@ To use another Apache installation, specify a path to the right apxs binary:
 ## Usage ##
 
 To use this module, you must first download or create a MaxMind DB file. We
-provide [free GeoLite2 databases](http://dev.maxmind.com/geoip/geoip2/geolite2)
+provide [free GeoLite2 databases](https://dev.maxmind.com/geoip/geoip2/geolite2)
 as well as [commercial GeoIP2 databases](https://www.maxmind.com/en/geoip2-databases).
 
 After installing this module and obtaining a database, you must now set up the
@@ -69,7 +69,7 @@ bind the desired lookup result to an environment variable.
 This module uses the client IP address for the lookup. This is not always what
 you want. If you need to use an IP address specified in a header (e.g., by
 your proxy frontend),
-[mod_remoteip](http://httpd.apache.org/docs/current/mod/mod_remoteip.html) may
+[mod_remoteip](https://httpd.apache.org/docs/current/mod/mod_remoteip.html) may
 be used to set the client IP address.
 
 Manually setting the client IP address is also possible. See
@@ -117,6 +117,15 @@ using map keys or 0-based array indexes separated by `/`.
     MaxMindDBEnv COUNTRY_CODE COUNTRY_DB/country/iso_code
     MaxMindDBEnv REGION_CODE  CITY_DB/subdivisions/0/iso_code
 
+### `MaxMindDBNetworkEnv` ###
+
+This directive assigns the network associated with the IP address to an
+environment variable. The network will be in CIDR format. This directive
+may only be used once per database.
+
+    MaxMindDBNetworkEnv COUNTRY_DB COUNTRY_NETWORK
+    MaxMindDBNetworkEnv CITY_DB    CITY_NETWORK
+
 ## Exported Environment Variables ##
 
 In addition to the environment variable specified by `MaxMindDBEnv`, this
@@ -131,7 +140,7 @@ This can be done, for instance, with
 [ModSecurity](https://github.com/SpiderLabs/ModSecurity/) in (real) phase 1.
 Note that mod_setenvif and mod_rewrite cannot be used for this as they are
 running after this module. For most usages,
-[mod_remoteip](http://httpd.apache.org/docs/current/mod/mod_remoteip.html)
+[mod_remoteip](https://httpd.apache.org/docs/current/mod/mod_remoteip.html)
 is an easier alternative.
 
 ## Examples ##
@@ -147,6 +156,8 @@ variables.
 
         MaxMindDBEnv MM_ASN ASN_DB/autonomous_system_number
         MaxMindDBEnv MM_ASORG ASN_DB/autonomous_system_organization
+
+        MaxMindDBNetworkEnv ASN_DB ASN_DB_NETWORK
     </IfModule>
 
 ### City Database ###
@@ -160,6 +171,8 @@ variables.
         MaxMindDBEnv MM_CITY_NAME CITY_DB/city/names/en
         MaxMindDBEnv MM_LONGITUDE CITY_DB/location/longitude
         MaxMindDBEnv MM_LATITUDE CITY_DB/location/latitude
+
+        MaxMindDBNetworkEnv CITY_DB CITY_DB_NETWORK
     </IfModule>
 
 ### Connection-Type Database ###
@@ -169,6 +182,8 @@ variables.
         MaxMindDBFile CONNECTION_TYPE_DB /usr/local/share/GeoIP/GeoIP2-Connection-Type.mmdb
 
         MaxMindDBEnv MM_CONNECTION_TYPE CONNECTION_TYPE_DB/connection_type
+
+        MaxMindDBNetworkEnv CONNECTION_TYPE_DB CONNECTION_TYPE_DB_NETWORK
     </IfModule>
 
 ### Domain Database ###
@@ -178,6 +193,8 @@ variables.
         MaxMindDBFile DOMAIN_DB /usr/local/share/GeoIP/GeoIP2-Domain.mmdb
 
         MaxMindDBEnv MM_DOMAIN DOMAIN_DB/domain
+
+        MaxMindDBNetworkEnv DOMAIN_DB DOMAIN_DB_NETWORK
     </IfModule>
 
 ### ISP Database ###
@@ -190,6 +207,8 @@ variables.
         MaxMindDBEnv MM_ASORG ISP_DB/autonomous_system_organization
         MaxMindDBEnv MM_ISP ISP_DB/isp
         MaxMindDBEnv MM_ORG ISP_DB/organization
+
+        MaxMindDBNetworkEnv ISP_DB ISP_DB_NETWORK
     </IfModule>
 
 ### Blocking by Country ###
@@ -219,23 +238,23 @@ Note that data stored as the "bytes" type in a MaxMind DB database can contain
 null bytes and may end up truncated when stored in an environment variable. If
 you really need to access this data, we recommend using [one of our
 programming language
-APIs](http://dev.maxmind.com/geoip/geoip2/downloadable/#MaxMind_APIs) instead.
+APIs](https://dev.maxmind.com/geoip/geoip2/downloadable/#MaxMind_APIs) instead.
 
 ## Support ##
 
-Please report all issues with this code using the [GitHub issue tracker]
-(https://github.com/maxmind/mod_maxminddb/issues).
+Please report all issues with this code using the [GitHub issue
+tracker](https://github.com/maxmind/mod_maxminddb/issues).
 
 If you are having an issue with a commercial MaxMind database that is not
 specific to this module, please see [our support
-page](http://www.maxmind.com/en/support).
+page](https://www.maxmind.com/en/support).
 
 ## Versioning ##
 
-The MaxMind DB Apache module uses [Semantic Versioning](http://semver.org/).
+The MaxMind DB Apache module uses [Semantic Versioning](https://semver.org/).
 
 ## Copyright and License ##
 
-This software is Copyright (c) 2013-2014 by MaxMind, Inc.
+This software is Copyright (c) 2013-2019 by MaxMind, Inc.
 
 This is free software, licensed under the Apache License, Version 2.0.

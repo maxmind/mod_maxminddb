@@ -1,7 +1,10 @@
-## 1.1.1
+## 1.2.0
 
 * Fix a bug where uninitialized memory could be accessed when looking up
   a path in a database. Pull Request by ylavic. GitHub #78.
+* Add new directive `MaxMindDBNetworkEnv` that allows setting an
+  environment variable containing the network associated with an IP
+  address.
 
 ## 1.1.0 - 2016-10-19
 
