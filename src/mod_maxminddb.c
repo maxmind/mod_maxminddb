@@ -3,7 +3,7 @@
  * This module populates environment variable from a MaxMind DB database
  * using the requestor's IP address.
  *
- * Copyright 2019, MaxMind Inc.
+ * Copyright 2013-2020, MaxMind Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
