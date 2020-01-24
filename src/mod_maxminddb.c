@@ -124,6 +124,7 @@ maybe_set_network_environment_variable(request_rec *const r,
                                        struct addrinfo const *const address,
                                        uint16_t const netmask);
 static void set_network_environment_variable(request_rec *const r,
+                                             maxminddb_config *conf,
                                              char const *const env_var,
                                              uint8_t const *const ip,
                                              int const prefix,
@@ -615,7 +616,7 @@ maybe_set_network_environment_variable(request_rec *const r,
         uint8_t network_ip[4] = {0};
 
         set_network_environment_variable(
-            r, env_var, ip, prefix, address->ai_family, network_ip);
+            r, conf, env_var, ip, prefix, address->ai_family, network_ip);
         return;
     }
 
@@ -627,12 +628,13 @@ maybe_set_network_environment_variable(request_rec *const r,
         uint8_t network_ip[16] = {0};
 
         set_network_environment_variable(
-            r, env_var, ip, prefix, address->ai_family, network_ip);
+            r, conf, env_var, ip, prefix, address->ai_family, network_ip);
         return;
     }
 }
 
 static void set_network_environment_variable(request_rec *const r,
+                                             maxminddb_config *conf,
                                              char const *const env_var,
                                              uint8_t const *const ip,
                                              int const prefix,
@@ -658,5 +660,5 @@ static void set_network_environment_variable(request_rec *const r,
     char network_str[256] = {0};
     snprintf(network_str, 256, "%s/%d", ip_str, prefix);
 
-    apr_table_set(r->subprocess_env, env_var, network_str);
+    maxminddb_kv_set(conf, r, env_var, network_str);
 }
