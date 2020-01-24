@@ -84,8 +84,8 @@ void *merge_lookups(apr_pool_t *pool,
                     const void *h2_val,
                     const void *UNUSED(data));
 static maxminddb_config *get_config(cmd_parms *cmd, void *dir_config);
-static void maxminddb_kv_set(maxminddb_config *conf,
-                             request_rec *r,
+static void maxminddb_kv_set(request_rec *r,
+                             maxminddb_config *conf,
                              const char *key,
                              const char *val);
 static int export_env(request_rec *r, maxminddb_config *conf);
@@ -97,10 +97,10 @@ static void export_env_for_database(request_rec *r,
                                     const char *database_name,
                                     MMDB_s *mmdb);
 static void export_env_for_lookups(request_rec *r,
+                                   maxminddb_config *conf,
                                    const char *ip_address,
                                    MMDB_lookup_result_s *lookup_result,
-                                   apr_hash_t *lookups_for_db,
-                                   maxminddb_config *conf);
+                                   apr_hash_t *lookups_for_db);
 static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg);
 static const char *
 set_maxminddb_set_notes(cmd_parms *cmd, void *config, int arg);
@@ -167,8 +167,8 @@ module AP_MODULE_DECLARE_DATA maxminddb_module = {
     maxminddb_register_hooks /* register hooks                      */
 };
 
-static void maxminddb_kv_set(maxminddb_config *conf,
-                             request_rec *r,
+static void maxminddb_kv_set(request_rec *r,
+                             maxminddb_config *conf,
                              const char *key,
                              const char *val) {
     apr_table_set(r->subprocess_env, key, val);
@@ -388,7 +388,7 @@ static int export_env(request_rec *r, maxminddb_config *conf) {
     if (NULL == ip_address) {
         return DECLINED;
     }
-    maxminddb_kv_set(conf, r, "MMDB_ADDR", ip_address);
+    maxminddb_kv_set(r, conf, "MMDB_ADDR", ip_address);
 
     for (apr_hash_index_t *db_index = apr_hash_first(r->pool, conf->databases);
          db_index;
@@ -462,13 +462,13 @@ static void export_env_for_database(request_rec *r,
         return;
     }
 
-    maxminddb_kv_set(conf, r, "MMDB_INFO", "lookup success");
+    maxminddb_kv_set(r, conf, "MMDB_INFO", "lookup success");
 
     INFO(r->server, "MMDB_lookup_string %s works", ip_address);
 
     if (lookup_result.found_entry) {
         export_env_for_lookups(
-            r, ip_address, &lookup_result, lookups_for_db, conf);
+            r, conf, ip_address, &lookup_result, lookups_for_db);
     }
 
     maybe_set_network_environment_variable(
@@ -478,10 +478,10 @@ static void export_env_for_database(request_rec *r,
 }
 
 static void export_env_for_lookups(request_rec *r,
+                                   maxminddb_config *conf,
                                    const char *ip_address,
                                    MMDB_lookup_result_s *lookup_result,
-                                   apr_hash_t *lookups_for_db,
-                                   maxminddb_config *conf) {
+                                   apr_hash_t *lookups_for_db) {
     for (apr_hash_index_t *lp_index = apr_hash_first(r->pool, lookups_for_db);
          lp_index;
          lp_index = apr_hash_next(lp_index)) {
@@ -491,7 +491,7 @@ static void export_env_for_lookups(request_rec *r,
         apr_hash_this(
             lp_index, (const void **)&env_key, NULL, (void **)&lookup_path);
 
-        maxminddb_kv_set(conf, r, "MMDB_INFO", "result found");
+        maxminddb_kv_set(r, conf, "MMDB_INFO", "result found");
 
         MMDB_entry_data_s result;
         int mmdb_error =
@@ -551,7 +551,7 @@ static void export_env_for_lookups(request_rec *r,
             }
 
             if (NULL != value) {
-                maxminddb_kv_set(conf, r, env_key, value);
+                maxminddb_kv_set(r, conf, env_key, value);
             }
         }
     }
@@ -660,5 +660,5 @@ static void set_network_environment_variable(request_rec *const r,
     char network_str[256] = {0};
     snprintf(network_str, 256, "%s/%d", ip_str, prefix);
 
-    maxminddb_kv_set(conf, r, env_var, network_str);
+    maxminddb_kv_set(r, conf, env_var, network_str);
 }
