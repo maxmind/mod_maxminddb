@@ -37,6 +37,8 @@ PerlModule Notes
         MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
 
         MaxMindDBEnv MM_COUNTRY_CODE                    CITY_DB/country/iso_code
+
+        MaxMindDBNetworkEnv CITY_DB CITY_NETWORK
     </IfModule>
 </Location>
 
