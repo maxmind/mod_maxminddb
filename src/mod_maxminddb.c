@@ -3,7 +3,7 @@
  * This module populates environment variable from a MaxMind DB database
  * using the requestor's IP address.
  *
- * Copyright 2019, MaxMind Inc.
+ * Copyright 2013-2020, MaxMind Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,6 +64,7 @@ typedef struct maxminddb_config {
     apr_hash_t *lookups;
     apr_hash_t *database_to_network_variable;
     int enabled;
+    int set_notes;
 } maxminddb_config;
 
 module AP_MODULE_DECLARE_DATA maxminddb_module;
@@ -83,6 +84,10 @@ void *merge_lookups(apr_pool_t *pool,
                     const void *h2_val,
                     const void *UNUSED(data));
 static maxminddb_config *get_config(cmd_parms *cmd, void *dir_config);
+static void maxminddb_kv_set(request_rec *r,
+                             maxminddb_config *conf,
+                             const char *key,
+                             const char *val);
 static int export_env(request_rec *r, maxminddb_config *conf);
 static int export_env_for_dir(request_rec *r);
 static int export_env_for_server(request_rec *r);
@@ -92,10 +97,13 @@ static void export_env_for_database(request_rec *r,
                                     const char *database_name,
                                     MMDB_s *mmdb);
 static void export_env_for_lookups(request_rec *r,
+                                   maxminddb_config *conf,
                                    const char *ip_address,
                                    MMDB_lookup_result_s *lookup_result,
                                    apr_hash_t *lookups_for_db);
 static const char *set_maxminddb_enable(cmd_parms *cmd, void *config, int arg);
+static const char *
+set_maxminddb_set_notes(cmd_parms *cmd, void *config, int arg);
 static const char *set_maxminddb_env(cmd_parms *cmd,
                                      void *config,
                                      const char *env,
@@ -116,6 +124,7 @@ maybe_set_network_environment_variable(request_rec *const r,
                                        struct addrinfo const *const address,
                                        uint16_t const netmask);
 static void set_network_environment_variable(request_rec *const r,
+                                             maxminddb_config *conf,
                                              char const *const env_var,
                                              uint8_t const *const ip,
                                              int const prefix,
@@ -128,6 +137,11 @@ static const command_rec maxminddb_directives[] = {
                  NULL,
                  OR_ALL,
                  "Turn on mod_maxminddb"),
+    AP_INIT_FLAG("MaxMindDBSetNotes",
+                 set_maxminddb_set_notes,
+                 NULL,
+                 OR_ALL,
+                 "Set Notes alongside env vars"),
     AP_INIT_TAKE2("MaxMindDBFile",
                   set_maxminddb_filename,
                   NULL,
@@ -152,6 +166,16 @@ module AP_MODULE_DECLARE_DATA maxminddb_module = {
     maxminddb_directives,    /* table of config file commands       */
     maxminddb_register_hooks /* register hooks                      */
 };
+
+static void maxminddb_kv_set(request_rec *r,
+                             maxminddb_config *conf,
+                             const char *key,
+                             const char *val) {
+    apr_table_set(r->subprocess_env, key, val);
+    if (conf->set_notes) {
+        apr_table_set(r->notes, key, val);
+    }
+}
 
 static void maxminddb_register_hooks(apr_pool_t *UNUSED(p)) {
     /* make sure we run before mod_rewrite's handler */
@@ -181,6 +205,8 @@ static void *create_config(apr_pool_t *pool) {
     /* We use -1 for off but not set */
     conf->enabled = -1;
 
+    conf->set_notes = 0; /* by default, don't set notes */
+
     return conf;
 }
 
@@ -193,6 +219,7 @@ static void *merge_config(apr_pool_t *pool, void *parent, void *child) {
     conf->enabled =
         child_conf->enabled == -1 ? parent_conf->enabled : child_conf->enabled;
 
+    conf->set_notes = child_conf->set_notes;
     conf->databases =
         apr_hash_overlay(pool, child_conf->databases, parent_conf->databases);
     conf->lookups = apr_hash_merge(
@@ -229,6 +256,19 @@ set_maxminddb_enable(cmd_parms *cmd, void *dir_config, int arg) {
     }
     conf->enabled = arg;
     INFO(cmd->server, "set_maxminddb_enable: (server) %d", arg);
+
+    return NULL;
+}
+
+static const char *
+set_maxminddb_set_notes(cmd_parms *cmd, void *dir_config, int arg) {
+    maxminddb_config *conf = get_config(cmd, dir_config);
+
+    if (!conf) {
+        return "mod_maxminddb: server structure not allocated";
+    }
+    conf->set_notes = arg;
+    INFO(cmd->server, "set_maxminddb_set_notes: (server) %d", arg);
 
     return NULL;
 }
@@ -348,7 +388,7 @@ static int export_env(request_rec *r, maxminddb_config *conf) {
     if (NULL == ip_address) {
         return DECLINED;
     }
-    apr_table_set(r->subprocess_env, "MMDB_ADDR", ip_address);
+    maxminddb_kv_set(r, conf, "MMDB_ADDR", ip_address);
 
     for (apr_hash_index_t *db_index = apr_hash_first(r->pool, conf->databases);
          db_index;
@@ -422,12 +462,13 @@ static void export_env_for_database(request_rec *r,
         return;
     }
 
-    apr_table_set(r->subprocess_env, "MMDB_INFO", "lookup success");
+    maxminddb_kv_set(r, conf, "MMDB_INFO", "lookup success");
 
     INFO(r->server, "MMDB_lookup_string %s works", ip_address);
 
     if (lookup_result.found_entry) {
-        export_env_for_lookups(r, ip_address, &lookup_result, lookups_for_db);
+        export_env_for_lookups(
+            r, conf, ip_address, &lookup_result, lookups_for_db);
     }
 
     maybe_set_network_environment_variable(
@@ -437,6 +478,7 @@ static void export_env_for_database(request_rec *r,
 }
 
 static void export_env_for_lookups(request_rec *r,
+                                   maxminddb_config *conf,
                                    const char *ip_address,
                                    MMDB_lookup_result_s *lookup_result,
                                    apr_hash_t *lookups_for_db) {
@@ -449,7 +491,7 @@ static void export_env_for_lookups(request_rec *r,
         apr_hash_this(
             lp_index, (const void **)&env_key, NULL, (void **)&lookup_path);
 
-        apr_table_set(r->subprocess_env, "MMDB_INFO", "result found");
+        maxminddb_kv_set(r, conf, "MMDB_INFO", "result found");
 
         MMDB_entry_data_s result;
         int mmdb_error =
@@ -509,7 +551,7 @@ static void export_env_for_lookups(request_rec *r,
             }
 
             if (NULL != value) {
-                apr_table_set(r->subprocess_env, env_key, value);
+                maxminddb_kv_set(r, conf, env_key, value);
             }
         }
     }
@@ -574,7 +616,7 @@ maybe_set_network_environment_variable(request_rec *const r,
         uint8_t network_ip[4] = {0};
 
         set_network_environment_variable(
-            r, env_var, ip, prefix, address->ai_family, network_ip);
+            r, conf, env_var, ip, prefix, address->ai_family, network_ip);
         return;
     }
 
@@ -586,12 +628,13 @@ maybe_set_network_environment_variable(request_rec *const r,
         uint8_t network_ip[16] = {0};
 
         set_network_environment_variable(
-            r, env_var, ip, prefix, address->ai_family, network_ip);
+            r, conf, env_var, ip, prefix, address->ai_family, network_ip);
         return;
     }
 }
 
 static void set_network_environment_variable(request_rec *const r,
+                                             maxminddb_config *conf,
                                              char const *const env_var,
                                              uint8_t const *const ip,
                                              int const prefix,
@@ -617,5 +660,5 @@ static void set_network_environment_variable(request_rec *const r,
     char network_str[256] = {0};
     snprintf(network_str, 256, "%s/%d", ip_str, prefix);
 
-    apr_table_set(r->subprocess_env, env_var, network_str);
+    maxminddb_kv_set(r, conf, env_var, network_str);
 }

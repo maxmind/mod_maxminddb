@@ -23,6 +23,25 @@ LogLevel        debug
 SecRuleEngine      On
 SecRule ARGS:mmdb_addr . "phase:1,t:none,id:32768,log,setenv:'MMDB_ADDR=%{MATCHED_VAR}',msg:'MMDB_ADDR=%{MATCHED_VAR}'"
 
+PerlSwitches -I@ServerRoot@/lib
+PerlModule Notes
+<Location /notes>
+    SetHandler modperl
+    PerlResponseHandler Notes
+
+    <IfModule mod_maxminddb.c>
+
+        MaxMindDBEnable On
+        MaxMindDBSetNotes On
+
+        MaxMindDBFile CITY_DB           @ServerRoot@/../maxmind-db/test-data/GeoIP2-City-Test.mmdb
+
+        MaxMindDBEnv MM_COUNTRY_CODE                    CITY_DB/country/iso_code
+
+        MaxMindDBNetworkEnv CITY_DB CITY_NETWORK
+    </IfModule>
+</Location>
+
 <Directory "@ServerRoot@/cgi-bin/valid-db">
     AllowOverride None
     Options +ExecCGI

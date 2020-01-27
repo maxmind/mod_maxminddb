@@ -5,6 +5,9 @@
 * Add new directive `MaxMindDBNetworkEnv` that allows setting an
   environment variable containing the network associated with an IP
   address.
+* Add new directive `MaxMindDBSetNotes`. When set to `On`, Apache request
+  notes will be set in addition to environment variables. Pull request by
+  Marco Fontani. GitHub #76.
 
 ## 1.1.0 - 2016-10-19
 
