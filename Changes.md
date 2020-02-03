@@ -1,4 +1,4 @@
-## 1.2.0
+## 1.2.0 - 2020-02-03
 
 * Fix a bug where uninitialized memory could be accessed when looking up
   a path in a database. Pull Request by ylavic. GitHub #78.
