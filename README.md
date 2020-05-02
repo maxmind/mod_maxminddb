@@ -62,7 +62,7 @@ as well as [commercial GeoIP2 databases](https://www.maxmind.com/en/geoip2-datab
 
 After installing this module and obtaining a database, you must now set up the
 module in your Apache configuration file (e.g., `/etc/apache2/apache2.conf`)
-or in an `.htaccess` file. You must set `MaxMindDBEnable` to enable the
+or in an `.htaccess` file. You must load the module with `LoadModule maxminddb_module /usr/lib/apache2/modules/mod_maxminddb.so`. You must set `MaxMindDBEnable` to enable the
 module, `MaxMindDBFile` to specify the database to use, and `MaxMindDBEnv` to
 bind the desired lookup result to an environment variable.
 You can also enable `MaxMindDBSetNotes` if you wish the environment variables
