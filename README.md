@@ -54,6 +54,14 @@ To use another Apache installation, specify a path to the right apxs binary:
 
     ./configure --with-apxs=/foo/bar/apxs
 
+## Loading the Module ##
+
+After installing the module, Apache has to load it. Note the installation
+does this automatically, so you should not need to do anything. If you're
+unsure if the module is loaded, ensure there's a `LoadModule` line
+somewhere in your config, such as `LoadModule maxminddb_module
+/path/to/mod_maxminddb.so`.
+
 ## Usage ##
 
 To use this module, you must first download or create a MaxMind DB file. We
