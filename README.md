@@ -236,8 +236,8 @@ variables.
 This example shows how to block users based on their country:
 
     MaxMindDBEnable On
-    MaxMindDBFile DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
-    MaxMindDBEnv MM_COUNTRY_CODE DB/country/iso_code
+    MaxMindDBFile COUNTRY_DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
+    MaxMindDBEnv MM_COUNTRY_CODE COUNTRY_DB/country/iso_code
 
     SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
     Deny from env=BlockCountry
