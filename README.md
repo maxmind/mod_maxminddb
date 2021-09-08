@@ -65,7 +65,7 @@ somewhere in your config, such as `LoadModule maxminddb_module
 ## Usage ##
 
 To use this module, you must first download or create a MaxMind DB file. We
-provide [free GeoLite2 databases](https://dev.maxmind.com/geoip/geoip2/geolite2)
+provide [free GeoLite2 databases](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?lang=en)
 as well as [commercial GeoIP2 databases](https://www.maxmind.com/en/geoip2-databases).
 
 After installing this module and obtaining a database, you must now set up the
@@ -258,7 +258,7 @@ Note that data stored as the "bytes" type in a MaxMind DB database can contain
 null bytes and may end up truncated when stored in an environment variable. If
 you really need to access this data, we recommend using [one of our
 programming language
-APIs](https://dev.maxmind.com/geoip/geoip2/downloadable/#MaxMind_APIs) instead.
+APIs](https://dev.maxmind.com/geoip/geolocate-an-ip/databases?lang=en) instead.
 
 ## Support ##
 
