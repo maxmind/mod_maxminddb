@@ -1,5 +1,3 @@
-LoadModule mpm_worker_module    /usr/lib/apache2/modules/mod_mpm_worker.so
-
 LoadModule alias_module         /usr/lib/apache2/modules/mod_alias.so
 LoadModule authn_core_module    /usr/lib/apache2/modules/mod_authn_core.so
 LoadModule authz_core_module    /usr/lib/apache2/modules/mod_authz_core.so
