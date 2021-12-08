@@ -8,7 +8,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      CFLAGS: -DMAXMINDDB_DEBUG=1 -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers
+      CFLAGS: -DMAXMINDDB_DEBUG=1 -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers -fsanitize=address
+      # Since we load ASAN with LD_PRELOAD, things like the Perl interpreter
+      # will get it as well. By default LeakSanitizer runs too. This leads to
+      # errors we don't care about, plus a much slower runtime. We're primarily
+      # interested in AddressSanitizer. Either way, disable LSAN for this test.
+      ASAN_OPTIONS: detect_leaks=0
     steps:
       - uses: actions/checkout@v2
         with:
@@ -22,4 +27,8 @@ jobs:
       - run: sudo cpanm --installdeps --notest .
       - run: perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
       - run: mkdir t/logs
-      - run: ./t/TEST -v
+      # ASAN expects to be linked to the runtime. In this case, apache. Since
+      # we're not building apache with ASAN, load it this way. This has the
+      # unfortunate side effect of loading it for things like Perl, and so does
+      # increase the runtime, but it seems tolerable.
+      - run: LD_PRELOAD=`clang -print-file-name=libclang_rt.asan-x86_64.so` ./t/TEST -v
