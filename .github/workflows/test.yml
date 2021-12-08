@@ -1,0 +1,25 @@
+name: Run tests
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '5 20 * * SUN'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CFLAGS: -DMAXMINDDB_DEBUG=1 -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - run: sudo apt install --assume-yes libmaxminddb-dev apache2-bin apache2 libapache2-mod-perl2 libtool libpcre3-dev libapache2-mod-security2 libjson-xs-perl cpanminus apache2-dev
+      - run: sudo mkdir /etc/apache2/logs
+      - run: ./bootstrap
+      - run: ./configure
+      - run: make
+      - run: sudo make install
+      - run: sudo cpanm --installdeps --notest .
+      - run: perl Makefile.PL -configure -httpd_conf setup/apache2.conf -src_dir /usr/lib/apache2/modules
+      - run: mkdir t/logs
+      - run: ./t/TEST -v
