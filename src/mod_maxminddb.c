@@ -331,7 +331,7 @@ static const char *set_maxminddb_env(cmd_parms *cmd,
         return NULL;
     }
     char **new_path_segments = (char **)apr_pmemdup(
-        cmd->pool, path_segments, (1 + i) * sizeof(char *));
+        cmd->pool, path_segments, (size_t)(1 + i) * sizeof(char *));
     apr_hash_t *lookups_for_db =
         apr_hash_get(conf->lookups, database_name, APR_HASH_KEY_STRING);
     if (NULL == lookups_for_db) {
