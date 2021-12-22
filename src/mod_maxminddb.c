@@ -605,7 +605,7 @@ maybe_set_network_environment_variable(request_rec *const r,
     if (address->ai_family == AF_INET && mmdb->metadata.ip_version == 6) {
         // The prefix length given the IPv4 address. If there is no IPv4
         // subtree, we use a prefix length of 0.
-        prefix = prefix >= 96 ? prefix - 96 : 0;
+        prefix = (uint16_t)(prefix >= 96 ? prefix - 96 : 0);
     }
 
     if (address->ai_family == AF_INET) {
@@ -646,7 +646,7 @@ static void set_network_environment_variable(request_rec *const r,
         uint8_t b = ip[i];
         if (prefix2 < 8) {
             int const shift_n = 8 - prefix2;
-            b = 0xff & (b >> shift_n) << shift_n;
+            b = (uint8_t)(0xff & (b >> shift_n) << shift_n);
         }
         network_ip[i] = b;
         prefix2 -= 8;
