@@ -8,12 +8,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      CFLAGS: -DMAXMINDDB_DEBUG=1 -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers -fsanitize=address
+      CFLAGS: -DMAXMINDDB_DEBUG=1 -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers -fsanitize=address -Wpedantic -Wformat=2 -Walloca -Wvla -Wimplicit-fallthrough -Wcast-qual -Wconversion -Wshadow -Wundef -Wswitch-enum -fstack-protector -D_FORTIFY_SOURCE=2
       # Since we load ASAN with LD_PRELOAD, things like the Perl interpreter
       # will get it as well. By default LeakSanitizer runs too. This leads to
       # errors we don't care about, plus a much slower runtime. We're primarily
-      # interested in AddressSanitizer. Either way, disable LSAN for this test.
-      ASAN_OPTIONS: detect_leaks=0
+      # interested in AddressSanitizer. Either way, disable LSAN for this test
+      # (the detect_leaks setting).
+      ASAN_OPTIONS: detect_leaks=0:strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2
     steps:
       - uses: actions/checkout@v2
         with:
