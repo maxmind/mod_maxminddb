@@ -74,7 +74,7 @@ static void *create_srv_config(apr_pool_t *pool, server_rec *s);
 static void *create_config(apr_pool_t *pool);
 static apr_status_t cleanup_database(void *mmdb);
 static char *from_uint128(apr_pool_t *pool, const MMDB_entry_data_s *result);
-static char *get_client_ip(request_rec *r);
+static char const *get_client_ip(request_rec *r);
 static void maxminddb_register_hooks(apr_pool_t *UNUSED(p));
 static void *merge_config(apr_pool_t *pool, void *parent, void *child);
 void *merge_lookups(apr_pool_t *pool,
@@ -383,7 +383,7 @@ static int export_env(request_rec *r, maxminddb_config *conf) {
     if (!conf || conf->enabled != 1) {
         return DECLINED;
     }
-    char *ip_address = get_client_ip(r);
+    char const *const ip_address = get_client_ip(r);
     INFO(r->server, "maxminddb_header_parser %s", ip_address);
     if (NULL == ip_address) {
         return DECLINED;
@@ -404,10 +404,10 @@ static int export_env(request_rec *r, maxminddb_config *conf) {
     return OK;
 }
 
-static char *get_client_ip(request_rec *r) {
+static char const *get_client_ip(request_rec *r) {
     const char *addr = apr_table_get(r->subprocess_env, "MMDB_ADDR");
     if (addr) {
-        return (char *)addr;
+        return addr;
     }
 #if AP_SERVER_MAJORVERSION_NUMBER == 2 && AP_SERVER_MINORVERSION_NUMBER == 4
     return r->useragent_ip;
@@ -611,7 +611,7 @@ maybe_set_network_environment_variable(request_rec *const r,
     if (address->ai_family == AF_INET) {
         struct sockaddr_in const *const sin =
             (struct sockaddr_in *)address->ai_addr;
-        uint8_t const *const ip = (uint8_t *)&sin->sin_addr.s_addr;
+        uint8_t const *const ip = (uint8_t const *)&sin->sin_addr.s_addr;
 
         uint8_t network_ip[4] = {0};
 
