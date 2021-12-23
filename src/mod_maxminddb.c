@@ -303,6 +303,8 @@ static apr_status_t cleanup_database(void *mmdb) {
     return APR_SUCCESS;
 }
 
+#define MAX_PATH_SEGMENTS 80
+
 static const char *set_maxminddb_env(cmd_parms *cmd,
                                      void *dir_config,
                                      const char *env,
@@ -311,8 +313,7 @@ static const char *set_maxminddb_env(cmd_parms *cmd,
 
     INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, path);
 
-    const int max_path_segments = 80;
-    char *path_segments[80 + 1];
+    char *path_segments[MAX_PATH_SEGMENTS + 1];
 
     char *tokenized_path = apr_pstrdup(cmd->pool, path);
     int i;
@@ -321,7 +322,7 @@ static const char *set_maxminddb_env(cmd_parms *cmd,
     const char *database_name = token =
         apr_strtok(tokenized_path, "/", &strtok_last);
 
-    for (i = 0; i < max_path_segments && token; i++) {
+    for (i = 0; i < MAX_PATH_SEGMENTS && token; i++) {
         token = apr_strtok(NULL, "/", &strtok_last);
         path_segments[i] = token;
     }
