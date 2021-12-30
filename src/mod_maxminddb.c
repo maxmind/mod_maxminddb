@@ -3,7 +3,7 @@
  * This module populates environment variable from a MaxMind DB database
  * using the requestor's IP address.
  *
- * Copyright 2013-2020, MaxMind Inc.
+ * Copyright 2013-2021, MaxMind Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ static void *create_srv_config(apr_pool_t *pool, server_rec *s);
 static void *create_config(apr_pool_t *pool);
 static apr_status_t cleanup_database(void *mmdb);
 static char *from_uint128(apr_pool_t *pool, const MMDB_entry_data_s *result);
-static char *get_client_ip(request_rec *r);
+static char const *get_client_ip(request_rec *r);
 static void maxminddb_register_hooks(apr_pool_t *UNUSED(p));
 static void *merge_config(apr_pool_t *pool, void *parent, void *child);
 void *merge_lookups(apr_pool_t *pool,
@@ -303,6 +303,8 @@ static apr_status_t cleanup_database(void *mmdb) {
     return APR_SUCCESS;
 }
 
+#define MAX_PATH_SEGMENTS 80
+
 static const char *set_maxminddb_env(cmd_parms *cmd,
                                      void *dir_config,
                                      const char *env,
@@ -311,8 +313,7 @@ static const char *set_maxminddb_env(cmd_parms *cmd,
 
     INFO(cmd->server, "set_maxminddb_env (server) %s %s", env, path);
 
-    const int max_path_segments = 80;
-    char *path_segments[max_path_segments + 1];
+    char *path_segments[MAX_PATH_SEGMENTS + 1];
 
     char *tokenized_path = apr_pstrdup(cmd->pool, path);
     int i;
@@ -321,7 +322,7 @@ static const char *set_maxminddb_env(cmd_parms *cmd,
     const char *database_name = token =
         apr_strtok(tokenized_path, "/", &strtok_last);
 
-    for (i = 0; i < max_path_segments && token; i++) {
+    for (i = 0; i < MAX_PATH_SEGMENTS && token; i++) {
         token = apr_strtok(NULL, "/", &strtok_last);
         path_segments[i] = token;
     }
@@ -331,7 +332,7 @@ static const char *set_maxminddb_env(cmd_parms *cmd,
         return NULL;
     }
     char **new_path_segments = (char **)apr_pmemdup(
-        cmd->pool, path_segments, (1 + i) * sizeof(char *));
+        cmd->pool, path_segments, (size_t)(1 + i) * sizeof(char *));
     apr_hash_t *lookups_for_db =
         apr_hash_get(conf->lookups, database_name, APR_HASH_KEY_STRING);
     if (NULL == lookups_for_db) {
@@ -383,7 +384,7 @@ static int export_env(request_rec *r, maxminddb_config *conf) {
     if (!conf || conf->enabled != 1) {
         return DECLINED;
     }
-    char *ip_address = get_client_ip(r);
+    char const *const ip_address = get_client_ip(r);
     INFO(r->server, "maxminddb_header_parser %s", ip_address);
     if (NULL == ip_address) {
         return DECLINED;
@@ -404,10 +405,10 @@ static int export_env(request_rec *r, maxminddb_config *conf) {
     return OK;
 }
 
-static char *get_client_ip(request_rec *r) {
+static char const *get_client_ip(request_rec *r) {
     const char *addr = apr_table_get(r->subprocess_env, "MMDB_ADDR");
     if (addr) {
-        return (char *)addr;
+        return addr;
     }
 #if AP_SERVER_MAJORVERSION_NUMBER == 2 && AP_SERVER_MINORVERSION_NUMBER == 4
     return r->useragent_ip;
@@ -605,13 +606,13 @@ maybe_set_network_environment_variable(request_rec *const r,
     if (address->ai_family == AF_INET && mmdb->metadata.ip_version == 6) {
         // The prefix length given the IPv4 address. If there is no IPv4
         // subtree, we use a prefix length of 0.
-        prefix = prefix >= 96 ? prefix - 96 : 0;
+        prefix = (uint16_t)(prefix >= 96 ? prefix - 96 : 0);
     }
 
     if (address->ai_family == AF_INET) {
         struct sockaddr_in const *const sin =
             (struct sockaddr_in *)address->ai_addr;
-        uint8_t const *const ip = (uint8_t *)&sin->sin_addr.s_addr;
+        uint8_t const *const ip = (uint8_t const *)&sin->sin_addr.s_addr;
 
         uint8_t network_ip[4] = {0};
 
@@ -646,7 +647,7 @@ static void set_network_environment_variable(request_rec *const r,
         uint8_t b = ip[i];
         if (prefix2 < 8) {
             int const shift_n = 8 - prefix2;
-            b = 0xff & (b >> shift_n) << shift_n;
+            b = (uint8_t)(0xff & (b >> shift_n) << shift_n);
         }
         network_ip[i] = b;
         prefix2 -= 8;
