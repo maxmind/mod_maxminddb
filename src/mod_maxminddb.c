@@ -22,15 +22,19 @@
 #include <ap_config.h>
 #include <apr_hash.h>
 #include <apr_strings.h>
+#if APR_HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
 #include <httpd.h>
-// Must come after httpd.h.
+ // Must come after httpd.h.
 #include <http_config.h>
 #include <http_log.h>
 #include <http_protocol.h>
 #include <inttypes.h>
 #include <maxminddb.h>
+#if APR_HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
 #include <sys/types.h>
 
 #ifdef APLOG_USE_MODULE
@@ -438,7 +442,7 @@ static void export_env_for_database(request_rec *r,
     int const gai_status = getaddrinfo(ip_address, NULL, &hints, &addresses);
     if (gai_status != 0) {
         ERROR(r->server,
-              "Error resolving IP address: %s",
+              "Error resolving IP address %s: %s", ip_address,
               gai_strerror(gai_status));
         return;
     }
