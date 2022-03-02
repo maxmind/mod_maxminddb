@@ -442,7 +442,7 @@ static void export_env_for_database(request_rec *r,
     int const gai_status = getaddrinfo(ip_address, NULL, &hints, &addresses);
     if (gai_status != 0) {
         ERROR(r->server,
-              "Error resolving IP address %s: %s", ip_address,
+              "Error resolving IP address '%s': %s", ip_address,
               gai_strerror(gai_status));
         return;
     }
