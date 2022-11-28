@@ -127,6 +127,8 @@ using map keys or 0-based array indexes separated by `/`.
     MaxMindDBEnv COUNTRY_CODE COUNTRY_DB/country/iso_code
     MaxMindDBEnv REGION_CODE  CITY_DB/subdivisions/0/iso_code
 
+Keep in mind that the configured environment variable(s) will only be exported if the data lookup succeeds.
+
 ### `MaxMindDBNetworkEnv` ###
 
 This directive assigns the network associated with the IP address to an
