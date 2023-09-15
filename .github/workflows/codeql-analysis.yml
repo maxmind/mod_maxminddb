@@ -40,8 +40,8 @@ jobs:
     #    uses a compiled language
 
     - run: |
-           sudo apt update
-           sudo apt install --assume-yes  apache2-bin apache2 apache2-dev apache2-utils libmaxminddb-dev
+           sudo apt-get update
+           sudo apt-get install --assume-yes  apache2-bin apache2 apache2-dev apache2-utils libmaxminddb-dev
            ./bootstrap
            ./configure
            make
