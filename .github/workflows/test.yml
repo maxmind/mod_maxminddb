@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+          persist-credentials: false
       - run: sudo apt-get update
       - run: sudo apt-get install --assume-yes libmaxminddb-dev apache2-bin apache2 libapache2-mod-perl2 libtool libpcre3-dev libapache2-mod-security2 libjson-xs-perl cpanminus apache2-dev
       - run: sudo mkdir /etc/apache2/logs
