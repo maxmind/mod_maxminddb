@@ -8,7 +8,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      CFLAGS: -DMAXMINDDB_DEBUG=1 -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers -fsanitize=address -Wpedantic -Wformat=2 -Walloca -Wvla -Wimplicit-fallthrough -Wcast-qual -Wconversion -Wshadow -Wundef -Wswitch-enum -fstack-protector -D_FORTIFY_SOURCE=2
+      CFLAGS: -DMAXMINDDB_DEBUG=1 -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers -fsanitize=address -Wpedantic -Wformat=2 -Walloca -Wvla -Wimplicit-fallthrough -Wcast-qual -Wconversion -Wshadow -Wundef -Wswitch-enum -fstack-protector -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2
       # Since we load ASAN with LD_PRELOAD, things like the Perl interpreter
       # will get it as well. By default LeakSanitizer runs too. This leads to
       # errors we don't care about, plus a much slower runtime. We're primarily
@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
+          persist-credentials: false
       - run: sudo apt-get update
       - run: sudo apt-get install --assume-yes libmaxminddb-dev apache2-bin apache2 libapache2-mod-perl2 libtool libpcre3-dev libapache2-mod-security2 libjson-xs-perl cpanminus apache2-dev
       - run: sudo mkdir /etc/apache2/logs
