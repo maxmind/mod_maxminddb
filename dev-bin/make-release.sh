@@ -16,7 +16,7 @@ if [ -n "$(git status --porcelain)" ]; then
     exit 1
 fi
 
-perl -i -pe "s/(?<=AC_INIT\(\[mod_maxminddb\], \[)(\d+\.\d+\.\d+)(?=\])/$TAG/" configure.ac;
+perl -i -pe "s/(?<=AC_INIT\(\[mod_maxminddb\], ?\[)(\d+\.\d+\.\d+)(?=\])/$TAG/" configure.ac;
 
 if [ -z "$(git status --porcelain)" ]; then
     echo 'Failed to update configure.ac'
