@@ -1,10 +1,9 @@
-AC_INIT([mod_maxminddb], [1.2.0], [support@maxmind.com])
-AC_ARG_WITH(apxs, AC_HELP_STRING([--with-apxs=NAME],
-            [name of your apxs executable [[apxs]]]),
+AC_INIT([mod_maxminddb],[1.2.0],[support@maxmind.com])
+AC_ARG_WITH(apxs, AS_HELP_STRING([--with-apxs=NAME],[name of your apxs executable [[apxs]]]),
             [APXS="$with_apxs"])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE
-AC_PROG_CC_C99
+AC_PROG_CC
 
 # Copied from http://stackoverflow.com/a/10682813/9832 and tweaked for C (as
 # opposed to C++)
