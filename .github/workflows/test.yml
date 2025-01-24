@@ -4,6 +4,7 @@ on:
   pull_request:
   schedule:
     - cron: '5 20 * * SUN'
+permissions: {}
 jobs:
   test:
     runs-on: ubuntu-latest
