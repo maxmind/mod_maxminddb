@@ -1,7 +1,7 @@
 ---
 layout: default
 title: mod_maxminddb - an Apache module that allows you to query MaxMind DB files
-version: 1.2.0
+version: 1.3.0
 ---
 # MaxMind DB Apache Module #
 
@@ -59,10 +59,18 @@ To use another Apache installation, specify a path to the right apxs binary:
 
     ./configure --with-apxs=/foo/bar/apxs
 
+## Loading the Module ##
+
+After installing the module, Apache has to load it. Note the installation
+does this automatically, so you should not need to do anything. If you're
+unsure if the module is loaded, ensure there's a `LoadModule` line
+somewhere in your config, such as `LoadModule maxminddb_module
+/path/to/mod_maxminddb.so`.
+
 ## Usage ##
 
 To use this module, you must first download or create a MaxMind DB file. We
-provide [free GeoLite2 databases](https://dev.maxmind.com/geoip/geoip2/geolite2)
+provide [free GeoLite2 databases](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?lang=en)
 as well as [commercial GeoIP2 databases](https://www.maxmind.com/en/geoip2-databases).
 
 After installing this module and obtaining a database, you must now set up the
@@ -123,6 +131,8 @@ using map keys or 0-based array indexes separated by `/`.
 
     MaxMindDBEnv COUNTRY_CODE COUNTRY_DB/country/iso_code
     MaxMindDBEnv REGION_CODE  CITY_DB/subdivisions/0/iso_code
+
+Keep in mind that the configured environment variable(s) will only be exported if the data lookup succeeds.
 
 ### `MaxMindDBNetworkEnv` ###
 
@@ -233,15 +243,38 @@ variables.
 This example shows how to block users based on their country:
 
     MaxMindDBEnable On
-    MaxMindDBFile DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
-    MaxMindDBEnv MM_COUNTRY_CODE DB/country/iso_code
+    MaxMindDBFile COUNTRY_DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
+    MaxMindDBEnv MM_COUNTRY_CODE COUNTRY_DB/country/iso_code
 
-    SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
-    Deny from env=BlockCountry
+    <Directory /your/directory>
+        SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
+        <RequireAll>
+            Require env MM_COUNTRY_CODE
+            Require not env BlockCountry
+        </RequireAll>
+    </Directory>
 
-Note that at least the "Deny" or "Allow" directive (or "Require" directive in
-Apache 2.4 and above) must be applied within a `<Directory>`, `<Location>` or
-`<Files>` container.
+Note that the "Require" directive must be applied within a `<Directory>`,
+`<Location>` or `<Files>` container.
+
+### Allowing by Country ###
+
+This example shows how to allow users based on their country:
+
+    MaxMindDBEnable On
+    MaxMindDBFile COUNTRY_DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
+    MaxMindDBEnv MM_COUNTRY_CODE COUNTRY_DB/country/iso_code
+
+    <Directory /your/directory>
+        SetEnvIf MM_COUNTRY_CODE ^(CA|FR) AllowCountry
+        <RequireAll>
+            Require env MM_COUNTRY_CODE
+            Require env AllowCountry
+        </RequireAll>
+    </Directory>
+
+Note that the "Require" directive must be applied within a `<Directory>`,
+`<Location>` or `<Files>` container.
 
 ## Data Output Format ##
 
@@ -255,7 +288,7 @@ Note that data stored as the "bytes" type in a MaxMind DB database can contain
 null bytes and may end up truncated when stored in an environment variable. If
 you really need to access this data, we recommend using [one of our
 programming language
-APIs](https://dev.maxmind.com/geoip/geoip2/downloadable/#MaxMind_APIs) instead.
+APIs](https://dev.maxmind.com/geoip/geolocate-an-ip/databases?lang=en) instead.
 
 ## Support ##
 
@@ -272,6 +305,6 @@ The MaxMind DB Apache module uses [Semantic Versioning](https://semver.org/).
 
 ## Copyright and License ##
 
-This software is Copyright (c) 2013-2020 by MaxMind, Inc.
+This software is Copyright (c) 2013-2025 by MaxMind, Inc.
 
 This is free software, licensed under the Apache License, Version 2.0.
