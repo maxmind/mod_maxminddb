@@ -1,4 +1,4 @@
-AC_INIT([mod_maxminddb],[1.2.0],[support@maxmind.com])
+AC_INIT([mod_maxminddb],[1.3.0],[support@maxmind.com])
 AC_ARG_WITH(apxs, AS_HELP_STRING([--with-apxs=NAME],[name of your apxs executable [[apxs]]]),
             [APXS="$with_apxs"])
 AC_CONFIG_AUX_DIR([.])

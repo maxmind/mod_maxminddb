@@ -1,3 +1,8 @@
+## 1.3.0 - 2025-05-02
+
+* Portability fixes
+* Documentation improvements
+
 ## 1.2.0 - 2020-02-03
 
 * Fix a bug where uninitialized memory could be accessed when looking up
