@@ -241,12 +241,35 @@ This example shows how to block users based on their country:
     MaxMindDBFile COUNTRY_DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
     MaxMindDBEnv MM_COUNTRY_CODE COUNTRY_DB/country/iso_code
 
-    SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
-    Deny from env=BlockCountry
+    <Directory /your/directory>
+        SetEnvIf MM_COUNTRY_CODE ^(RU|DE|FR) BlockCountry
+        <RequireAll>
+            Require env MM_COUNTRY_CODE
+            Require not env BlockCountry
+        </RequireAll>
+    </Directory>
 
-Note that at least the "Deny" or "Allow" directive (or "Require" directive in
-Apache 2.4 and above) must be applied within a `<Directory>`, `<Location>` or
-`<Files>` container.
+Note that the "Require" directive must be applied within a `<Directory>`,
+`<Location>` or `<Files>` container.
+
+### Allowing by Country ###
+
+This example shows how to allow users based on their country:
+
+    MaxMindDBEnable On
+    MaxMindDBFile COUNTRY_DB /usr/local/share/GeoIP/GeoLite2-Country.mmdb
+    MaxMindDBEnv MM_COUNTRY_CODE COUNTRY_DB/country/iso_code
+
+    <Directory /your/directory>
+        SetEnvIf MM_COUNTRY_CODE ^(CA|FR) AllowCountry
+        <RequireAll>
+            Require env MM_COUNTRY_CODE
+            Require env AllowCountry
+        </RequireAll>
+    </Directory>
+
+Note that the "Require" directive must be applied within a `<Directory>`,
+`<Location>` or `<Files>` container.
 
 ## Data Output Format ##
 
