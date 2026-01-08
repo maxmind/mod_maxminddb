@@ -1,0 +1,3 @@
+mod src/.libs/mod_maxminddb.so
+mod debian/maxminddb.load
+mod debian/maxminddb.conf
