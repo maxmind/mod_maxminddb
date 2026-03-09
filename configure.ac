@@ -4,6 +4,7 @@ AC_ARG_WITH(apxs, AS_HELP_STRING([--with-apxs=NAME],[name of your apxs executabl
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE
 AC_PROG_CC
+AC_PROG_MKDIR_P
 
 # Copied from http://stackoverflow.com/a/10682813/9832 and tweaked for C (as
 # opposed to C++)
@@ -40,6 +41,13 @@ if test "$APXS" = no; then
     AC_MSG_ERROR([apxs not found. set apxs with --with-apxs.])
 fi
 AC_SUBST(APXS)
+
+LIBEXECDIR=`$APXS -q LIBEXECDIR 2>/dev/null`
+if test -z "${LIBEXECDIR}"; then
+    AC_MSG_ERROR([apxs returned empty LIBEXECDIR])
+fi
+AC_SUBST(LIBEXECDIR)
+
 AC_CHECK_HEADERS([maxminddb.h])
 AC_CHECK_LIB(maxminddb, MMDB_lib_version, [
     AC_DEFINE([HAVE_LIBMAXMINDDB], [1], [Have found libmaxminddb])
