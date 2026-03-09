@@ -1,3 +1,11 @@
+## 1.4.0
+
+* Fixed build failures caused by `LDFLAGS` being passed directly to `apxs`
+  rather than through its `-Wl,` flag. Pull request by Robert Scheck.
+  GitHub #162.
+* Added `DESTDIR` support to the install target. Pull request by Robert
+  Scheck. GitHub #162.
+
 ## 1.3.0 - 2025-05-02
 
 * Portability fixes
