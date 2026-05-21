@@ -11,7 +11,8 @@
 *.so
 *.so.*
 *.sw?
-.gh-pages
+docs/.hugo_build.lock
+docs/public/
 .libs
 .tidyall.d
 MYMETA.json
