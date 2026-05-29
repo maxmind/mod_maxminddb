@@ -65,8 +65,8 @@ somewhere in your config, such as `LoadModule maxminddb_module
 ## Usage ##
 
 To use this module, you must first download or create a MaxMind DB file. We
-provide [free GeoLite2 databases](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?lang=en)
-as well as [commercial GeoIP2 databases](https://www.maxmind.com/en/geoip2-databases).
+provide [free GeoLite databases](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?lang=en)
+as well as [commercial GeoIP databases](https://www.maxmind.com/en/geoip2-databases).
 
 After installing this module and obtaining a database, you must now set up the
 module in your Apache configuration file (e.g., `/etc/apache2/apache2.conf`)
