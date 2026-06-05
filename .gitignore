@@ -11,6 +11,7 @@
 *.so
 *.so.*
 *.sw?
+.lycheecache
 docs/.hugo_build.lock
 docs/public/
 .libs

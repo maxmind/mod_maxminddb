@@ -65,8 +65,8 @@ somewhere in your config, such as `LoadModule maxminddb_module
 ## Usage ##
 
 To use this module, you must first download or create a MaxMind DB file. We
-provide [free GeoLite databases](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?lang=en)
-as well as [commercial GeoIP databases](https://www.maxmind.com/en/geoip2-databases).
+provide [free GeoLite databases](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data/?lang=en)
+as well as [commercial GeoIP databases](https://www.maxmind.com/en/geoip-databases).
 
 After installing this module and obtaining a database, you must now set up the
 module in your Apache configuration file (e.g., `/etc/apache2/apache2.conf`)
@@ -159,7 +159,7 @@ Apache notes.
 In case you want supply your own value for the IP address to lookup, it may be
 done by setting the environment variable `MMDB_ADDR`.
 This can be done, for instance, with
-[ModSecurity](https://github.com/SpiderLabs/ModSecurity/) in (real) phase 1.
+[ModSecurity](https://github.com/owasp-modsecurity/ModSecurity) in (real) phase 1.
 Note that mod_setenvif and mod_rewrite cannot be used for this as they are
 running after this module. For most usages,
 [mod_remoteip](https://httpd.apache.org/docs/current/mod/mod_remoteip.html)
@@ -283,7 +283,7 @@ Note that data stored as the "bytes" type in a MaxMind DB database can contain
 null bytes and may end up truncated when stored in an environment variable. If
 you really need to access this data, we recommend using [one of our
 programming language
-APIs](https://dev.maxmind.com/geoip/geolocate-an-ip/databases?lang=en) instead.
+APIs](https://dev.maxmind.com/geoip/geolocate-an-ip/databases/?lang=en) instead.
 
 ## Support ##
 
@@ -292,7 +292,7 @@ tracker](https://github.com/maxmind/mod_maxminddb/issues).
 
 If you are having an issue with a commercial MaxMind database that is not
 specific to this module, please see [our support
-page](https://www.maxmind.com/en/support).
+page](https://support.maxmind.com/knowledge-base).
 
 ## Versioning ##
 
