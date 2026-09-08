@@ -1,0 +1,10 @@
+libapache2-mod-maxminddb for Debian
+-----------------------------------
+
+This package requires non-free MaxMind database files.
+Some of them can be dowloaded for free using geoipupdate package.
+They will be installed in /var/lib/GeoIP folder.
+
+More information at: https://dev.maxmind.com/geoip/geoip2/geolite2/ 
+
+ -- Adam Cecile <acecile@le-vert.net>  Wed, 18 Jul 2018 21:12:01 +0200
