@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+DESTDIR := debian/libapache2-mod-maxminddb
+
+%:
+	dh $@ --with apache2
+
+override_dh_auto_install:
+
+override_dh_installdocs:
+	dh_installdocs
+	sed -i 's!/usr/local/share/GeoIP/!/var/lib/GeoIP/!g' \
+	  $(DESTDIR)/usr/share/doc/libapache2-mod-maxminddb/README.md
+
+dh_installchangelogs:
+	dh_installchangelogs Changes.md
