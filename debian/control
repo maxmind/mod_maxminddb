@@ -1,0 +1,14 @@
+Source: mod-maxminddb
+Section: httpd
+Priority: optional
+Maintainer: Adam Cecile <acecile@le-vert.net>
+Build-Depends: debhelper (>= 9), dh-apache2, apache2-dev, libmaxminddb-dev
+Standards-Version: 4.1.3
+Homepage: https://github.com/maxmind/mod_maxminddb/
+
+Package: libapache2-mod-maxminddb
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: geoipupdate
+Description: Query MaxMind DB (geo-localisation) files
+ Query MaxMind DB files to perform actions based on geo-localisation.
