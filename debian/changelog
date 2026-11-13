@@ -1,0 +1,5 @@
+mod-maxminddb (1.1.0-1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Adam Cecile <acecile@le-vert.net>  Wed, 18 Jul 2018 21:12:01 +0200
